@@ -5,6 +5,6 @@
 #include "system_words.h"
 #include "names_table.h"
 
-int LexicalAnalysis(Vector *tokens, char *buf);
+int LexicalAnalysis(NamesTable *data, Vector *tokens, const char *filename);
 
 #endif

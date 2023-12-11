@@ -9,20 +9,24 @@ enum ResizeOptions {
 };
 
 const size_t INCREASE = 2;
-const size_t START_NUM_OF_NAMES = 8;
 
 static int NamesTableVerify(NamesTable *data);
 static int NamesTableResize(NamesTable *data, const ResizeOptions option);
 
-int NamesTableCtor(NamesTable *data, const char *KEY_WORDS) {
+int NamesTableCtor(NamesTable *data, const char *KEY_WORDS[]) {
 
     assert(data);
 
-    data->names = (Name *) calloc (START_NUM_OF_NAMES, sizeof (Name));
+    data->names = (Name *) calloc (NUMBER_OF_KEY_WORDS, sizeof (Name));
     if (!data->names) return NO_MEMORY;
 
-    data->capacity = START_NUM_OF_NAMES;
+    data->capacity = NUMBER_OF_KEY_WORDS;
     data->size = 0;
+
+    for (size_t i = 0; i < NUMBER_OF_KEY_WORDS; i++) {
+        if (PushName(data, {KEY_WORDS[i], KEY_WORD}) != SUCCESS)
+            return ERROR;
+    }
 
     return SUCCESS;
 }
@@ -66,7 +70,7 @@ int PopName(NamesTable *data, Name *dst) {
 
     *dst = data->names[--data->size - 1];
 
-    if (data->capacity > START_NUM_OF_NAMES && data->capacity - data->size > data->capacity - data->capacity / INCREASE) {
+    if (data->capacity > NUMBER_OF_KEY_WORDS && data->capacity - data->size > data->capacity - data->capacity / INCREASE) {
         if (NamesTableResize(data, kResizeCut) != SUCCESS)
             return NO_MEMORY;
     }

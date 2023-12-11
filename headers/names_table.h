@@ -3,15 +3,17 @@
 
 #include <stdio.h>
 
+const size_t NUMBER_OF_KEY_WORDS = 24;
+
 enum NameType {
-    VAR   = 0,
-    FUNC  = 1,
-    SYS_W = 2,
+    VARIABLE = 0,
+    KEY_WORD = 1,
+    FUNCTION = 2,
 };
 
 struct Name {
-    char *name;
-    NameType typr;
+    const char *name;
+    NameType type;
 };
 
 struct NamesTable {
@@ -20,7 +22,7 @@ struct NamesTable {
     size_t capacity;
 };
 
-int NamesTableCtor(NamesTable *data);
+int NamesTableCtor(NamesTable *data, const char *KEY_WORDS[]);
 int NamesTableDtor(NamesTable *data);
 int PushName(NamesTable *data, Name value);
 int PopName(NamesTable *data, Name *dst);

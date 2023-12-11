@@ -5,12 +5,14 @@
 #include "system_words.h"
 
 struct Token {
-    TokenType type;
+    ValueType type;
     union {
         double number;
-        TokenOperation operation;
-        char var;
-        SWCodes sys_word;
+        Binary_Op binary_op;
+        Unary_Op unary_op;
+        size_t var_index;
+        size_t func_index;
+        Punctuation punct_sym;
     };
 };
 

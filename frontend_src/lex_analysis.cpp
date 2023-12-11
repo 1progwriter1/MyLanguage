@@ -2,31 +2,48 @@
 #include <assert.h>
 #include "../headers/lex_analysis.h"
 #include "../../MyLibraries/headers/systemdata.h"
-#include <errno.h>
+#include "../../MyLibraries/headers/file_func.h"
 #include <string.h>
 
-const char *KEY_WORDS[] = {  "Once upon the time",                          // begin main
-                                "and they lived happily ever after",        // end main
-                                "king", "queen", "prince", "princess"       // double
-                                "stone", "go left", "go right",             // if, then, else
-                                "fell into a dead sleep while"              // while
-                                "fairy tale",                               // begin function
-                                "end"                                       // end function
-                                "did not turn into", "turned into"          // !=, ==
-                                "turn into", "stronger", "weeker",          // =, >, <
-                                "not stronger", "not weeker"                // <=, >=
-                                "add", "sub", "mul", "div", "pow", "not"    // +, -, *, /, ^
-                            };
+const char *KEY_WORDS[NUMBER_OF_KEY_WORDS] = {  "Once upon a time",                         // begin main
+                                                "and they lived happily ever after",        // end main
+                                                "fairytale character",                      // double
+                                                "stone", "go left", "go right",             // if, then, else
+                                                "fell into a dead sleep while",             // while
+                                                "fairytale",                                // begin function
+                                                "end",                                      // end function
+                                                "did not turn into", "turned into",         // !=, ==
+                                                "turn into", "stronger", "weeker",          // =, >, <
+                                                "not stronger", "not weeker",               // <=, >=
+                                                "add", "sub", "mul", "div", "pow", "not",   // +, -, *, /, ^
+                                                "guess the riddle", "say the magic word"    // , printf
+                                                };
 
 static int ReadNumber(char **buf, double *num);
 static int ReadSystemWord(char **buf, SWCodes *code);
 static int ReadVariable(char **buf, NamesTable *data);
 
-int LexicalAnalysis(NamesTable *data, Vector *tokens, char *buf) {
+const size_t START_NUM_OF_TOKENS = 8;
 
-    assert(buf);
+int LexicalAnalysis(NamesTable *data, Vector *tokens, const char *filename) {
+
+    assert(filename);
     assert(tokens);
     assert(data);
+
+    char *buf = readbuf(filename);
+    if (!buf) return ERROR;
+
+    if (NamesTableCtor(data, KEY_WORDS) != SUCCESS) {
+        free(buf);
+        return ERROR;
+    }
+
+    if (VectorCtor(tokens, START_NUM_OF_TOKENS) != SUCCESS) {
+        free(buf);
+        NamesTableDtor(data);
+        return ERROR;
+    }
 
     char *tmp = buf;
     while (*tmp != '\0') {
@@ -36,70 +53,7 @@ int LexicalAnalysis(NamesTable *data, Vector *tokens, char *buf) {
             continue;
         }
 
-        switch (*tmp) {
-            case ('+'): {
-                tmp++;
-                if (PushBack(tokens, (Token) {TOKEN_OPERATION, {.operation = TOKEN_ADD}}) != SUCCESS)
-                    return ERROR;
-                continue;
-            }
-            case ('-'): {
-                tmp++;
-                if (PushBack(tokens, (Token) {TOKEN_OPERATION, {.operation = TOKEN_SUB}}) != SUCCESS)
-                    return ERROR;
-                continue;
-            }
-            case ('*'): {
-                tmp++;
-                if (PushBack(tokens, (Token) {TOKEN_OPERATION, {.operation = TOKEN_MUL}}) != SUCCESS)
-                    return ERROR;
-                continue;
-            }
-            case ('/'): {
-                tmp++;
-                if (PushBack(tokens, (Token) {TOKEN_OPERATION, {.operation = TOKEN_DIV}}) != SUCCESS)
-                    return ERROR;
-                continue;
-            }
-            case ('('): {
-                tmp++;
-                if (PushBack(tokens, (Token) {TOKEN_OP_BRACKET, {}}) != SUCCESS)
-                    return ERROR;
-                continue;
-            }
-            case (')'): {
-                tmp++;
-                if (PushBack(tokens, (Token) {TOKEN_CL_BRACKET, {}}) != SUCCESS)
-                    return ERROR;
-                continue;
-            }
-            case ('='): {
-                tmp++;
-                if (PushBack(tokens, (Token) {TOKEN_OPERATION, {.operation = TOKEN_ASSIGN}}) != SUCCESS)
-                    return ERROR;
-                continue;
-            }
-            default: {
-                break;
-            }
-        }
-
-        SWCodes code = SW_COS;
-        if (ReadSystemWord(&tmp, &code) == SUCCESS) {
-            if (PushBack(tokens, (Token) {TOKEN_SYS_WORD, {.sys_word = code}}) != SUCCESS)
-                return ERROR;
-            continue;
-        }
-
-        double num = 0;
-        if (ReadNumber(&tmp, &num) == SUCCESS) {
-            if (PushBack(tokens, (Token) {TOKEN_NUMBER, {.number = num}}) != SUCCESS)
-                return ERROR;
-            continue;
-        }
-
-        if (ReadVariable(&buf, data) != SUCCESS)
-            return ERROR;
+        char *
 
     }
 

@@ -2,12 +2,12 @@
 #define SYSTEM_WORDS_LANG
 
 enum ValueType {
-    punct_sym  = 0,
-    binary_op  = 1,
-    unary_op   = 2,
-    number     = 3,
-    var_index  = 4,
-    func_index = 5,
+    PUNCT_SYM = 0,
+    BINARY_OP = 1,
+    UNARY_OP  = 2,
+    NUMBER    = 3,
+    VARIABLE  = 4,
+    FUNCTION  = 5,
 };
 
 enum Punctuation {
