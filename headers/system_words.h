@@ -11,15 +11,15 @@ enum ValueType {
 };
 
 enum Punctuation {
-    END_SYMBOL     = 0,
+    END_SYMBOL     = 0, // \0
 
-    OP_PARENTHESIS = 1,
-    CL_PARENTHESIS = 2,
+    OP_PARENTHESIS = 1, // (
+    CL_PARENTHESIS = 2, // )
 
-    OP_BRACES      = 3,
-    CL_BRACES      = 4,
+    OP_BRACE       = 3, // {
+    CL_BRACE       = 4, // }
 
-    NEW_LINE       = 5,
+    NEW_LINE       = 5, // ;
 
 };
 
@@ -54,6 +54,9 @@ enum Unary_Op {
 
     IF    = 8,
     WHILE = 9,
+};
+
+enum KeyWordIndex {
 };
 
 #endif

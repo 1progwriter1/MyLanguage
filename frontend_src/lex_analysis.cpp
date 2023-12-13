@@ -5,23 +5,29 @@
 #include "../../MyLibraries/headers/file_func.h"
 #include <string.h>
 
-const char *KEY_WORDS[NUMBER_OF_KEY_WORDS] = {  "Once upon a time",                         // begin main
-                                                "and they lived happily ever after",        // end main
-                                                "fairytale character",                      // double
-                                                "stone", "go left", "go right",             // if, then, else
-                                                "fell into a dead sleep while",             // while
-                                                "fairytale",                                // begin function
-                                                "end",                                      // end function
-                                                "did not turn into", "turned into",         // !=, ==
-                                                "turn into", "stronger", "weeker",          // =, >, <
-                                                "not stronger", "not weeker",               // <=, >=
-                                                "add", "sub", "mul", "div", "pow", "not",   // +, -, *, /, ^
-                                                "guess the riddle", "say the magic word"    // , printf
-                                                };
+// ask about const
+
+#define KEY_WORD_LEN sizeof (KEY_WORDS[i]) - 1
+
+static const char *KEY_WORDS[NUMBER_OF_KEY_WORDS] = {   "Once upon a time",                         // begin main
+                                                        "and they lived happily ever after",        // end main
+                                                        "fairytale character",                      // double
+                                                        "stone", "go left", "go right",             // if, then, else
+                                                        "fell into a dead sleep while",             // while
+                                                        "fairytale",                                // begin function
+                                                        "end",                                      // end function
+                                                        "guess the riddle", "say the magic word",   // , printf
+                                                        "sin", "cos", "sqrt", "ln", "not",          // sin, cos, sqrt, ln, not
+                                                        "did not turn into", "turned into",         // !=, ==
+                                                        "turn into", "stronger", "weeker",          // =, >, <
+                                                        "not stronger", "not weeker",               // <=, >=
+                                                        "+", "-", "*", "/", "^"                     // +, -, *, /, ^
+                                                    };
 
 static int ReadNumber(char **buf, double *num);
-static int ReadSystemWord(char **buf, SWCodes *code);
+static int ReadKeyWord(char **buf, Vector *tokens, bool *is_found);
 static int ReadVariable(char **buf, NamesTable *data);
+static int ReadPunctuation(char **buf, Vector *tokens, bool *is_found);
 
 const size_t START_NUM_OF_TOKENS = 8;
 
@@ -53,16 +59,110 @@ int LexicalAnalysis(NamesTable *data, Vector *tokens, const char *filename) {
             continue;
         }
 
-        char *
+        bool is_found = false;
+        if (ReadPunctuation(&tmp, tokens, &is_found) == SUCCESS) {
+            continue;
+        }
+        else if (is_found) {
+            return ERROR;
+        }
+
+        if (ReadKeyWord(&tmp, tokens, &is_found) == SUCCESS) {
+            continue;
+        }
+        else if (is_found) {
+            return ERROR;
+        }
+
+        double num = 0;
+        if (ReadNumber(&tmp, &num) == SUCCESS)
+            continue;
+
+        if (ReadVariable(&tmp, data) != SUCCESS)
+            return ERROR;
 
     }
 
-    if (PushBack(tokens, (Token) {TOKEN_END_SYM, {}}) != SUCCESS)
+    if (PushBack(tokens, (Token) {TOKEN_PUNCT_SYM, {.code = END_SYMBOL}}) != SUCCESS)
         return ERROR;
 
     return SUCCESS;
 }
-//const
+
+static int ReadPunctuation(char **buf, Vector *tokens, bool *is_found) {
+
+    assert(buf);
+    assert(tokens);
+    assert(is_found);
+
+    Punctuation code = END_SYMBOL;
+    *is_found = true;
+
+    switch (**buf) {
+        case ('\0'): {
+            code = END_SYMBOL;
+            break;
+        }
+        case ('('): {
+            code = OP_PARENTHESIS;
+            break;
+        }
+        case (')'): {
+            code = CL_PARENTHESIS;
+            break;
+        }
+        case ('{'): {
+            code = OP_BRACE;
+            break;
+        }
+        case ('}'): {
+            code = CL_PARENTHESIS;
+            break;
+        }
+        case (';'): {
+            code = NEW_LINE;
+            break;
+        }
+        default: {
+            *is_found = false;
+            break;
+        }
+    }
+
+    if (*is_found) {
+        *buf += 1;
+        if (PushBack(tokens, (Token) {TOKEN_PUNCT_SYM, {.code = code}}) != SUCCESS)
+            return ERROR;
+
+        return SUCCESS;
+    }
+
+    return ERROR;
+}
+
+static int ReadKeyWord(char **buf, Vector *tokens, bool *is_found) {
+
+    assert(buf);
+    assert(*buf);
+    assert(tokens);
+    assert(index);
+
+    *is_found = false;
+    for (size_t i = 0; i < NUMBER_OF_KEY_WORDS; i++) {
+        if (strncmp(*buf, KEY_WORDS[i], KEY_WORD_LEN) == 0) {
+            *is_found = true;
+
+            if (PushBack(tokens, (Token) {TOKEN_KEY_WORD, {.key_word = i}}) != SUCCESS)
+                return ERROR;
+
+            *buf += KEY_WORD_LEN;
+            return SUCCESS;
+        }
+    }
+
+    return ERROR;
+}
+
 static int ReadNumber(char **buf, double *num) {
 
     assert(buf);
@@ -77,23 +177,6 @@ static int ReadNumber(char **buf, double *num) {
     *buf = end;
 
     return SUCCESS;
-}
-
-static int ReadSystemWord(char **buf, SWCodes *code) {
-
-    assert(buf);
-    assert(*buf);
-    assert(code);
-
-    for (size_t i = 0; i < sizeof (SYSTEM_WORDS) / sizeof (SYSTEM_WORDS[0]); i++) {
-        if (strncmp(*buf, SYSTEM_WORDS[i], sizeof (SYSTEM_WORDS[i]) - 1) == 0) {
-            *code = (SWCodes) i;
-            *buf += sizeof (SYSTEM_WORDS[i]) - 1;
-            return SUCCESS;
-        }
-    }
-
-    return ERROR;
 }
 
 static int ReadVariable(char **buf, NamesTable *data) {
@@ -111,7 +194,7 @@ static int ReadVariable(char **buf, NamesTable *data) {
 
     sscanf(*buf, "%s", name);
 
-    if (PushName(data, (Name) {name, 0}) != SUCCESS) {
+    if (PushName(data, (Name) {name, VAR_NAME}) != SUCCESS) {
         printf(RED "error: " END_OF_COLOR "unable to add new variable\n");
         return ERROR;
     }

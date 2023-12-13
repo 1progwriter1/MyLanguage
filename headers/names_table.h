@@ -3,12 +3,12 @@
 
 #include <stdio.h>
 
-const size_t NUMBER_OF_KEY_WORDS = 24;
+const size_t NUMBER_OF_KEY_WORDS = 28;
 
 enum NameType {
-    VARIABLE = 0,
+    VAR_NAME = 0,
     KEY_WORD = 1,
-    FUNCTION = 2,
+    FUNC_NAME = 2,
 };
 
 struct Name {
