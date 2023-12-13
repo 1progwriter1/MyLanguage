@@ -21,7 +21,7 @@ int StringParse(NamesTable *names, Vector *tokens, TreeStruct *tree) {
     tree->root = GetExpression(&data, tree);
     if (!tree->root) return ERROR;
 
-    if (tokens->data[data.position].type != TOKEN_END_SYM) {
+    if (tokens->data[data.position].type != TOKEN_PUNCT_SYM) {
         printf(RED "Syntax error: " END_OF_COLOR "\nexpected: \\0\n");
         TreeRootDtor(tree);
         return ERROR;

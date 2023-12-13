@@ -9,25 +9,14 @@
 
 #define KEY_WORD_LEN sizeof (KEY_WORDS[i]) - 1
 
-static const char *KEY_WORDS[NUMBER_OF_KEY_WORDS] = {   "Once upon a time",                         // begin main
-                                                        "and they lived happily ever after",        // end main
-                                                        "fairytale character",                      // double
-                                                        "stone", "go left", "go right",             // if, then, else
-                                                        "fell into a dead sleep while",             // while
-                                                        "fairytale",                                // begin function
-                                                        "end",                                      // end function
-                                                        "guess the riddle", "say the magic word",   // , printf
-                                                        "sin", "cos", "sqrt", "ln", "not",          // sin, cos, sqrt, ln, not
-                                                        "did not turn into", "turned into",         // !=, ==
-                                                        "turn into", "stronger", "weeker",          // =, >, <
-                                                        "not stronger", "not weeker",               // <=, >=
-                                                        "+", "-", "*", "/", "^"                     // +, -, *, /, ^
-                                                    };
+#define IsFuncBegin (tokens->data[tokens->size - 1].type == FUNCTION)
 
 static int ReadNumber(char **buf, double *num);
 static int ReadKeyWord(char **buf, Vector *tokens, bool *is_found);
-static int ReadVariable(char **buf, NamesTable *data);
+static int ReadName(char **buf, NamesTable *data, Vector *tokens);
 static int ReadPunctuation(char **buf, Vector *tokens, bool *is_found);
+static int ReadString(char **buf, NamesTable *data);
+static bool IsNameExists(const char *str, NamesTable *data, size_t *index);
 
 const size_t START_NUM_OF_TOKENS = 8;
 
@@ -59,6 +48,12 @@ int LexicalAnalysis(NamesTable *data, Vector *tokens, const char *filename) {
             continue;
         }
 
+        if (*tmp == '"') {
+            *tmp += 1;
+            if (ReadString(&tmp, data) == SUCCESS)
+                continue;
+        }
+
         bool is_found = false;
         if (ReadPunctuation(&tmp, tokens, &is_found) == SUCCESS) {
             continue;
@@ -78,12 +73,12 @@ int LexicalAnalysis(NamesTable *data, Vector *tokens, const char *filename) {
         if (ReadNumber(&tmp, &num) == SUCCESS)
             continue;
 
-        if (ReadVariable(&tmp, data) != SUCCESS)
+        if (ReadName(&tmp, data, tokens) != SUCCESS)
             return ERROR;
 
     }
 
-    if (PushBack(tokens, (Token) {TOKEN_PUNCT_SYM, {.code = END_SYMBOL}}) != SUCCESS)
+    if (PushBack(tokens, (Token) {PUNCT_SYM, {.code = END_SYMBOL}}) != SUCCESS)
         return ERROR;
 
     return SUCCESS;
@@ -131,7 +126,7 @@ static int ReadPunctuation(char **buf, Vector *tokens, bool *is_found) {
 
     if (*is_found) {
         *buf += 1;
-        if (PushBack(tokens, (Token) {TOKEN_PUNCT_SYM, {.code = code}}) != SUCCESS)
+        if (PushBack(tokens, (Token) {PUNCT_SYM, {.code = code}}) != SUCCESS)
             return ERROR;
 
         return SUCCESS;
@@ -152,8 +147,16 @@ static int ReadKeyWord(char **buf, Vector *tokens, bool *is_found) {
         if (strncmp(*buf, KEY_WORDS[i], KEY_WORD_LEN) == 0) {
             *is_found = true;
 
-            if (PushBack(tokens, (Token) {TOKEN_KEY_WORD, {.key_word = i}}) != SUCCESS)
-                return ERROR;
+            Token value = {};
+
+            if (i < BINARY_OP_INDEX)
+                value = {FUNCTION, {.func_index = 0}};
+            else if (i < UNARY_OP_INDEX)
+                value = {BINARY_OP, {.bin_op = (Binary_Op) (i - BINARY_OP_INDEX)}};
+            else if (i < KEY_OP_INDEX)
+                value = {UNARY_OP, {.un_op = (Unary_Op) (i - UNARY_OP_INDEX)}};
+            else if (i < ADD_WORDS_INDEX)
+                value = {KEY_OP, {.key_op = (Key_Op) (i - KEY_OP_INDEX)}};
 
             *buf += KEY_WORD_LEN;
             return SUCCESS;
@@ -179,22 +182,32 @@ static int ReadNumber(char **buf, double *num) {
     return SUCCESS;
 }
 
-static int ReadVariable(char **buf, NamesTable *data) {
+static int ReadName(char **buf, NamesTable *data, Vector *tokens) {
 
     assert(buf);
     assert(*buf);
     assert(data);
+    assert(tokens);
 
     size_t len_of_var = 0;
     while (*buf[len_of_var] != ' ')
         len_of_var++;
 
-    char *name = (char *) calloc (len_of_var, sizeof (char));
+    char *name = (char *) calloc (len_of_var + 1, sizeof (char));
     if (!name) return NO_MEMORY;
 
     sscanf(*buf, "%s", name);
 
-    if (PushName(data, (Name) {name, VAR_NAME}) != SUCCESS) {
+    NameType type = IsFuncBegin ? FUNC_NAME : VAR_NAME;
+
+    size_t name_index = 0;
+    if (IsNameExists(name, data, &name_index)) {
+
+    }
+    if (type == FUNC_NAME)
+        tokens->data[tokens->size - 1].func_index = data->size;
+
+    if (PushName(data, (Name) {name, type}) != SUCCESS) {
         printf(RED "error: " END_OF_COLOR "unable to add new variable\n");
         return ERROR;
     }
@@ -202,4 +215,40 @@ static int ReadVariable(char **buf, NamesTable *data) {
     *buf += len_of_var;
 
     return SUCCESS;
+}
+
+static int ReadString(char **buf, NamesTable *data) {
+
+    assert(buf);
+    assert(*buf);
+    assert(data);
+
+    size_t len_of_str = 0;
+    while (*buf[len_of_str] != ' ')
+        len_of_str++;
+
+    char *string = (char *) calloc (len_of_str + 1, sizeof (char));
+    if (!string) return NO_MEMORY;
+
+    sscanf(*buf, "%[^\"]", string);
+
+    if (PushName(data, (Name) {string, STRING}) != SUCCESS)
+        return ERROR;
+
+    return SUCCESS;
+}
+
+static bool IsNameExists(const char *str, NamesTable *data) {
+
+    assert(str);
+    assert(data);
+    assert(index);
+
+    for (size_t i = NUMBER_OF_KEY_WORDS - 1; i < data->size; i++)
+        if (strcmp(data->names[i].name, str) == 0) {
+            *index = i;
+            return true;
+        }
+
+    return false;
 }

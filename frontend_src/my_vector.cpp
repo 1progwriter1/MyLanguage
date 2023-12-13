@@ -92,7 +92,7 @@ static int Resize(Vector *vec, VecChangeSize action) {
         return NO_MEMORY;
 
     for (size_t i = vec->size; i < vec->capacity; i++) {
-        vec->data[i] = {};
+        vec->data[i] = (Token) {};
     }
     return SUCCESS;
 }

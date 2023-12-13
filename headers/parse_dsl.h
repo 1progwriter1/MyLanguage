@@ -6,17 +6,21 @@
                                                 data->error = CL_PARENTHESIS_MISSED;                            \
                                                 return 0;}                                                      \
 //TODO: reduce
-#define IsAdd(position)         ((data->tokens->data[position].type == TOKEN_OPERATION) && (data->tokens->data[position].operation == TOKEN_ADD))
+#define IsOperation(position)   (data->tokens->data[position].type == TOKEN_OPERATION)
 
-#define IsSub(position)         ((data->tokens->data[position].type == TOKEN_OPERATION) && (data->tokens->data[position].operation == TOKEN_SUB))
+#define IsAdd(position)         (IsOperation(position) && (data->tokens->data[position].operation == TOKEN_ADD))
 
-#define IsDiv(position)         ((data->tokens->data[position].type == TOKEN_OPERATION) && (data->tokens->data[position].operation == TOKEN_DIV))
+#define IsSub(position)         (IsOperation(position) && (data->tokens->data[position].operation == TOKEN_SUB))
 
-#define IsMul(position)         ((data->tokens->data[position].type == TOKEN_OPERATION) && (data->tokens->data[position].operation == TOKEN_MUL))
+#define IsDiv(position)         ((IsOperation(position)&& (data->tokens->data[position].operation == TOKEN_DIV))
 
-#define IsCos(position)         ((data->tokens->data[position].type == TOKEN_OPERATION) && (data->tokens->data[position].sys_word == SW_COS))
+#define IsMul(position)         (IsOperation(position) && (data->tokens->data[position].operation == TOKEN_MUL))
 
-#define IsSin(position)         ((data->tokens->data[position].type == TOKEN_OPERATION) && (data->tokens->data[position].sys_word == SW_SIN))
+#define IsCos(position)         (IsOperation(position) && (data->tokens->data[position].sys_word == SW_COS))
+
+#define IsSin(position)         (IsOperation(position) && (data->tokens->data[position].sys_word == SW_SIN))
+
+
 
 #define IsClBracket(position)   (data->tokens->data[position].type == TOKEN_CL_BRACKET)
 

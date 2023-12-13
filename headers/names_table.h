@@ -2,13 +2,13 @@
 #define NAMES_TABLE_LANG
 
 #include <stdio.h>
-
-const size_t NUMBER_OF_KEY_WORDS = 28;
+#include "key_words.h"
 
 enum NameType {
-    VAR_NAME = 0,
-    KEY_WORD = 1,
+    VAR_NAME  = 0,
+    KEY_WORD  = 1,
     FUNC_NAME = 2,
+    STRING    = 3
 };
 
 struct Name {

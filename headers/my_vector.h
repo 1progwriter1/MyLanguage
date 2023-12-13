@@ -2,24 +2,19 @@
 #define VECTOR_CPU
 
 #include <stdio.h>
-#include "system_words.h"
-
-enum TokenValueType {
-    TOKEN_KEY_WORD  = 0,
-    TOKEN_NUMBER    = 1,
-    TOKEN_VARIABLE  = 2,
-    TOKE_FUNCTION   = 3,
-    TOKEN_PUNCT_SYM = 4
-};
+#include "key_words.h"
 
 struct Token {
-    TokenValueType type;
+    ValueType type;
     union {
         double number;
-        size_t key_word;
+        Binary_Op bin_op;
+        Unary_Op un_op;
+        Key_Op key_op;
         size_t var_index;
         size_t func_index;
         Punctuation code;
+        const char *string;
     };
 };
 

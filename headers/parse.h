@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include "my_vector.h"
 #include "names_table.h"
-#include "system_words.h"
+#include "key_words.h"
 #include "../diff_func/headers/bin_tree.h"
 
 #define INPUT_FILE "expr.txt"
