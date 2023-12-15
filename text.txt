@@ -1,6 +1,6 @@
 once upon the time () {
 
-    x = 0;
+    x turn into 0;
 
     say the magic number (x);
 

@@ -19,7 +19,7 @@ int main() {
     printf("\n\n");
 
     for (size_t i = 0; i < data.size; i++)
-        printf("%s [%d]\n", data.names[i].name, data.names[i].type);
+        printf("\"%s\" [%d]\n", data.names[i].name, data.names[i].type);
 
     return SUCCESS;
 }

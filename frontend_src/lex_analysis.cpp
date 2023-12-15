@@ -23,14 +23,16 @@ const char *KEY_WORDS[NUMBER_OF_KEY_WORDS] = {  "sin", "cos", "sqrt", "ln", "not
                                                 "go left", "go right", "fairytale character"        // words to make code be like a fairytale
                                              };
 
-static int ReadNumber(char **buf, double *num);
+static int ReadNumber(char **buf, Vector *tokens, bool *is_found);
 static int ReadKeyWord(char **buf, Vector *tokens, bool *is_found);
 static int ReadName(char **buf, NamesTable *data, Vector *tokens);
 static int ReadPunctuation(char **buf, Vector *tokens, bool *is_found);
 static int ReadString(char **buf, NamesTable *data);
 static bool IsNameExists(const char *str, NamesTable *data, size_t *index);
+static bool IsValidSymbol(const char sym);
 
 const size_t START_NUM_OF_TOKENS = 8;
+
 
 int LexicalAnalysis(NamesTable *data, Vector *tokens, const char *filename) {
 
@@ -59,31 +61,22 @@ int LexicalAnalysis(NamesTable *data, Vector *tokens, const char *filename) {
             tmp += 1;
             continue;
         }
-        fprintf(stderr, "<<%s>>\n<<%s>>\n\n", tmp, buf);
+
         if (*tmp == '"') {
             tmp += 1;
-            if (ReadString(&tmp, data) == SUCCESS)
-                continue;
+            if (ReadString(&tmp, data) == SUCCESS) continue;
         }
 
         bool is_found = false;
-        if (ReadPunctuation(&tmp, tokens, &is_found) == SUCCESS) {
-            continue;
-        }
-        else if (is_found) {
-            return ERROR;
-        }
 
-        if (ReadKeyWord(&tmp, tokens, &is_found) == SUCCESS) {
-            continue;
-        }
-        else if (is_found) {
-            return ERROR;
-        }
+        if (ReadPunctuation(&tmp, tokens, &is_found) == SUCCESS) continue;
+        else if (is_found) return ERROR;
 
-        double num = 0;
-        if (ReadNumber(&tmp, &num) == SUCCESS)
-            continue;
+        if (ReadKeyWord(&tmp, tokens, &is_found) == SUCCESS) continue;
+        else if (is_found) return ERROR;
+
+        if (ReadNumber(&tmp, tokens, &is_found) == SUCCESS) continue;
+        else if (is_found) return ERROR;
 
         if (ReadName(&tmp, data, tokens) != SUCCESS)
             return ERROR;
@@ -95,6 +88,7 @@ int LexicalAnalysis(NamesTable *data, Vector *tokens, const char *filename) {
 
     return SUCCESS;
 }
+
 
 static int ReadPunctuation(char **buf, Vector *tokens, bool *is_found) {
 
@@ -147,6 +141,7 @@ static int ReadPunctuation(char **buf, Vector *tokens, bool *is_found) {
     return ERROR;
 }
 
+
 static int ReadKeyWord(char **buf, Vector *tokens, bool *is_found) {
 
     assert(buf);
@@ -159,6 +154,7 @@ static int ReadKeyWord(char **buf, Vector *tokens, bool *is_found) {
         if (strncmp(*buf, KEY_WORDS[i], KEY_WORD_LEN) == 0) {
             *is_found = true;
 
+            *buf += KEY_WORD_LEN;
             Token value = {};
 
             if (i < BINARY_OP_INDEX)
@@ -172,8 +168,12 @@ static int ReadKeyWord(char **buf, Vector *tokens, bool *is_found) {
 
             else if (i < ADD_WORDS_INDEX)
                 value = {FUNCTION, {.func_index = 0}};
+            else
+                return SUCCESS;
 
-            *buf += KEY_WORD_LEN;
+            if (PushBack(tokens, value) != SUCCESS)
+                return ERROR;
+
             return SUCCESS;
         }
     }
@@ -181,21 +181,31 @@ static int ReadKeyWord(char **buf, Vector *tokens, bool *is_found) {
     return ERROR;
 }
 
-static int ReadNumber(char **buf, double *num) {
+
+static int ReadNumber(char **buf, Vector *tokens, bool *is_found) {
 
     assert(buf);
     assert(*buf);
-    assert(num);
+    assert(tokens);
+    assert(is_found);
 
     char *end = NULL;
-    *num = strtod(*buf, &end);
+    double num = strtod(*buf, &end);
 
-    if (end == *buf) return ERROR;
+    if (end == *buf) {
+        *is_found = false;
+        return ERROR;
+    }
+
+    *is_found = true;
+    if (PushBack(tokens, (Token) {NUMBER, {.number = num}}) != SUCCESS)
+        return ERROR;
 
     *buf = end;
 
     return SUCCESS;
 }
+
 
 static int ReadName(char **buf, NamesTable *data, Vector *tokens) {
 
@@ -205,19 +215,30 @@ static int ReadName(char **buf, NamesTable *data, Vector *tokens) {
     assert(tokens);
 
     size_t len_of_var = 0;
-    while (*(*buf + len_of_var) != ' ' && *(*buf + len_of_var) != '\n')
+    while (IsValidSymbol(*(*buf + len_of_var)))
         len_of_var++;
+
+    if (len_of_var == 0) {
+        printf(RED "error: " END_OF_COLOR "invalid variable name\n");
+        return ERROR;
+    }
 
     char *name = (char *) calloc (len_of_var + 1, sizeof (char));
     if (!name) return NO_MEMORY;
 
-    sscanf(*buf, "%s", name);
+    sscanf(*buf, "%[^(){}; \n", name);
 
     NameType type = IsFuncBegin ? FUNC_NAME : VAR_NAME;
 
     size_t name_index = 0;
-    if (!IsNameExists(name, data, &name_index))
+    if (!IsNameExists(name, data, &name_index)) {
         name_index = data->size;
+
+        if (PushName(data, (Name) {name, type}) != SUCCESS) {
+            printf(RED "error: " END_OF_COLOR "unable to add new variable\n");
+            return ERROR;
+        }
+    }
 
     if (type == FUNC_NAME)
         tokens->data[tokens->size - 1].func_index = name_index;
@@ -226,15 +247,12 @@ static int ReadName(char **buf, NamesTable *data, Vector *tokens) {
             return ERROR;
 
 
-    if (PushName(data, (Name) {name, type}) != SUCCESS) {
-        printf(RED "error: " END_OF_COLOR "unable to add new variable\n");
-        return ERROR;
-    }
 
     *buf += len_of_var;
 
     return SUCCESS;
 }
+
 
 static int ReadString(char **buf, NamesTable *data) {
 
@@ -257,6 +275,7 @@ static int ReadString(char **buf, NamesTable *data) {
     return SUCCESS;
 }
 
+
 static bool IsNameExists(const char *str, NamesTable *data, size_t *name_index) {
 
     assert(str);
@@ -270,4 +289,17 @@ static bool IsNameExists(const char *str, NamesTable *data, size_t *name_index) 
         }
 
     return false;
+}
+
+
+static bool IsValidSymbol(const char sym) {
+
+    const size_t PUNC_SYM_NUM = 7;
+    char punct_symbols[PUNC_SYM_NUM] = {'(', ')', '{', '}', ';', '\n', ' '};
+
+    for (size_t i = 0; i < PUNC_SYM_NUM; i++)
+        if (sym == punct_symbols[i])
+            return false;
+
+    return true;
 }

@@ -7,6 +7,14 @@
 #include "../headers/parse_dsl.h"
 #include "../diff_func/headers/diff_dsl.h"
 
+/*
+    G ::= E '\0'
+    E ::= T (['+','-'] T)*
+    T ::= P (['*,'/'] P)*
+    P ::= '(' E ')' || N
+    N ::= (['0','1','2','3','4','5','6','7','8','9'])+
+*/
+
 int StringParse(NamesTable *names, Vector *tokens, TreeStruct *tree) {
 
     assert(tokens);
