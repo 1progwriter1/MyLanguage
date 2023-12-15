@@ -13,36 +13,6 @@ enum ValueType {
     STRING    =  7,
 };
 
-enum Punctuation {
-    END_SYMBOL     = 0, // \0
-
-    OP_PARENTHESIS = 1, // (
-    CL_PARENTHESIS = 2, // )
-
-    OP_BRACE       = 3, // {
-    CL_BRACE       = 4, // }
-
-    NEW_LINE       = 5, // ;
-
-};
-
-enum Binary_Op {
-    ADD    = 0,
-    SUB    = 1,
-    MUL    = 2,
-    DIV    = 3,
-    POW    = 4,
-
-    EQUAL  = 5,
-    ABOVE  = 6,
-    BELOW  = 7,
-    BEL_EQ = 8,
-    AB_EQ  = 9,
-    NOT_EQ = 10,
-
-    ASSIGN = 11,
-};
-
 enum Unary_Op {
     SIN   = 0,
     COS   = 1,
@@ -55,35 +25,54 @@ enum Unary_Op {
     OUT_S = 6,
     IN    = 7,
 
-    CALL    = 8,
-    RET = 9,
+    CALL  = 8,
+    RET   = 9,
+};
+
+enum Binary_Op {
+    ADD    = 10,
+    SUB    = 11,
+    MUL    = 12,
+    DIV    = 13,
+    POW    = 14,
+
+    EQUAL  = 15,
+    ABOVE  = 16,
+    BELOW  = 17,
+    AB_EQ  = 18,
+    BEl_EQ = 19,
+    NOT_EQ = 20,
+
+    ASSIGN = 21,
 };
 
 enum Key_Op {
-    IF    = 0,
-    WHILE = 1,
+    IF    = 22,
+    WHILE = 23,
+};
+
+enum Punctuation {
+    NEW_LINE       = 24, // ;
+
+    END_SYMBOL     = 25, // \0
+
+    OP_PARENTHESIS = 26, // (
+    CL_PARENTHESIS = 27, // )
+
+    OP_BRACE       = 28, // {
+    CL_BRACE       = 29, // }
 };
 
 const size_t NUMBER_OF_KEY_WORDS = 29;
 
 enum KeyWordIndex {
-    FUNCTION_DEF_INDEX = 0,
-    BINARY_OP_INDEX    = 2,
-    UNARY_OP_INDEX     = 14,
-    KEY_OP_INDEX       = 24,
+    UNARY_OP_INDEX     = 0,
+    BINARY_OP_INDEX    = 10,
+    KEY_OP_INDEX       = 22,
+    FUNCTION_DEF_INDEX = 24,
     ADD_WORDS_INDEX    = 26,
 };
 
-static const char *KEY_WORDS[NUMBER_OF_KEY_WORDS] = {   "Once upon a time", "fairytale",                // main, function
-                                                        "+", "-", "*", "/", "^", "turned into",         // +, -, *, /, ^, ==
-                                                        "stronger", "weeker", "not stronger",           // >, <, <=
-                                                        "not weeker", "did not turn into", "turn into", // >=, != =
-                                                        "sin", "cos", "sqrt", "ln", "not",              // sin, cos, sqrt, ln, !
-                                                        "say the magic number", "say the magic word",   // printf("%lg"), printf("%s")
-                                                        "guess the riddle", "end",                      // scanf("%lg"), return from function
-                                                        "and they lived happily ever after",            // return from main
-                                                        "stone", "fell into a dead sleep while",        // if, while
-                                                        "go left", "go right", "fairytale character"    // words to make code be like a fairy tale
-                                                    };
+extern const char *KEY_WORDS[NUMBER_OF_KEY_WORDS];
 
 #endif

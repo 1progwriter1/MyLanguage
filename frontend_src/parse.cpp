@@ -21,7 +21,7 @@ int StringParse(NamesTable *names, Vector *tokens, TreeStruct *tree) {
     tree->root = GetExpression(&data, tree);
     if (!tree->root) return ERROR;
 
-    if (tokens->data[data.position].type != TOKEN_PUNCT_SYM) {
+    if (!IsEndSym(data.position)) {
         printf(RED "Syntax error: " END_OF_COLOR "\nexpected: \\0\n");
         TreeRootDtor(tree);
         return ERROR;
@@ -48,7 +48,7 @@ TreeNode *GetExpression(StringParseData *data, TreeStruct *tree) {
     TreeNode *ptr_fst = GetTerm(data, tree);
     if (!ptr_fst) return NULL;
 
-    while (IsAdd(data->position) || IsSub(data->position)) {
+    while (IsBinOp(data->position, ADD) || IsBinOp(data->position, SUB)) {
 
         size_t old_position = data->position;
         data->position += 1;
@@ -57,11 +57,11 @@ TreeNode *GetExpression(StringParseData *data, TreeStruct *tree) {
         if (!ptr_snd) return NULL;
 
 
-        if (IsAdd(old_position)) {
-            return NEW_S(OP(ADD), ptr_fst, ptr_snd);
+        if (IsBinOp(old_position, ADD)) {
+            return NEW_S(BIN_OP(ADD), ptr_fst, ptr_snd);
         }
-        if (IsSub(old_position)) {
-            return NEW_S(OP(SUB), ptr_fst, ptr_snd);
+        if (IsBinOp(old_position, SUB)) {
+            return NEW_S(BIN_OP(SUB), ptr_fst, ptr_snd);
         }
     }
     return ptr_fst;
@@ -76,7 +76,7 @@ TreeNode *GetTerm(StringParseData *data, TreeStruct *tree) {
     TreeNode *ptr_fst = GetPrimaryExpression(data, tree);
     if (!ptr_fst) return NULL;
 
-    while (IsMul(data->position) || IsDiv(data->position)) {
+    while (IsBinOp(data->position, MUL) || IsBinOp(data->position, DIV)) {
 
         size_t old_position = data->position;
         data->position += 1;
@@ -84,11 +84,11 @@ TreeNode *GetTerm(StringParseData *data, TreeStruct *tree) {
         TreeNode *ptr_snd = GetPrimaryExpression(data, tree);
         if (!ptr_snd) return NULL;
 
-        if (IsMul(old_position)) {
-            return NEW_S(OP(MUL), ptr_fst, ptr_snd);
+        if (IsBinOp(old_position, MUL)) {
+            return NEW_S(BIN_OP(MUL), ptr_fst, ptr_snd);
         }
-        if (IsDiv(old_position)) {
-            return NEW_S(OP(DIV), ptr_fst, ptr_snd);
+        if (IsBinOp(old_position, DIV)) {
+            return NEW_S(BIN_OP(DIV), ptr_fst, ptr_snd);
         }
     }
 
@@ -101,7 +101,7 @@ TreeNode *GetPrimaryExpression(StringParseData *data, TreeStruct *tree) {
     assert(data->tokens);
     assert(tree);
 
-    if (IsOpBracket(data->position)) {
+    if (IsPunct(data->position, OP_PARENTHESIS)) {
 
         data->position += 1;
         TreeNode *ptr = GetExpression(data, tree);
@@ -125,16 +125,16 @@ TreeNode *GetUnary(StringParseData *data, TreeStruct *tree) {
     assert(tree);
 
     TreeNode *ptr = NULL;
-    if (IsCos(data->position)) {
+    if (IsUnOp(data->position, COS)) {
         data->position += 1;
-        if (IsOpBracket(data->position)) {
-            ptr = NEW_S(OP(COS), NULL, GetExpression(data, tree));
+        if (IsPunct(data->position, OP_PARENTHESIS)) {
+            ptr = NEW_S(UN_OP(COS), NULL, GetExpression(data, tree));
         }
     }
-    if (IsSin(data->position)) {
+    if (IsUnOp(data->position, SIN)) {
         data->position += 1;
-        if (IsOpBracket(data->position)) {
-            ptr = NEW_S(OP(COS), NULL, GetExpression(data, tree));
+        if (IsPunct(data->position, OP_PARENTHESIS)) {
+            ptr = NEW_S(UN_OP(COS), NULL, GetExpression(data, tree));
         }
     }
 

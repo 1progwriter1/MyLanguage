@@ -1,4 +1,6 @@
 .vscode
-diff_func
-Graphviz
 *.o
+*.dot
+*.png
+*.out
+*.txt

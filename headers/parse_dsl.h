@@ -1,31 +1,19 @@
 #ifndef PARSING_DSL
 #define PARSING_DSL
 
-#define PAR_ASSERT              if (!IsClBracket(data->position)) {                                             \
+#define PAR_ASSERT              if (!IsPunct(data->position, CL_PARENTHESIS)) {                                 \
                                                 printf(RED "Syntax error: " END_OF_COLOR "\nexpexted: )\n");    \
                                                 data->error = CL_PARENTHESIS_MISSED;                            \
-                                                return 0;}                                                      \
+                                                return NULL;}                                                   \
 //TODO: reduce
-#define IsOperation(position)   (data->tokens->data[position].type == TOKEN_OPERATION)
+#define IsBinOp(position, operation) ((data->tokens->data[position].type == BINARY_OP) && (data->tokens->data[position].bin_op == operation))
 
-#define IsAdd(position)         (IsOperation(position) && (data->tokens->data[position].operation == TOKEN_ADD))
+#define IsUnOp(position, operation)  ((data->tokens->data[position].type == UNARY_OP) && (data->tokens->data[position].un_op == operation))
 
-#define IsSub(position)         (IsOperation(position) && (data->tokens->data[position].operation == TOKEN_SUB))
+#define IsPunct(position, symbol)    ((data->tokens->data[position].type == PUNCT_SYM) && (data->tokens->data[position].sym_code == symbol))
 
-#define IsDiv(position)         ((IsOperation(position)&& (data->tokens->data[position].operation == TOKEN_DIV))
+#define IsEndSym(position)           ((data.tokens->data[position].type == PUNCT_SYM) && (data.tokens->data[position].sym_code == END_SYMBOL))
 
-#define IsMul(position)         (IsOperation(position) && (data->tokens->data[position].operation == TOKEN_MUL))
-
-#define IsCos(position)         (IsOperation(position) && (data->tokens->data[position].sys_word == SW_COS))
-
-#define IsSin(position)         (IsOperation(position) && (data->tokens->data[position].sys_word == SW_SIN))
-
-
-
-#define IsClBracket(position)   (data->tokens->data[position].type == TOKEN_CL_BRACKET)
-
-#define IsOpBracket(position)   (data->tokens->data[position].type == TOKEN_OP_BRACKET)
-
-#define IsNumber(position)       (data->tokens->data[position].type == TOKEN_NUMBER)
+#define IsNumber(position)           (data->tokens->data[position].type == NUMBER)
 
 #endif

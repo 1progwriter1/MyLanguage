@@ -21,7 +21,7 @@ all: $(SOURCES)
 front:
 	$(COMP) $(CFLAGS) -c $(FRONT_SRC) frontend.cpp
 	$(COMP) $(CFLAGS) $(FRONT_OBJ) $(LIB_OBJ) frontend.o -o front.out
-	mv $(OBJECTS) $(OBJ_DIR)/
+	mv $(FRONT_OBJ) frontend.o $(OBJ_DIR)/
 
 clean:
 	rm -f $(OBJ_MOVED)

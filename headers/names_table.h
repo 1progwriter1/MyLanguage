@@ -8,7 +8,7 @@ enum NameType {
     VAR_NAME  = 0,
     KEY_WORD  = 1,
     FUNC_NAME = 2,
-    STRING    = 3
+    STR       = 3
 };
 
 struct Name {
@@ -22,7 +22,7 @@ struct NamesTable {
     size_t capacity;
 };
 
-int NamesTableCtor(NamesTable *data, const char *KEY_WORDS[]);
+int NamesTableCtor(NamesTable *data);
 int NamesTableDtor(NamesTable *data);
 int PushName(NamesTable *data, Name value);
 int PopName(NamesTable *data, Name *dst);

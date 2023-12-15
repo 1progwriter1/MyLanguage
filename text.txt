@@ -1,23 +1,8 @@
-once upon a time () {
+once upon the time () {
 
-    fairytale character nesmeyana turn into 0;
+    x = 0;
 
-    fairytale character frog = 8
+    say the magic number (x);
 
-    stone (nesmeyana turned into frog)
-        go right {
-        }
-        go left {
-        }
-
-    fell into a dead sleep while () {
-
-    }
-
-    and they lived happily ever after
-}
-
-fiarytale () {
-
-    end
+    and they lived happily ever after;
 }

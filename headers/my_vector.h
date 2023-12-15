@@ -13,7 +13,7 @@ struct Token {
         Key_Op key_op;
         size_t var_index;
         size_t func_index;
-        Punctuation code;
+        Punctuation sym_code;
         const char *string;
     };
 };

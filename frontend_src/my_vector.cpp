@@ -88,8 +88,10 @@ static int Resize(Vector *vec, VecChangeSize action) {
     }
 
     vec->data = (Vec_t *) realloc (vec->data, sizeof (Vec_t) * vec->capacity);
-    if (!vec->data)
+    if (!vec->data) {
+        printf(RED "Vector error: " END_OF_COLOR "memory allocation error\n");
         return NO_MEMORY;
+    }
 
     for (size_t i = vec->size; i < vec->capacity; i++) {
         vec->data[i] = (Token) {};
@@ -102,11 +104,11 @@ static int VerifyVector(Vector *vec) {
     assert(vec);
 
     if (!vec->data) {
-        printf(RED "Vector data: NULL" END_OF_COLOR "\n");
+        printf(RED "Vector verifying: " END_OF_COLOR "NULL data\n");
         return ERROR;
     }
     if (vec->size > vec->capacity) {
-        printf(RED "Vector: incorrect size or capacity" END_OF_COLOR "\n");
+        printf(RED "Vector verifying: " END_OF_COLOR "incorrect size or capacity\n");
         return ERROR;
     }
 

@@ -13,7 +13,7 @@ const size_t INCREASE = 2;
 static int NamesTableVerify(NamesTable *data);
 static int NamesTableResize(NamesTable *data, const ResizeOptions option);
 
-int NamesTableCtor(NamesTable *data, const char *KEY_WORDS[]) {
+int NamesTableCtor(NamesTable *data) {
 
     assert(data);
 

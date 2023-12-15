@@ -7,9 +7,21 @@
 
 // ask about const
 
-#define KEY_WORD_LEN sizeof (KEY_WORDS[i]) - 1
+#define KEY_WORD_LEN strlen(KEY_WORDS[i])
 
 #define IsFuncBegin (tokens->data[tokens->size - 1].type == FUNCTION)
+
+const char *KEY_WORDS[NUMBER_OF_KEY_WORDS] = {  "sin", "cos", "sqrt", "ln", "not",                  //sin, cos, sqrt, ln, not
+                                                "say the magic number", "say the magic word",       // printf("%lg"), printf("%s")
+                                                "guess the riddle", "end",                          // scanf("%lg"), return function
+                                                "and they lived happily ever after",                // return main
+                                                "+", "-", "*", "/", "^", "turned into",             // +, -, *, /, ^, ==
+                                                "stronger", "weeker", "not weeker",                 // >, <, >=
+                                                "not stronger", "did not turn into", "turn into",   // <=, !=, =
+                                                "stone", "fell into a dead sleep while",            // if, while
+                                                "fairytale", "once upon the time",                  // begin function, begin main
+                                                "go left", "go right", "fairytale character"        // words to make code be like a fairytale
+                                             };
 
 static int ReadNumber(char **buf, double *num);
 static int ReadKeyWord(char **buf, Vector *tokens, bool *is_found);
@@ -29,7 +41,7 @@ int LexicalAnalysis(NamesTable *data, Vector *tokens, const char *filename) {
     char *buf = readbuf(filename);
     if (!buf) return ERROR;
 
-    if (NamesTableCtor(data, KEY_WORDS) != SUCCESS) {
+    if (NamesTableCtor(data) != SUCCESS) {
         free(buf);
         return ERROR;
     }
@@ -43,13 +55,13 @@ int LexicalAnalysis(NamesTable *data, Vector *tokens, const char *filename) {
     char *tmp = buf;
     while (*tmp != '\0') {
 
-        if (*tmp == ' ') {
-            tmp++;
+        if (*tmp == ' ' || *tmp == '\n') {
+            tmp += 1;
             continue;
         }
-
+        fprintf(stderr, "<<%s>>\n<<%s>>\n\n", tmp, buf);
         if (*tmp == '"') {
-            *tmp += 1;
+            tmp += 1;
             if (ReadString(&tmp, data) == SUCCESS)
                 continue;
         }
@@ -78,7 +90,7 @@ int LexicalAnalysis(NamesTable *data, Vector *tokens, const char *filename) {
 
     }
 
-    if (PushBack(tokens, (Token) {PUNCT_SYM, {.code = END_SYMBOL}}) != SUCCESS)
+    if (PushBack(tokens, (Token) {PUNCT_SYM, {.sym_code = END_SYMBOL}}) != SUCCESS)
         return ERROR;
 
     return SUCCESS;
@@ -126,7 +138,7 @@ static int ReadPunctuation(char **buf, Vector *tokens, bool *is_found) {
 
     if (*is_found) {
         *buf += 1;
-        if (PushBack(tokens, (Token) {PUNCT_SYM, {.code = code}}) != SUCCESS)
+        if (PushBack(tokens, (Token) {PUNCT_SYM, {.sym_code = code}}) != SUCCESS)
             return ERROR;
 
         return SUCCESS;
@@ -150,13 +162,16 @@ static int ReadKeyWord(char **buf, Vector *tokens, bool *is_found) {
             Token value = {};
 
             if (i < BINARY_OP_INDEX)
-                value = {FUNCTION, {.func_index = 0}};
-            else if (i < UNARY_OP_INDEX)
-                value = {BINARY_OP, {.bin_op = (Binary_Op) (i - BINARY_OP_INDEX)}};
+                value = {UNARY_OP, {.un_op = (Unary_Op) i}};
+
             else if (i < KEY_OP_INDEX)
-                value = {UNARY_OP, {.un_op = (Unary_Op) (i - UNARY_OP_INDEX)}};
+                value = {BINARY_OP, {.bin_op = (Binary_Op) i}};
+
+            else if (i < FUNCTION_DEF_INDEX)
+                value = {KEY_OP, {.key_op = (Key_Op) i}};
+
             else if (i < ADD_WORDS_INDEX)
-                value = {KEY_OP, {.key_op = (Key_Op) (i - KEY_OP_INDEX)}};
+                value = {FUNCTION, {.func_index = 0}};
 
             *buf += KEY_WORD_LEN;
             return SUCCESS;
@@ -190,7 +205,7 @@ static int ReadName(char **buf, NamesTable *data, Vector *tokens) {
     assert(tokens);
 
     size_t len_of_var = 0;
-    while (*buf[len_of_var] != ' ')
+    while (*(*buf + len_of_var) != ' ' && *(*buf + len_of_var) != '\n')
         len_of_var++;
 
     char *name = (char *) calloc (len_of_var + 1, sizeof (char));
@@ -201,11 +216,15 @@ static int ReadName(char **buf, NamesTable *data, Vector *tokens) {
     NameType type = IsFuncBegin ? FUNC_NAME : VAR_NAME;
 
     size_t name_index = 0;
-    if (IsNameExists(name, data, &name_index)) {
+    if (!IsNameExists(name, data, &name_index))
+        name_index = data->size;
 
-    }
     if (type == FUNC_NAME)
-        tokens->data[tokens->size - 1].func_index = data->size;
+        tokens->data[tokens->size - 1].func_index = name_index;
+    else
+        if (PushBack(tokens, {VARIABLE, {.var_index = name_index}}) != SUCCESS)
+            return ERROR;
+
 
     if (PushName(data, (Name) {name, type}) != SUCCESS) {
         printf(RED "error: " END_OF_COLOR "unable to add new variable\n");
@@ -232,21 +251,21 @@ static int ReadString(char **buf, NamesTable *data) {
 
     sscanf(*buf, "%[^\"]", string);
 
-    if (PushName(data, (Name) {string, STRING}) != SUCCESS)
+    if (PushName(data, (Name) {string, STR}) != SUCCESS)
         return ERROR;
 
     return SUCCESS;
 }
 
-static bool IsNameExists(const char *str, NamesTable *data) {
+static bool IsNameExists(const char *str, NamesTable *data, size_t *name_index) {
 
     assert(str);
     assert(data);
-    assert(index);
+    assert(name_index);
 
     for (size_t i = NUMBER_OF_KEY_WORDS - 1; i < data->size; i++)
         if (strcmp(data->names[i].name, str) == 0) {
-            *index = i;
+            *name_index = i;
             return true;
         }
 
