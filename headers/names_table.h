@@ -2,7 +2,7 @@
 #define NAMES_TABLE_LANG
 
 #include <stdio.h>
-#include "key_words.h"
+#include "key_words_codes.h"
 
 enum NameType {
     VAR_NAME  = 0,

@@ -3,13 +3,11 @@
 #include "calculate.h"
 #include <assert.h>
 #include "../MyLibraries/headers/systemdata.h"
-#include "gen_graph_diff.h"
 #include "../MyLibraries/headers/func.h"
 #include <stdbool.h>
 #include "bin_tree.h"
 #include "diff_dsl.h"
 #include <math.h>
-#include "tree_output.h"
 
 const char *SIMPLIFYING_PHRASES[] = {
     "Очевидно, что",

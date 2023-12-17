@@ -1,11 +1,23 @@
 #ifndef DIFFERENTIATOR_DSL
 #define DIFFERENTIATOR_DSL
 
+// std::expected
+
+// struct {error, node}
+
 #define CALC(node) CalculateNode(node, vars, error)
+
+#define PUNCT(sym)   (Token) {PUNCT_SYM, {.sym_code = sym}}
+
+#define KEY_OP(oper) (Token) {KEY_OP, {.key_op = oper}}
 
 #define UN_OP(oper)  (Token) {UNARY_OP, {.un_op = oper}}
 
 #define BIN_OP(oper) (Token) {BINARY_OP, {.bin_op = oper}}
+
+#define STR(str)     (Token) {STRING, {.string = str}}
+
+#define FUNC(code)   (Token) {FUNCTION, {.func_index = code}}
 
 #define NUM(num)     (Token) {NUMBER, {.number = num}}
 

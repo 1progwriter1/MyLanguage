@@ -5,12 +5,15 @@ COMP=g++
 OBJ_DIR=object_files
 LIB_DIR=libs_objects
 FRONT_DIR=frontend_src
+GRAPH_DIR=Graphviz
 SOURCES=$(wildcard src/*.cpp)
 OBJECTS=$(wildcard *.o)
 OBJ_MOVED=$(wildcard $(OBJ_DIR)/*.o)
 LIB_OBJ=$(wildcard $(LIB_DIR)/*.o)
+GRAPH_SRC=$(wildcard $(GRAPH_DIR)/*.cpp)
+GRAPH_OBJ=$(patsubst $(GRAPH_DIR)/%.cpp, %.o, $(GRAPH_SRC))
 FRONT_SRC=$(wildcard $(FRONT_DIR)/*.cpp)
-FRONT_OBJ=$(patsubst frontend_src/%.cpp, %.o, $(FRONT_SRC))
+FRONT_OBJ=$(patsubst $(FRONT_DIR)/%.cpp, %.o, $(FRONT_SRC))
 
 
 all: $(SOURCES)
@@ -19,9 +22,9 @@ all: $(SOURCES)
 	$(COMP) $(CFLAGS) $(OBJ_MOVED) $(LIB_OBJ)
 
 front:
-	$(COMP) $(CFLAGS) -c $(FRONT_SRC) frontend.cpp
-	$(COMP) $(CFLAGS) $(FRONT_OBJ) $(LIB_OBJ) frontend.o -o front.out
-	mv $(FRONT_OBJ) frontend.o $(OBJ_DIR)/
+	$(COMP) $(CFLAGS) -c $(FRONT_SRC) $(GRAPH_SRC) frontend.cpp
+	$(COMP) $(CFLAGS) $(FRONT_OBJ) $(LIB_OBJ) $(GRAPH_OBJ) frontend.o -o front.out
+	mv $(FRONT_OBJ) $(GRAPH_OBJ) frontend.o $(OBJ_DIR)/
 
 clean:
 	rm -f $(OBJ_MOVED)

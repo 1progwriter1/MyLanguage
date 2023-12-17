@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "../headers/my_vector.h"
 #include <assert.h>
+#include <string.h>
 #include "../../MyLibraries/headers/systemdata.h"
 
 const int INCREASE = 2;
@@ -93,9 +94,8 @@ static int Resize(Vector *vec, VecChangeSize action) {
         return NO_MEMORY;
     }
 
-    for (size_t i = vec->size; i < vec->capacity; i++) {
-        vec->data[i] = (Token) {};
-    }
+    memset(vec->data + vec->size, 0, vec->capacity - vec->size);
+
     return SUCCESS;
 }
 

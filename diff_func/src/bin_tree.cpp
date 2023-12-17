@@ -37,22 +37,18 @@ TreeNode *TreeNodeNew(TreeStruct *tree, Token value, TreeNode *left, TreeNode *r
 
 TreeNode *TreeNodeNewSafe(TreeStruct *tree, Token value, TreeNode *left, TreeNode *right) {
 
-    if (!right)
-        return NULL;
+    assert(tree);
 
-    if (value.type == BINARY_OP)
-        if (!left)
+    if (value.type == UNARY_OP)
+        if (!right)
             return NULL;
 
-    TreeNode *node = (TreeNode *) calloc (1, sizeof (TreeNode));
-    if (!node)
-        return NULL;
+    if (value.type == BINARY_OP || value.type == KEY_OP)
+        if (!left || !right)
+            return NULL;
 
-    node->value = value;
-    node->left  = left;
-    node->right = right;
-
-    tree->size++;
+    TreeNode *node = TreeNodeNew(tree, value, left, right);
+    if (!node) return NULL;
 
     return node;
 }
@@ -77,7 +73,9 @@ int TreeRootDtor(TreeStruct *tree) {
 int NodeDtor(TreeStruct *tree, TreeNode *node) {
 
     assert(tree);
-    assert(node);
+
+    if (!node)
+        return SUCCESS;
 
     if (node->left) {
         NodeDtor(tree, node->left);

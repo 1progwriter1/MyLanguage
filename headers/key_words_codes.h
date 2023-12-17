@@ -1,8 +1,7 @@
-#ifndef SYSTEM_WORDS_LANG
-#define SYSTEM_WORDS_LANG
+#ifndef KEY_WORDS_CODES
+#define KEY_WORDS_CODES
 
 enum ValueType {
-    NO_TYPE   = -1,
     PUNCT_SYM =  0,
     BINARY_OP =  1,
     UNARY_OP  =  2,

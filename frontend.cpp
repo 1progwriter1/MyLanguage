@@ -3,23 +3,32 @@
 #include "headers/names_table.h"
 #include "headers/lex_analysis.h"
 #include "headers/parse.h"
-
-// bash script
+#include "Graphviz/gen_graph_lang.h"
 
 int main() {
+
     NamesTable data = {};
     Vector tokens = {};
+    TreeStruct tree = {};
 
-    if (LexicalAnalysis(&data, &tokens, "text.txt") != SUCCESS)
+    if (LexicalAnalysis(&data, &tokens, "text.txt") != SUCCESS) {
+        printf(RED "error: " END_OF_COLOR "lexical analysis failed\n");
         return ERROR;
+    }
 
-    for (size_t i = 0; i < tokens.size; i++)
-        printf("%lu) %d\n", i, tokens.data[i]);
+    for (size_t i = 0; i < tokens.size; i++) {
+        fprintf(stderr, "%d ", tokens.data[i].type);
+    }
 
-    printf("\n\n");
+    if (StringParse(&tokens, &tree) != SUCCESS) {
+        printf(RED "error: " END_OF_COLOR "string parse failed\n");
+        return ERROR;
+    }
 
-    for (size_t i = 0; i < data.size; i++)
-        printf("\"%s\" [%d]\n", data.names[i].name, data.names[i].type);
+    if (GenGraphLang(&tree, GRAPH_FILE) != SUCCESS) {
+        printf(RED "error: " END_OF_COLOR "graph generation failed\n");
+        return ERROR;
+    }
 
     return SUCCESS;
 }

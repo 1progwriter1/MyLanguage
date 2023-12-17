@@ -3,6 +3,9 @@
 #include <assert.h>
 #include "../../MyLibraries/headers/systemdata.h"
 
+// void*
+// size_t size
+
 enum ResizeOptions {
     kResizeRaise = 0,
     kResizeCut   = 1,
@@ -103,7 +106,7 @@ static int NamesTableResize(NamesTable *data, const ResizeOptions option) {
     if (!data->names) return NO_MEMORY;
 
     for (size_t i = old_capacity; i < data->capacity; i++)
-        data->names[i] = {};
+        data->names[i] = {}; //memset
 
     return SUCCESS;
 }

@@ -2,7 +2,7 @@
 #define VECTOR_CPU
 
 #include <stdio.h>
-#include "key_words.h"
+#include "key_words_codes.h"
 
 struct Token {
     ValueType type;
@@ -14,7 +14,7 @@ struct Token {
         size_t var_index;
         size_t func_index;
         Punctuation sym_code;
-        const char *string;
+        char *string;
     };
 };
 

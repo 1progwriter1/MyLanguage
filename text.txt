@@ -1,8 +1,7 @@
-once upon the time () {
+once upon the time {
 
     x turn into 0;
 
     say the magic number (x);
 
-    and they lived happily ever after;
 }
