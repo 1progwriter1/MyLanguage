@@ -20,7 +20,7 @@ int main() {
     }
 
     if (GenAsmCode(&tree, ASM_FILE) != SUCCESS) {
-        printf(RED "error: " END_OF_COLOR "asm code gen  failed\n");
+        printf(RED "error: " END_OF_COLOR "asm code gen failed\n");
         return ERROR;
     }
 

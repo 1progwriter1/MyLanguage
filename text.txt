@@ -1,5 +1,9 @@
 once upon the time {
 
-    say the magic word ("hello world\n");
-
+    x turn into 123 + 11;
+    fell into a dead sleep while (x stronger 10) {
+        x turn into x - 1;
+    }
+    say the magic word ("answer: ");
+    say the magic number (x);
 }
