@@ -20,6 +20,9 @@ enum ParseError {
     ASSIGN_ERROR,
     NEW_LINE_ERROR,
     COPY_ERROR,
+    MEMORY_ERROR,
+    UNARY_OP_ERROR,
+    CONDITION_ERROR,
 };
 
 struct StringParseData {
@@ -42,9 +45,7 @@ TreeNode *GetNumber(StringParseData *data, TreeStruct *tree);
 
 TreeNode *GetUnary(StringParseData *data, TreeStruct *tree);
 
-TreeNode *GetIf(StringParseData *data, TreeStruct *tree);
-
-TreeNode *GetWhile (StringParseData *data, TreeStruct *tree);
+TreeNode *GetKeyOp(StringParseData *data, TreeStruct *tree);
 
 TreeNode *GetAssign(StringParseData *data, TreeStruct *tree);
 

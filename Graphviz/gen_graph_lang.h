@@ -5,7 +5,7 @@
 #include "../diff_func/headers/bin_tree.h"
 
 #define GRAPH_FILE "Graphviz/graph.png"
-#define GRAPH_SRC  "Graphvizgraph.dot"
+#define GRAPH_SRC  "Graphviz/graph.dot"
 
 int GenGraphLang(const TreeStruct *tree, const char *filename);
 

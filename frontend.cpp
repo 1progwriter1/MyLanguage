@@ -4,6 +4,7 @@
 #include "headers/lex_analysis.h"
 #include "headers/parse.h"
 #include "Graphviz/gen_graph_lang.h"
+#include "headers/prog_output.h"
 
 int main() {
 
@@ -16,10 +17,6 @@ int main() {
         return ERROR;
     }
 
-    for (size_t i = 0; i < tokens.size; i++) {
-        fprintf(stderr, "%d ", tokens.data[i].type);
-    }
-
     if (StringParse(&tokens, &tree) != SUCCESS) {
         printf(RED "error: " END_OF_COLOR "string parse failed\n");
         return ERROR;
@@ -29,6 +26,9 @@ int main() {
         printf(RED "error: " END_OF_COLOR "graph generation failed\n");
         return ERROR;
     }
+
+    if (PrintInFile(&tree, PROG_FILE) != SUCCESS)
+        return ERROR;
 
     return SUCCESS;
 }

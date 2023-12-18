@@ -1,7 +1,5 @@
 once upon the time {
 
-    x turn into 0;
-
-    say the magic number (x);
+    say the magic word ("hello world\n");
 
 }
