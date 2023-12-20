@@ -16,17 +16,17 @@ once upon the time {
     say the magic word ("Enter c: ");
     guess the riddle (c);
 
+    stone (a turned into 0)
+    go right {
+        Linear();
+        end;
+    }
+
     d turn into b * b - 4 * (a * c);
 
     stone (d not weeker 0)
     go right {
-        stone (d turned into 0)
-        go right {
-            Linear();
-        }
-        go left {
-            Square();
-        }
+        Square();
     }
     go left {
       say the magic word ("no roots");
@@ -47,7 +47,7 @@ fairytale Linear {
       end;
    }
 
-   x turn into -1 * b / (2 * a);
+   x turn into -1 * c / b;
    say the magic word ("x = ");
    say the magic number (x);
 
@@ -55,6 +55,14 @@ fairytale Linear {
 }
 
 fairytale Square {
+
+    stone (d turned into 0)
+    go right {
+        x turn into -1 * b / (2 * a);
+        say the magic word ("x = ");
+        say the magic number (x);
+        end;
+    }
 
    x1 turn into (-1 * b + sqrt(d)) / (2 * a);
    x2 turn into (-1 * b - sqrt(d)) / ( 2 * a);
