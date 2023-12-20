@@ -2,7 +2,7 @@
 #define BIN_TREE_FUNC
 
 #include <stdio.h>
-#include "../../headers/my_vector.h"
+#include "../headers/my_vector.h"
 
 typedef Token Tree_t;
 #define tree_output_id "%d"

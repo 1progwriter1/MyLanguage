@@ -1,10 +1,10 @@
 #include <stdio.h>
-#include "../headers/bin_tree.h"
+#include "bin_tree.h"
 #include <assert.h>
-#include "../../../MyLibraries/headers/systemdata.h"
-#include "../../../MyLibraries/headers/func.h"
+#include "../../MyLibraries/headers/systemdata.h"
+#include "../../MyLibraries/headers/func.h"
 #include <string.h>
-#include "../../../MyLibraries/headers/file_func.h"
+#include "../../MyLibraries/headers/file_func.h"
 #include "../headers/calculate.h"
 
 static int WalkTree(TreeNode *node, size_t *col_nodes);

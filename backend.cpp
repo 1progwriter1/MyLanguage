@@ -3,7 +3,7 @@
 #include "../MyLibraries/headers/systemdata.h"
 #include "Graphviz/gen_graph_lang.h"
 #include "headers/file_read_lang.h"
-#include "diff_func/headers/bin_tree.h"
+#include "bin_tree/bin_tree.h"
 #include "headers/gen_asm.h"
 
 int main(const int argc, const char *argv[]) {

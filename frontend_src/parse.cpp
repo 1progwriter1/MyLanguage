@@ -4,7 +4,7 @@
 #include <string.h>
 #include "../../MyLibraries/headers/file_func.h"
 #include "../headers/parse.h"
-#include "../diff_func/headers/diff_dsl.h"
+#include "../headers/diff_dsl.h"
 
 /*
     G  ::= B '\0'
@@ -410,13 +410,15 @@ TreeNode *GetExpression(StringParseData *data, TreeStruct *tree) {
     RETURN_ON_ERROR(ptr_fst, NULL)
     if (!ptr_fst) return NULL;
 
-    if (IsBinOp(data, ADD) || IsBinOp(data, SUB)) {
+    while (IsBinOp(data, ADD) || IsBinOp(data, SUB)) {
 
         Binary_Op operation = BinaryOp(data);
         data->position++;
 
         TreeNode *ptr_snd = GetTerm(data, tree);
         RETURN_ON_ERROR(ptr_fst, ptr_snd)
+
+
 
         ptr_fst = NEW_S(BIN_OP(operation), ptr_fst, ptr_snd);
 
@@ -432,7 +434,7 @@ TreeNode *GetTerm(StringParseData *data, TreeStruct *tree) {
     RETURN_ON_ERROR(ptr_fst, NULL);
     if (!ptr_fst) return NULL;
 
-    while (IsBinOp(data, MUL) || IsBinOp(data, DIV)) {
+    while (IsBinOp(data, MUL) || IsBinOp(data, DIV) || IsBinOp(data, POW)) {
 
         Binary_Op operation = BinaryOp(data);
         data->position++;

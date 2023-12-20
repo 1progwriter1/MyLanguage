@@ -4,7 +4,7 @@
 #include <assert.h>
 #include "../../MyLibraries/headers/systemdata.h"
 #include <string.h>
-#include "../diff_func/headers/bin_tree.h"
+#include "../bin_tree/bin_tree.h"
 #include "../headers/key_words_codes.h"
 
 static int ReadNodeFile(TreeStruct *tree, TreeNode *node, FileBuffer *buffer);

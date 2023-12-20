@@ -7,6 +7,7 @@ LIB_DIR=libs_objects
 FRONT_DIR=frontend_src
 GRAPH_DIR=Graphviz
 BACK_DIR=backend_src
+MID_DIR=middle_end_src
 SOURCES=$(wildcard src/*.cpp)
 OBJECTS=$(wildcard *.o)
 OBJ_MOVED=$(wildcard $(OBJ_DIR)/*.o)
@@ -17,6 +18,8 @@ FRONT_SRC=$(wildcard $(FRONT_DIR)/*.cpp)
 FRONT_OBJ=$(patsubst $(FRONT_DIR)/%.cpp, %.o, $(FRONT_SRC))
 BACK_SRC=$(wildcard $(BACK_DIR)/*.cpp)
 BACK_OBJ=$(patsubst $(BACK_DIR)/%.cpp, %.o, $(BACK_SRC))
+MID_SRC=$(wildcard $(MID_DIR)/*.cpp)
+MID_OBJ=$(patsubst $(MID_DIR)/%.cpp, %.o, $(MID_SRC))
 
 
 all: $(SOURCES)
@@ -33,6 +36,12 @@ back:
 	$(COMP) $(CFLAGS) -c $(BACK_SRC) $(GRAPH_SRC) backend.cpp
 	$(COMP) $(CFLAGS) $(BACK_OBJ) $(LIB_OBJ) $(GRAPH_OBJ) backend.o -o back.out
 	mv $(BACK_OBJ) $(GRAPH_OBJ) backend.o $(OBJ_DIR)/
+
+mid:
+	$(COMP) $(CFLAGS) -c $(MID_SRC) $(GRAPH_SRC) middle_end.cpp
+	$(COMP) $(CFLAGS) $(MID_OBJ) $(LIB_OBJ) $(GRAPH_OBJ) object_files/file_read_lang.o object_files/prog_output.o middle_end.o -o mid.out
+	mv $(MID_OBJ) $(GRAPH_OBJ) middle_end.o $(OBJ_DIR)/
+
 
 clean:
 	rm -f $(OBJ_MOVED)

@@ -1,7 +1,7 @@
 #ifndef ASM_CODE_GEN
 #define ASM_CODE_GEN
 
-#include "../diff_func/headers/bin_tree.h"
+#include "../bin_tree/bin_tree.h"
 #include "vars_addresses.h"
 
 #define DST_FILE "asm.txt"

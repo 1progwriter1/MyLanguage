@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include "../headers/calculate.h"
-#include "../../../MyLibraries/headers/systemdata.h"
-#include "../headers/bin_tree.h"
+#include "../../MyLibraries/headers/systemdata.h"
+#include "../bin_tree/bin_tree.h"
 #include <assert.h>
 #include <math.h>
-#include "../../../MyLibraries/headers/func.h"
+#include "../../MyLibraries/headers/func.h"
 #include "../headers/diff_dsl.h"
 
 enum NumOfAgrs {
@@ -12,9 +12,7 @@ enum NumOfAgrs {
     kTwoArgsNum = 2
 };
 
-/* static int GetVariables(Vector *vars);
-
-int CalculateTree(TreeStruct *tree, Vector *vars, double *answer) {
+int CalculateTree(TreeStruct *tree, double *answer) {
 
     assert(tree);
     assert(answer);
@@ -22,17 +20,8 @@ int CalculateTree(TreeStruct *tree, Vector *vars, double *answer) {
     if (TreeVerify(tree) != SUCCESS)
         return ERROR;
 
-    if (vars) {
-        if (VarsVerify(vars) != SUCCESS)
-            return ERROR;
-
-        if (vars->size > 0) {
-            GetVariables(vars);
-        }
-    }
-
     bool error = 0;
-    *answer = CalculateNode(tree->root, vars, &error);
+    *answer = CalculateNode(tree->root, &error);
 
     if (error) {
         printf(RED "Error when calculating the tree" END_OF_COLOR "\n");
@@ -42,7 +31,7 @@ int CalculateTree(TreeStruct *tree, Vector *vars, double *answer) {
     return SUCCESS;
 }
 
-double CalculateNode(TreeNode *node, Vector *vars, bool *error) {
+double CalculateNode(TreeNode *node, bool *error) {
 
     assert(node);
     assert(error);
@@ -51,17 +40,13 @@ double CalculateNode(TreeNode *node, Vector *vars, bool *error) {
         return ERROR;
     }
 
-    if (node->value.type == NUMBER) {
-        return node->value.number;
+    if (!((IsValType(node, UNARY_OP) && node->value.un_op <= LN) || (IsValType(node, BINARY_OP) && node->value.bin_op <= POW) || node->value.type == NUMBER)) {
+        *error = true;
+        return ERROR;
     }
 
-    if (node->value.type == VARIABLE) {
-        if (!vars) {
-            printf(RED "Missing values of variables" END_OF_COLOR "\n");
-            *error = true;
-            return ERROR;
-        }
-        return vars->data[node->value.nvar].value;
+    if (IsValType(node, NUMBER)) {
+        return node->value.number;
     }
 
     if (OperationVerify(node) != SUCCESS) {
@@ -73,7 +58,9 @@ double CalculateNode(TreeNode *node, Vector *vars, bool *error) {
             return calc;                                    \
         }
 
-    switch (node->value.operation) {
+    int op_code = IsValType(node, UNARY_OP) ? (int) node->value.un_op : (int) node->value.bin_op;
+
+    switch (op_code) {
         #include "../headers/operations.h"
         default: {
             printf(RED "Incorrect operation" END_OF_COLOR "\n");
@@ -85,14 +72,13 @@ double CalculateNode(TreeNode *node, Vector *vars, bool *error) {
     #undef DEF_OP
 
     return SUCCESS;
-} */
+}
 
-/* int OperationVerify(const TreeNode *node) {
+int OperationVerify(const TreeNode *node) {
 
     assert(node);
 
-    switch (GetNumOfArgs(node->value.operation)) {
-        case (kOneArgsNum): {
+    if (IsValType(node, UNARY_OP)) {
             if (!node->right) {
                 printf(RED "Missing argument. A null pointer was received." END_OF_COLOR "\n");
                 return ERROR;
@@ -101,36 +87,35 @@ double CalculateNode(TreeNode *node, Vector *vars, bool *error) {
                 printf(RED "An unnecessary argument for a operation that requires a single argument" END_OF_COLOR "\n");
                 return ERROR;
             }
-            break;
-        }
-        case (kTwoArgsNum): {
-            if (!node->left || !node->right) {
+    }
+    else if (IsValType(node, BINARY_OP)) {
+        if (!node->left || !node->right) {
                 printf(RED "Incorrect number of arguments for operation that requires two arguments" END_OF_COLOR "\n");
                 return ERROR;
             }
-            break;
-        }
-        default: {
-            printf(RED "Invalid number of arguments" END_OF_COLOR "\n");
-            return ERROR;
-        }
+
     }
-    Operation operation = node->value.operation;
-    if (operation == DIV) {
+    else {
+        printf(RED "Incorrect operation to calculate" END_OF_COLOR "\n");
+        return ERROR;
+    }
+
+
+    if (IsBinaryOp(node, DIV)) {
         if (node->right->value.type == NUMBER && IsEqual(node->right->value.number, 0)) {
             printf(RED "Division by zero" END_OF_COLOR "\n");
             return ERROR;
         }
         return SUCCESS;
     }
-    if (operation == SQRT) {
+    if (IsUnaryOp(node, SQRT)) {
         if (node->right->value.type == NUMBER && node->value.number < 0) {
             printf(RED "The square root of a negative number" END_OF_COLOR "\n");
             return ERROR;
         }
         return SUCCESS;
     }
-    if (operation == LN) {
+    if (IsUnaryOp(node, LN)) {
         if (node->right->value.type == NUMBER && node->right->value.number <= 0) {
             printf(RED "The ln of a non-positive number" END_OF_COLOR "\n");
             return ERROR;
@@ -139,27 +124,7 @@ double CalculateNode(TreeNode *node, Vector *vars, bool *error) {
     }
 
     return SUCCESS;
-} */
-
-/* int GetNumOfArgs(const Operation operation) {
-
-    #define DEF_OP(name, code, sym, args, ...)  \
-        case (code): {                          \
-            return args;                        \
-        }
-
-
-    switch (operation) {
-
-        #include "../headers/operations.h"
-
-        default: {
-            return 0;
-        }
-    }
-
-    return 0;
-} */
+}
 
 int TreeCopy(TreeStruct *tree_src, TreeStruct *tree_dst) {
 
@@ -202,32 +167,3 @@ TreeNode* NodeCopy(TreeStruct *tree, TreeNode *src) {
 
     return ptr;
 }
-
-/* static int GetVariables(Vector *vars) {
-
-    assert(vars);
-
-    for (size_t i = 0; i < vars->size; i++) {
-        printf(MAGENTA "Enter %c: " END_OF_COLOR "\n", vars->data[i].name);
-        vars->data[i].value = GetVarialble();
-    }
-
-    return SUCCESS;
-}
-
-double GetVarialble() {
-
-    double var = 0;
-
-    bool correct = 1;
-    do {
-        correct = 1;
-        if (scanf("%lg", &var) != 1) {
-            printf(RED "Incorrect input. Try again: " END_OF_COLOR);
-            buf_clear();
-            correct = 0;
-        }
-    } while (!correct);
-
-    return var;
-} */

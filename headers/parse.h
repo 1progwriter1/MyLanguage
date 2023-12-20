@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include "my_vector.h"
 #include "key_words_codes.h"
-#include "../diff_func/headers/bin_tree.h"
+#include "../bin_tree/bin_tree.h"
 
 #define INPUT_FILE "expr.txt"
 

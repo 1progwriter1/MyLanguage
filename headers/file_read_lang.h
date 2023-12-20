@@ -1,7 +1,7 @@
 #ifndef FILE_READ_DIFF
 #define FILE_READ_DIFF
 
-#include "../diff_func/headers/bin_tree.h"
+#include "../bin_tree/bin_tree.h"
 
 #define SRC_FILE "prog.txt"
 

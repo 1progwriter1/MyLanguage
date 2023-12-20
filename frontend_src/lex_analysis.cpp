@@ -44,7 +44,6 @@ int LexicalAnalysis(NamesTable *data, Vector *tokens, const char *filename) {
         free(buf);
         return ERROR;
     }
-
     const size_t INITIAL_NUM_OF_TOKENS = 8;
     if (VectorCtor(tokens, INITIAL_NUM_OF_TOKENS) != SUCCESS) {
         free(buf);
@@ -304,8 +303,8 @@ static bool IfNameExists(const char *str, NamesTable *data, size_t *name_index) 
 
 static bool IsValidSymbol(const char sym) {
 
-    const size_t PUNC_SYM_NUM = 8;
-    char punct_symbols[PUNC_SYM_NUM] = {'(', ')', '{', '}', ';', '\n', ' ', '"'};
+    const size_t PUNC_SYM_NUM = 14;
+    char punct_symbols[PUNC_SYM_NUM] = {'(', ')', '{', '}', ';', '\n', ' ', '"', '*', '\\', '-', '+', '^', ' '};
 
     for (size_t i = 0; i < PUNC_SYM_NUM; i++)
         if (sym == punct_symbols[i])
@@ -353,7 +352,7 @@ static char *GetName(char **buf) {
     char *str = (char *) calloc (len_of_str + 1, sizeof (char));
     if (!str) return NULL;
 
-    sscanf(*buf, "%[^(){} \n\";]", str);
+    sscanf(*buf, "%[^(){} \n\";-+*\\^]", str);
 
     *buf += len_of_str;
 

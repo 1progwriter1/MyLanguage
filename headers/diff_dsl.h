@@ -1,11 +1,8 @@
 #ifndef DIFFERENTIATOR_DSL
 #define DIFFERENTIATOR_DSL
 
-// std::expected
 
-// struct {error, node}
-
-#define CALC(node) CalculateNode(node, vars, error)
+#define CALC(node) CalculateNode(node, error)
 
 #define PUNCT(sym)   (Token) {PUNCT_SYM, {.sym_code = sym}}
 
@@ -39,16 +36,16 @@
 
 #define RIGHT node->right
 
-#define IsVar(node)   node->value.type == VARIABLE
+#define IsValType(node, val_type)   (node->value.type == val_type)
 
-#define IsNum(node)   node->value.type == NUMBER
+#define IsUnaryOp(node, operation)    (IsValType(node, UNARY_OP) && node->value.un_op == operation)
 
-#define IsOp(node)    node->value.type == OPERATION
+#define IsBinaryOp(node, operation)   (IsValType(node, BINARY_OP) && node->value.bin_op  == operation)
 
-#define IsZero(node)  ( IsNum(node) && IsEqual(node->value.number, 0) )
+#define IsZero(node)  ( IsValType(node, NUMBER) && IsEqual(node->value.number, 0) )
 
-#define IsOne(node)   ( IsNum(node) && IsEqual(node->value.number, 1) )
+#define IsOne(node)   ( IsValType(node, NUMBER) && IsEqual(node->value.number, 1) )
 
-#define EQ(node, num) ( IsNum(node) && IsEqual(node->value.number, num) )
+#define EQ(node, num) ( IsValType(node, NUMBER) && IsEqual(node->value.number, num) )
 
 #endif
