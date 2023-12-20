@@ -5,6 +5,6 @@
 
 int PrintInFile(TreeStruct *tree, const char *fileanme);
 
-#define PROG_FILE "prog.txt"
+#define DST_FILE "prog.txt"
 
 #endif

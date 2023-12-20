@@ -13,8 +13,6 @@ enum ReadStatus
     kReadStatusNotFound,
 };
 
-// ask about const
-
 #define KEY_WORD_LEN strlen(KEY_WORDS[i])
 
 #define IfFuncBegins (tokens->data[tokens->size - 1].type == FUNCTION)
@@ -25,9 +23,12 @@ static ReadStatus ReadKeyWord(char **buf, Vector *tokens);
 static ReadStatus ReadName(char **buf, NamesTable *data, Vector *tokens);
 static ReadStatus ReadPunctuation(char **buf, Vector *tokens);
 static ReadStatus ReadString(char **buf, Vector *tokens);
+static int PrototypesAnalysis(char **buf, NamesTable *data);
 static bool IfNameExists(const char *str, NamesTable *data, size_t *index);
 static bool IsValidSymbol(const char sym);
 static void SkipSpaces(char **buf);
+static void SkipComments(char **buf);
+static char *GetName(char **buf);
 
 
 int LexicalAnalysis(NamesTable *data, Vector *tokens, const char *filename) {
@@ -52,14 +53,18 @@ int LexicalAnalysis(NamesTable *data, Vector *tokens, const char *filename) {
     }
 
     char *tmp = buf;
+    if (PrototypesAnalysis(&tmp, data) != SUCCESS)
+        return ERROR;
+
     while (*tmp != '\0') {
 
+        SkipSpaces(&tmp);
+        SkipComments(&tmp);
         SkipSpaces(&tmp);
 
         ReadStatus status = kReadStatusFound;
         if (*tmp == '"') {
             tmp++;
-
             status = ReadString(&tmp, tokens);
             if (status == kReadStatusNoMemory) return NO_MEMORY;
             else if (status == kReadStatusFound) continue;
@@ -69,13 +74,13 @@ int LexicalAnalysis(NamesTable *data, Vector *tokens, const char *filename) {
         if (status == kReadStatusFound) continue;
         else if (status == kReadStatusNoMemory) return NO_MEMORY;
 
-        status = ReadKeyWord(&tmp, tokens);
-        if (status == kReadStatusNoMemory) return NO_MEMORY;
-        else if (status == kReadStatusFound) continue;;
-
         status = ReadNumber(&tmp, tokens);
         if (status == kReadStatusNoMemory) return NO_MEMORY;
         else if (status == kReadStatusFound) continue;
+
+        status = ReadKeyWord(&tmp, tokens);
+        if (status == kReadStatusNoMemory) return NO_MEMORY;
+        else if (status == kReadStatusFound) continue;;
 
         status = ReadName(&tmp, data, tokens);
         if (status == kReadStatusNoMemory) return NO_MEMORY;
@@ -197,19 +202,7 @@ static ReadStatus ReadName(char **buf, NamesTable *data, Vector *tokens) {
     assert(data);
     assert(tokens);
 
-    size_t len_of_str = 0;
-    while (IsValidSymbol((*buf)[len_of_str]))
-        len_of_str++;
-
-    if (len_of_str == 0) {
-        printf(RED "error: " END_OF_COLOR "invalid variable name \"%s\"\n", *buf);
-        return kReadStatusNotFound;
-    }
-
-    char *name = (char *) calloc (len_of_str + 1, sizeof (char));
-    if (!name) return kReadStatusNoMemory;
-
-    sscanf(*buf, "%[^(){} \n\";]", name);
+    char *name = GetName(buf);
 
     NameType type = IfFuncBegins ? FUNC_NAME : VAR_NAME;
 
@@ -217,19 +210,25 @@ static ReadStatus ReadName(char **buf, NamesTable *data, Vector *tokens) {
     if (!IfNameExists(name, data, &name_index)) {
         name_index = data->size;
 
-        if (PushName(data, {name, type}) != SUCCESS) {
-            printf(RED "error: " END_OF_COLOR "unable to add new variable\n");
+        if (PushName(data, {name, type}) != SUCCESS)
             return kReadStatusNoMemory;
-        }
+    }
+    else {
+        free(name);
+        name = NULL;
     }
 
-    if (type == FUNC_NAME)
+    if (type == FUNC_NAME) {
         tokens->data[tokens->size - 1].func_index = name_index;
-    else
+    }
+    else if (data->names[name_index].type == FUNC_NAME) {
+            if (PushBack(tokens, {FUNCTION ,{.func_index = name_index}}) != SUCCESS)
+                return kReadStatusNoMemory;
+    }
+    else {
         if (PushBack(tokens, {VARIABLE, {.var_index = name_index}}) != SUCCESS)
             return kReadStatusNoMemory;
-
-    *buf += len_of_str;
+    }
 
     return kReadStatusFound;
 }
@@ -242,7 +241,7 @@ static ReadStatus ReadString(char **buf, Vector *tokens) {
     assert(tokens);
 
     size_t len_of_str = 0;
-    while ((*buf)[len_of_str] != '\"')
+    while ((*buf)[len_of_str] != '\"' && (*buf)[len_of_str] != '\0')
         len_of_str++;
 
     char *string = (char *) calloc (len_of_str + 1, sizeof (char));
@@ -258,6 +257,34 @@ static ReadStatus ReadString(char **buf, Vector *tokens) {
     return kReadStatusFound;
 }
 
+static int PrototypesAnalysis(char **buf, NamesTable *data) {
+
+    assert(buf);
+    assert(*buf);
+    assert(data);
+
+    while (true) {
+        SkipSpaces(buf);
+        SkipComments(buf);
+        SkipSpaces(buf);
+
+        if (strncmp(*buf, "once upon the time", sizeof ("once upon the time") - 1) == 0)
+            return SUCCESS;
+
+        if (strncmp(*buf, "fairytale", sizeof ("fairytale") - 1) == 0) {
+            *buf += sizeof ("fairytale") - 1;
+            SkipSpaces(buf);
+            char *func_name = GetName(buf);
+            if (!func_name)
+                return ERROR;
+
+            if (PushName(data, {func_name, FUNC_NAME}) != SUCCESS)
+                return ERROR;
+        }
+
+        *buf += 1;
+    }
+}
 
 static bool IfNameExists(const char *str, NamesTable *data, size_t *name_index) {
 
@@ -294,4 +321,41 @@ static void SkipSpaces(char **buf) {
 
     while (**buf == ' ' || **buf == '\n')
         *buf += 1;
+}
+
+static void SkipComments(char **buf) {
+
+    assert(buf);
+    assert(*buf);
+
+    if (**buf == '/' && *(*buf + 1) == '/') {
+        *buf += 2;
+        while (**buf != '\n')
+            *buf += 1;
+        *buf += 1;
+    }
+}
+
+static char *GetName(char **buf) {
+
+    assert(buf);
+    assert(*buf);
+
+    size_t len_of_str = 0;
+    while (IsValidSymbol((*buf)[len_of_str]))
+        len_of_str++;
+
+    if (len_of_str == 0) {
+        printf(RED "error: " END_OF_COLOR "invalid name \"%s\"\n", *buf);
+        return NULL;
+    }
+
+    char *str = (char *) calloc (len_of_str + 1, sizeof (char));
+    if (!str) return NULL;
+
+    sscanf(*buf, "%[^(){} \n\";]", str);
+
+    *buf += len_of_str;
+
+    return str;
 }

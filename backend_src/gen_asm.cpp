@@ -25,6 +25,8 @@ static int GenExpression(TreeNode *node, CodeGenData *data);
 static int GenLogicalJump(TreeNode *node, CodeGenData *data);
 static int GenUnaryOp(TreeNode *node, CodeGenData *data);
 static int GenBinaryOp(TreeNode *node, CodeGenData *data);
+static int GenInput(TreeNode *node, CodeGenData *data);
+static int GenCall(TreeNode *node, CodeGenData *data);
 
 static int GetVarValue(size_t var_code, CodeGenData *data);
 static int WriteVarValue(size_t var_code, CodeGenData *data);
@@ -35,8 +37,9 @@ static bool IsPunct(TreeNode *node, Punctuation sym);
 static bool IsBinOp(TreeNode *node, Binary_Op operation);
 static bool IsUnOp(TreeNode *node, Unary_Op operation);
 static bool IsKeyOp(TreeNode *node, Key_Op operation);
+static bool IsType(TreeNode *node, ValueType type);
 
-static const char *REGS[] = {"rax", "rbx", "rcx", "rdx"};
+const char *REGS[] = {"rax", "rbx", "rcx", "rdx"};
 const size_t NUM_OF_REGS = 4;
 const size_t RAM_SIZE = 10000;
 
@@ -79,7 +82,7 @@ static int GenFunction(TreeNode *node, CodeGenData *data) {
         fprintf(data->fn, ":main\n");
     }
     else {
-        fprintf(data->fn, ":func_%lu\n", data->cur_func++);
+        fprintf(data->fn, ":func_%lu\n", node->value.func_index);
     }
 
     if (node->left && IsPunct(node->left, NEW_LINE)) {
@@ -118,10 +121,46 @@ static int GenNewLine(TreeNode *node, CodeGenData *data) {
         if (GenOutput(node->left, data) != SUCCESS)
             return ERROR;
 
-    if (node->right)
-        if (IsPunct(node->right, NEW_LINE))
-            if (GenNewLine(node->right, data) != SUCCESS)
-                return ERROR;
+    if (IsUnOp(node->left, IN))
+        if (GenInput(node->left, data) != SUCCESS)
+            return ERROR;
+
+    if (IsType(node->left, FUNCTION))
+        if (GenCall(node->left, data) != SUCCESS)
+            return ERROR;
+
+    if (IsUnOp(node, RET))
+        fprintf(data->fn, "\t\tret\n");
+
+    if (node->right && IsPunct(node->right, NEW_LINE))
+        if (GenNewLine(node->right, data) != SUCCESS)
+            return ERROR;
+
+    return SUCCESS;
+}
+
+static int GenInput(TreeNode *node, CodeGenData *data) {
+
+    CODE_GEN_ASSERT
+
+    if (!node->right || node->right->value.type != VARIABLE) {
+        printf(RED "gen asm error: " END_OF_COLOR "variable for input expected\n");
+        return ERROR;
+    }
+
+    fprintf(data->fn, "\t\tin\n");
+
+    if (WriteVarValue(node->right->value.var_index, data) != SUCCESS)
+        return ERROR;
+
+    return SUCCESS;
+}
+
+static int GenCall(TreeNode *node, CodeGenData *data) {
+
+    CODE_GEN_ASSERT
+
+    fprintf(data->fn, "\t\tcall func_%lu\n", node->value.func_index);
 
     return SUCCESS;
 }
@@ -140,13 +179,14 @@ static int GenIf(TreeNode *node, CodeGenData *data) {
     if (GenLogicalJump(node->left, data) != SUCCESS) return ERROR;
     fprintf(data->fn, "if_%lu\n", if_index);
 
-    if (GenNewLine(node->right->right, data) != SUCCESS) return ERROR;
+    if (node->right->right && IsPunct(node->right->right, NEW_LINE))
+        if (GenNewLine(node->right->right, data) != SUCCESS) return ERROR;
 
     fprintf(data->fn, "\t\tjmp end_if_%lu\n", if_index);
     fprintf(data->fn, ":if_%lu\n", if_index);
 
-    if (GenNewLine(node->right->left, data) != SUCCESS)
-        return ERROR;
+    if (node->right->left && IsPunct(node->right->left, NEW_LINE))
+        if (GenNewLine(node->right->left, data) != SUCCESS) return ERROR;
 
     fprintf(data->fn, ":end_if_%lu\n", if_index);
 
@@ -197,22 +237,20 @@ static int GenAssign(TreeNode *node, CodeGenData *data) {
         real_index = data->vars_data.size;
         if (data->cur_reg_ind < NUM_OF_REGS) {
 
-            if (PushVarAddress(&data->vars_data, {.place = VarPlaceREGS, .var_code = node->left->value.var_index, .var_index = data->cur_reg_ind++}) != SUCCESS)
+            if (PushVarAddress(&data->vars_data, {node->left->value.var_index, VarPlaceREGS, data->cur_reg_ind++}) != SUCCESS)
                 return ERROR;
-
         }
         else if (data->cur_ram_ind < RAM_SIZE) {
 
-            if (PushVarAddress(&data->vars_data, {.place = VarPlaceRAM, .var_code = node->left->value.var_index, .var_index = data->cur_ram_ind++}) != SUCCESS)
+            if (PushVarAddress(&data->vars_data, {node->left->value.var_index, VarPlaceRAM, data->cur_ram_ind++}) != SUCCESS)
                 return ERROR;
-
         }
         else {
             printf(RED "asm gen error: " END_OF_COLOR "unable to push variable\n");
             return ERROR;
         }
     }
-    if (WriteVarValue(data->vars_data.data[real_index].var_code, data) != SUCCESS)
+    if (WriteVarValue(node->left->value.var_index, data) != SUCCESS)
         return ERROR;
 
     return SUCCESS;
@@ -234,18 +272,17 @@ static int GenOutput(TreeNode *node, CodeGenData *data) {
                 fprintf(data->fn, "\t\tpush %d\n\t\toutc\n", '\n');
                 str += 2;
             }
-            else
-                fprintf(data->fn, "\t\tpush %d\n\t\toutc\n", *str++);
+            else fprintf(data->fn, "\t\tpush %d\n\t\toutc\n", *str++);
         }
     }
     else {
         if (node->right->value.type == NUMBER)
-            fprintf(data->fn, "\t\tpush %lg\n\t\tout\n", node->right->value.number);
+            fprintf(data->fn, "\t\tpush %lg\n", node->right->value.number);
         else {
             if (GetVarValue(node->right->value.var_index, data) != SUCCESS)
                 return ERROR;
-            fprintf(data->fn, "\t\tout\n");
         }
+        fprintf(data->fn, "\t\tout\n");
     }
 
     return SUCCESS;
@@ -318,6 +355,8 @@ static int GetVarValue(size_t var_code, CodeGenData *data) {
         }
     }
 
+    printf(RED "gen asm error: " END_OF_COLOR "variable does not exist\n");
+
     return ERROR;
 }
 
@@ -337,6 +376,7 @@ static int WriteVarValue(size_t var_code, CodeGenData *data) {
             return SUCCESS;
         }
     }
+    printf(RED "gen asm error: " END_OF_COLOR "variable to write value does not exist\n");
 
     return ERROR;
 }
@@ -482,4 +522,11 @@ static bool IsKeyOp(TreeNode *node, Key_Op operation) {
     assert(node);
 
     return node->value.type == KEY_OP && node->value.key_op == operation;
+}
+
+static bool IsType(TreeNode *node, ValueType type) {
+
+    assert(node);
+
+    return node->value.type == type;
 }

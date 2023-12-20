@@ -4,7 +4,7 @@
 #include "../diff_func/headers/bin_tree.h"
 #include "vars_addresses.h"
 
-#define ASM_FILE "asm.txt"
+#define DST_FILE "asm.txt"
 
 struct CodeGenData {
     FILE *fn;

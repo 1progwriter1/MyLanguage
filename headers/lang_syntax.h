@@ -6,12 +6,12 @@ const char *KEY_WORDS[] = {
     "cos",                                  // cos
     "sqrt",                                 // sqrt
     "ln",                                   // ln
-    "not",                                  // not
+    "not true",                             // not
     "say the magic number",                 // printf("%lg")
     "say the magic word",                   // printf("%s")
     "guess the riddle",                     // scanf("%lg")
-    "end",                                  // return main
-    "and they lived happily ever after",    // return from function
+    "tell the story",                       // return main
+    "end",                                  // return from function
     "+",                                    // +
     "-",                                    // -
     "*",                                    // *

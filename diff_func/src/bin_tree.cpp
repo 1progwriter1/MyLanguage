@@ -86,6 +86,10 @@ int NodeDtor(TreeStruct *tree, TreeNode *node) {
         node->right = NULL;
     }
 
+    if (node->value.type == STRING) {
+        free(node->value.string);
+        node->value.string = NULL;
+    }
     free(node);
 
     tree->size--;

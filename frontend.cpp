@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <assert.h>
 #include "../MyLibraries/headers/systemdata.h"
 #include "headers/names_table.h"
 #include "headers/lex_analysis.h"
@@ -6,13 +7,24 @@
 #include "Graphviz/gen_graph_lang.h"
 #include "headers/prog_output.h"
 
-int main() {
+int main(const int argc, const char *argv[]) {
+
+    assert(argv);
+
+    const char *input_file = SRC_FILE;
+    const char *output_file = DST_FILE;
+
+    if (argc > 1) {
+        input_file = argv[1];
+        if (argc > 2)
+            output_file = argv[2];
+    }
 
     NamesTable data = {};
     Vector tokens = {};
     TreeStruct tree = {};
 
-    if (LexicalAnalysis(&data, &tokens, "text.txt") != SUCCESS) {
+    if (LexicalAnalysis(&data, &tokens, input_file) != SUCCESS) {
         printf(RED "error: " END_OF_COLOR "lexical analysis failed\n");
         return ERROR;
     }
@@ -27,7 +39,7 @@ int main() {
         return ERROR;
     }
 
-    if (PrintInFile(&tree, PROG_FILE) != SUCCESS)
+    if (PrintInFile(&tree, output_file) != SUCCESS)
         return ERROR;
 
     return SUCCESS;

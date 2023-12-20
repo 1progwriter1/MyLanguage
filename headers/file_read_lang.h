@@ -3,7 +3,7 @@
 
 #include "../diff_func/headers/bin_tree.h"
 
-#define PROG_FILE "prog.txt"
+#define SRC_FILE "prog.txt"
 
 struct FileBuffer {
     char *buf;
