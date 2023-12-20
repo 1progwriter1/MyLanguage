@@ -89,7 +89,6 @@ static int GenFunction(TreeNode *node, CodeGenData *data) {
         if (GenNewLine(node->left, data) != SUCCESS)
             return ERROR;
     }
-    fprintf(data->fn, "\t\tret\n\n");
 
     if (node->right && node->right->value.type == FUNCTION)
         if (GenFunction(node->right, data) != SUCCESS)
@@ -129,7 +128,7 @@ static int GenNewLine(TreeNode *node, CodeGenData *data) {
         if (GenCall(node->left, data) != SUCCESS)
             return ERROR;
 
-    if (IsUnOp(node, RET))
+    if (IsUnOp(node->left, RET))
         fprintf(data->fn, "\t\tret\n");
 
     if (node->right && IsPunct(node->right, NEW_LINE))
