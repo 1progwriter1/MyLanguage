@@ -105,7 +105,7 @@ int TreeVerify(TreeStruct *tree) {
     if (tree->root)
         col_nodes = 1;
     else {
-        printf(RED "Tree veryfiong: " END_OF_COLOR "NULL root\n");
+        printf(RED "Tree verifying: " END_OF_COLOR "NULL root\n");
         return NULL_POINTER;
     }
 

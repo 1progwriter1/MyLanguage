@@ -1,75 +1,31 @@
-// square solver
+// factorial
 
-fairytale Linear(b, c);
-fairytale Square(a, b, c, d);
+fairytale Fact(n);
 
 once upon the time () {
 
-    a turn into 0;
-    b turn into 0;
-    c turn into 0;
+    n turn into 0;
 
-    say the magic word ("Enter a: ");
-    guess the riddle (a);
-    say the magic word ("Enter b: ");
-    guess the riddle (b);
-    say the magic word ("Enter c: ");
-    guess the riddle (c);
+    say the magic word ("Enter n: ");
+    guess the riddle (n);
 
-    stone (a turned into 0)
-    go right {
-        Linear(b, c);
-        end;
-    }
+    ans turn into Fact(n);
 
-    d turn into b * b - 4 * (a * c);
+    say the magic word ("Answer: ");
+    say the magic number (ans);
 
-    stone (d not weeker 0)
-    go right {
-        Square(a, b, c, d);
-    }
-    go left {
-      say the magic word ("no roots");
-    }
-
-    end;
+    end();
 }
 
-fairytale Linear(b, c) {
 
-   stone (b turned into 0) {
-      stone (c turned into 0) {
-         say the magic word ("inf roots");
-      }
-      {
-         say the magic word ("no roots");
-      }
-      end;
-   }
+fairytale Fact(n) {
 
-   x turn into -1 * c / b;
-   say the magic word ("x = ");
-   say the magic number (x);
-
-   end;
-}
-
-fairytale Square(a, b, c, d) {
-
-    stone (d turned into 0)
+    stone (n not stronger 1)
     go right {
-        x turn into -1 * b / (2 * a);
-        say the magic word ("x = ");
-        say the magic number (x);
-        end;
+        end(1);
     }
 
-   x1 turn into (-1 * b + sqrt(d)) / (2 * a);
-   x2 turn into (-1 * b - sqrt(d)) / ( 2 * a);
-   say the magic word ("x1 = ");
-   say the magic number (x1);
-   say the magic word ("\nx2 = ");
-   say the magic number (x2);
+    tmp turn into n - 1;
 
-   end;
+    end(n * Fact(tmp));
 }

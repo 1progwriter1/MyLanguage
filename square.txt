@@ -19,7 +19,7 @@ once upon the time () {
     stone (a turned into 0)
     go right {
         Linear(b, c);
-        end;
+        end();
     }
 
     d turn into b * b - 4 * (a * c);
@@ -32,7 +32,7 @@ once upon the time () {
       say the magic word ("no roots");
     }
 
-    end;
+    end();
 }
 
 fairytale Linear(b, c) {
@@ -44,14 +44,14 @@ fairytale Linear(b, c) {
       {
          say the magic word ("no roots");
       }
-      end;
+      end();
    }
 
    x turn into -1 * c / b;
    say the magic word ("x = ");
    say the magic number (x);
 
-   end;
+   end();
 }
 
 fairytale Square(a, b, c, d) {
@@ -61,15 +61,16 @@ fairytale Square(a, b, c, d) {
         x turn into -1 * b / (2 * a);
         say the magic word ("x = ");
         say the magic number (x);
-        end;
+        end();
     }
 
    x1 turn into (-1 * b + sqrt(d)) / (2 * a);
    x2 turn into (-1 * b - sqrt(d)) / ( 2 * a);
+
    say the magic word ("x1 = ");
    say the magic number (x1);
    say the magic word ("\nx2 = ");
    say the magic number (x2);
 
-   end;
+   end();
 }

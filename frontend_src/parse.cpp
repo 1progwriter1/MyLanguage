@@ -11,7 +11,7 @@
     F  ::= '(' ARGS ')' '{' B '}' ';'
     B  ::= K | A | O | I | C | R
 
-    R ::= "end" ';'
+    R ::= "end" '(' ( E ) ')' ';'
     ARGS ::= Variable ([','] Variable)*
     C ::= "function" '(' ')' ';'
     I ::= "guess the riddle" '(' Variable ')'
@@ -23,7 +23,7 @@
     E  ::= T (['+','-'] T)*
     T  ::= P (['*,'/'] P)*
     P  ::= '(' E ')' | N
-    N  ::= Number | Variable
+    N  ::= Number | Variable | C;
 */
 
 #define PARSE_ASSERT    do {                        \
@@ -54,7 +54,7 @@ const char *PARSE_ERRORS[] = {
 [CL_BRACE_MISSED]       = "closing brace missed",
 [KEY_OP_ERROR]          = "invalid key operator",
 [LOGICAL_OP_ERROR]      = "logical operator expected",
-[NUMBER_ERROR]          = "number or variable expected",
+[NUMBER_ERROR]          = "number, variable or call expected expected",
 [ASSIGN_ERROR]          = "assign expected",
 [NEW_LINE_ERROR]        = "; expected",
 [COPY_ERROR]            = "string copy failed",
@@ -231,6 +231,18 @@ TreeNode *GetRet(StringParseData *data, TreeStruct *tree) {
     if (IsUnOp(data, RET)) {
         data->position++;
         ptr = NEW(UN_OP(RET), NULL, NULL);
+
+        PUNCT_ASSERT(OP_PARENTHESIS, OP_PARENTHESIS_MISSED, ptr, NULL)
+        data->position++;
+
+        if (!IsPunct(data, CL_PARENTHESIS)) {
+            ptr->right = GetExpression(data, tree);
+            RETURN_ON_ERROR(ptr, NULL)
+        }
+
+        PUNCT_ASSERT(CL_PARENTHESIS, CL_PARENTHESIS_MISSED, ptr, NULL)
+        data->position++;
+
         PUNCT_ASSERT(NEW_LINE, NEW_LINE_ERROR, ptr, NULL)
         data->position++;
     }
@@ -548,6 +560,22 @@ TreeNode *GetNumber(StringParseData *data, TreeStruct *tree) {
     }
     else if (IsType(data, VARIABLE)) {
         return NEW(VAR(data->tokens->data[data->position++].var_index), NULL, NULL);
+    }
+    else if (IsType(data, FUNCTION)) {
+
+        TreeNode *ptr = NEW(FUNC(data->tokens->data[data->position].func_index), NULL, NULL);
+        data->position++;
+
+        PUNCT_ASSERT(OP_PARENTHESIS, OP_PARENTHESIS_MISSED, ptr, NULL)
+        data->position++;
+
+        ptr->right = GetArgs(data, tree);
+        RETURN_ON_ERROR(ptr, NULL);
+
+        PUNCT_ASSERT(CL_PARENTHESIS, CL_PARENTHESIS_MISSED, ptr, NULL)
+        data->position++;
+
+        return ptr;
     }
     else {
         data->error = NUMBER_ERROR;

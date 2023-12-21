@@ -27,6 +27,7 @@ static int GenUnaryOp(TreeNode *node, CodeGenData *data);
 static int GenBinaryOp(TreeNode *node, CodeGenData *data);
 static int GenInput(TreeNode *node, CodeGenData *data);
 static int GenCall(TreeNode *node, CodeGenData *data);
+static int GenRet(TreeNode *node, CodeGenData *data);
 
 static int DtorLocalVars(CodeGenData *data);
 static int GetVarValue(size_t var_code, CodeGenData *data);
@@ -165,11 +166,26 @@ static int GenNewLine(TreeNode *node, CodeGenData *data) {
     }
 
     if (IsUnOp(node->left, RET))
-        fprintf(data->fn, "\t\tret\n");
+        if (GenRet(node->left, data) != SUCCESS)
+            return ERROR;
 
     if (node->right && IsPunct(node->right, NEW_LINE))
         if (GenNewLine(node->right, data) != SUCCESS)
             return ERROR;
+
+    return SUCCESS;
+}
+
+static int GenRet(TreeNode *node, CodeGenData *data) {
+
+    CODE_GEN_ASSERT
+
+    if (node->right) {
+        if (GenExpression(node->right, data) != SUCCESS)
+            return ERROR;
+    }
+
+    fprintf(data->fn, "\t\tret\n");
 
     return SUCCESS;
 }
@@ -323,7 +339,7 @@ static int GenExpression(TreeNode *node, CodeGenData *data) {
     if (!node)
         return SUCCESS;
 
-    if (node->value.type == UNARY_OP) {
+    if (IsType(node, UNARY_OP)) {
         if (GenExpression(node->right, data) != SUCCESS)
             return ERROR;
 
@@ -332,7 +348,7 @@ static int GenExpression(TreeNode *node, CodeGenData *data) {
 
         return SUCCESS;
     }
-    if (node->value.type == BINARY_OP) {
+    if (IsType(node, BINARY_OP)) {
         if (GenExpression(node->left, data) != SUCCESS || GenExpression(node->right, data) != SUCCESS)
             return ERROR;
 
@@ -342,17 +358,24 @@ static int GenExpression(TreeNode *node, CodeGenData *data) {
         return SUCCESS;
     }
 
-    if (node->value.type == VARIABLE) {
+    if (IsType(node, VARIABLE)) {
         if (GetVarValue(node->value.var_index, data) != SUCCESS)
             return ERROR;
         return SUCCESS;
     }
-    if (node->value.type == NUMBER) {
+    if (IsType(node, NUMBER)) {
         fprintf(data->fn, "\t\tpush %lg\n", node->value.number);
         return SUCCESS;
     }
 
-    printf(RED "asm gen error: " END_OF_COLOR "invalid value type for assignment\n");
+    if (IsType(node, FUNCTION)) {
+        if (GenCall(node->right, data) != SUCCESS)
+            return ERROR;
+        fprintf(data->fn, "\t\tcall func_%lu\n", node->value.func_index);
+        return SUCCESS;
+    }
+
+    printf(RED "asm gen error: " END_OF_COLOR "invalid value type for expression\n");
 
     return ERROR;
 

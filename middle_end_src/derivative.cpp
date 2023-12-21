@@ -69,7 +69,7 @@ static TreeNode* ConstEvaluate(TreeStruct *tree, TreeNode *node, bool *is_change
         bool error = 0;
         double ans = CalculateNode(node ,&error);
         if (error)
-            return NULL;
+            return node;
         NodeDtor(tree, node);
         *is_changed = true;
         return NEW(NUM(ans), NULL, NULL);

@@ -42,6 +42,19 @@ mid:
 	$(COMP) $(CFLAGS) $(MID_OBJ) $(LIB_OBJ) $(GRAPH_OBJ) object_files/file_read_lang.o object_files/prog_output.o middle_end.o -o mid.out
 	mv $(MID_OBJ) $(GRAPH_OBJ) middle_end.o $(OBJ_DIR)/
 
+run_square:
+	./front.out square.txt back.txt
+	./mid.out  back.txt
+	./back.out back.txt asm.txt
+	./asm.out asm.txt square.bin
+	./proc.out square.bin
+
+run_fact:
+	./front.out fact.txt back.txt
+	./mid.out  back.txt
+	./back.out back.txt asm.txt
+	./asm.out asm.txt fact.bin
+	./proc.out fact.bin
 
 clean:
 	rm -f $(OBJ_MOVED)
