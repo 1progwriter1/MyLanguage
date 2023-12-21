@@ -1,9 +1,9 @@
 // square solver
 
-fairytale Linear();
-fairytale Square();
+fairytale Linear(b, c);
+fairytale Square(a, b, c, d);
 
-once upon the time {
+once upon the time () {
 
     a turn into 0;
     b turn into 0;
@@ -18,7 +18,7 @@ once upon the time {
 
     stone (a turned into 0)
     go right {
-        Linear();
+        Linear(b, c);
         end;
     }
 
@@ -26,7 +26,7 @@ once upon the time {
 
     stone (d not weeker 0)
     go right {
-        Square();
+        Square(a, b, c, d);
     }
     go left {
       say the magic word ("no roots");
@@ -35,7 +35,7 @@ once upon the time {
     end;
 }
 
-fairytale Linear {
+fairytale Linear(b, c) {
 
    stone (b turned into 0) {
       stone (c turned into 0) {
@@ -54,7 +54,7 @@ fairytale Linear {
    end;
 }
 
-fairytale Square {
+fairytale Square(a, b, c, d) {
 
     stone (d turned into 0)
     go right {

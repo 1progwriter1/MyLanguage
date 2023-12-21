@@ -42,5 +42,8 @@ int main(const int argc, const char *argv[]) {
     if (PrintInFile(&tree, output_file) != SUCCESS)
         return ERROR;
 
+    TreeRootDtor(&tree);
+    VectorDtor(&tokens);
+
     return SUCCESS;
 }

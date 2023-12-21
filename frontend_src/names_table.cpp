@@ -58,6 +58,11 @@ int PushName(NamesTable *data, Name value) {
         if (NamesTableResize(data, kResizeRaise) != SUCCESS)
             return ERROR;
 
+    if (!value.name) {
+        printf(RED "names table error: "  END_OF_COLOR "null name push\n");
+        return ERROR;
+    }
+
     data->names[data->size++] = value;
 
     return SUCCESS;

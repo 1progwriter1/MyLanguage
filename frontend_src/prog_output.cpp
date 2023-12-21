@@ -20,6 +20,8 @@ int PrintInFile(TreeStruct *tree, const char *filename) {
     if (PrintNode(tree->root, fn) != SUCCESS)
         return ERROR;
 
+    fileclose(fn);
+
     return SUCCESS;
 }
 

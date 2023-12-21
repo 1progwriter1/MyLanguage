@@ -60,6 +60,8 @@ enum Punctuation {
 
     OP_BRACE       = 28, // {
     CL_BRACE       = 29, // }
+
+    COMMA          = 30, // ,
 };
 
 const size_t NUMBER_OF_KEY_WORDS = 29;

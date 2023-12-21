@@ -20,6 +20,7 @@ struct NamesTable {
     Name *names;
     size_t size;
     size_t capacity;
+    size_t start_search_index;
 };
 
 int NamesTableCtor(NamesTable *data);

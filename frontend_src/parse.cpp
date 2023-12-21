@@ -8,10 +8,11 @@
 
 /*
     G  ::= B '\0'
-    F  ::= '{' B '}' ';'
+    F  ::= '(' ARGS ')' '{' B '}' ';'
     B  ::= K | A | O | I | C | R
 
     R ::= "end" ';'
+    ARGS ::= Variable ([','] Variable)*
     C ::= "function" '(' ')' ';'
     I ::= "guess the riddle" '(' Variable ')'
     K ::= "stone" Cond B B | "fell into a dead sleep while" Cond B
@@ -60,7 +61,8 @@ const char *PARSE_ERRORS[] = {
 [MEMORY_ERROR]          = "node creation failed",
 [UNARY_OP_ERROR]        = "sin, cos, ln or sqrt expected",
 [CONDITION_ERROR]       = "condition expected",
-[INPUT_ERROR]           = "variable for input expected"
+[INPUT_ERROR]           = "variable for input expected",
+[ARGS_ERROR]            = "argument after comma expected"
                         };
 
 static bool IsType(StringParseData *data, ValueType type);
@@ -115,23 +117,31 @@ TreeNode *GetFunction(StringParseData *data, TreeStruct *tree) {
     TreeNode *func_ptr = NULL;
 
     if (data->tokens->data[data->position].type == FUNCTION) {
-        func_ptr = NEW(FUNC(data->tokens->data[data->position].func_index), NULL, NULL);
+        func_ptr = NEW(FUNC(data->tokens->data[data->position].func_index), NEW(PUNCT(NEW_LINE), NULL, NULL), NULL);
+        data->position++;
+
+        PUNCT_ASSERT(OP_PARENTHESIS, OP_PARENTHESIS_MISSED, func_ptr, NULL)
+        data->position++;
+
+        if (data->tokens->data[data->position].func_index != 0) {
+            TreeNode *args = GetArgs(data, tree);
+            func_ptr->left->right = args;
+        }
+
+        PUNCT_ASSERT(CL_PARENTHESIS, CL_PARENTHESIS_MISSED, func_ptr, NULL)
         data->position++;
     }
     else return NULL;
 
-    if (!IsPunct(data, OP_BRACE))
-        return NULL;
-
+    if (!IsPunct(data, OP_BRACE)) return NULL;
     data->position++;
 
     TreeNode *ptr = GetBody(data, tree);
     RETURN_ON_ERROR(ptr, NULL)
 
-    func_ptr->left = ptr;
+    func_ptr->left->left = ptr;
 
     PUNCT_ASSERT(CL_BRACE, CL_BRACE_MISSED, func_ptr, NULL)
-
     data->position++;
 
     TreeNode *next = GetFunction(data, tree);
@@ -140,6 +150,32 @@ TreeNode *GetFunction(StringParseData *data, TreeStruct *tree) {
     func_ptr->right = next;
 
     return func_ptr;
+}
+
+TreeNode *GetArgs(StringParseData *data, TreeStruct *tree) {
+
+    PARSE_ASSERT
+
+    if (!IsType(data, VARIABLE))
+        return NULL;
+
+    TreeNode *ptr = NEW(VAR(data->tokens->data[data->position].var_index), NULL, NULL);
+    data->position++;
+
+    if (!IsPunct(data, COMMA))
+        return ptr;
+    data->position++;
+
+    if (!IsType(data, VARIABLE)) {
+        data->error = ARGS_ERROR;
+        RETURN_ON_ERROR(ptr, NULL);
+    }
+
+    TreeNode *next = GetArgs(data, tree);
+    RETURN_ON_ERROR(ptr, next);
+    ptr->right = next;
+
+    return ptr;
 }
 
 TreeNode *GetBody(StringParseData *data, TreeStruct *tree) {
@@ -217,6 +253,11 @@ TreeNode *GetCall(StringParseData *data, TreeStruct *tree) {
 
     PUNCT_ASSERT(OP_PARENTHESIS, OP_PARENTHESIS_MISSED, ptr, NULL)
     data->position++;
+
+    TreeNode *args = GetArgs(data, tree);
+    RETURN_ON_ERROR(args, ptr);
+
+    ptr->right = args;
 
     PUNCT_ASSERT(CL_PARENTHESIS, CL_PARENTHESIS_MISSED ,ptr, NULL)
     data->position++;

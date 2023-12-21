@@ -24,6 +24,7 @@ enum ParseError {
     UNARY_OP_ERROR,
     CONDITION_ERROR,
     INPUT_ERROR,
+    ARGS_ERROR,
 };
 
 struct StringParseData {
@@ -62,5 +63,6 @@ TreeNode *GetCall(StringParseData *data, TreeStruct *tree);
 
 TreeNode *GetRet(StringParseData *data, TreeStruct *tree);
 
+TreeNode *GetArgs(StringParseData *data, TreeStruct *tree);
 
 #endif

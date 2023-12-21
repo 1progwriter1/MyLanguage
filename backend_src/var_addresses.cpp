@@ -33,7 +33,7 @@ int VarsAddressesDtor(VarsAddresses *data) {
 
     assert(data);
 
-    free(data->data);
+    // free(data->data);
     data->data = NULL;
     data->size = 0;
     data->capacity = 0;
@@ -58,7 +58,7 @@ int PushVarAddress(VarsAddresses *data, Address value) {
     return SUCCESS;
 }
 
-int Pop(VarsAddresses *data, Address *value) {
+int PopVarsAddresses(VarsAddresses *data, Address *value) {
 
     assert(data);
 

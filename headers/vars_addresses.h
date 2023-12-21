@@ -23,5 +23,6 @@ struct VarsAddresses {
 int VarsAddressesCtor(VarsAddresses *data);
 int VarsAddressesDtor(VarsAddresses *data);
 int PushVarAddress(VarsAddresses *data, Address value);
+int PopVarsAddresses(VarsAddresses *data, Address *value);
 
 #endif
