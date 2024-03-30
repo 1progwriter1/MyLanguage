@@ -39,11 +39,12 @@ int main(const int argc, const char *argv[]) {
         return ERROR;
     }
 
-    if (PrintInFile(&tree, output_file) != SUCCESS)
+    if (PrintInFile(&tree, &data, output_file) != SUCCESS)
         return ERROR;
 
     TreeRootDtor(&tree);
     VectorDtor(&tokens);
+    NamesTableDtor(&data);
 
     return SUCCESS;
 }

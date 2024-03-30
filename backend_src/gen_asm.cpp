@@ -15,6 +15,14 @@ enum VarSearchStatus {
     kStatusNotFound,
 };
 
+/*
+   ! Recursion. Push in stack or use regs to create varibles with bigger code
+   ! Check if Null returned
+   ? Parse dsl (NEW(...))
+   * maybe simplify (too many fucntions)
+   * TODO: comments in asm, frontend -1 with var names
+*/
+
 static int GenFunction(TreeNode *node, CodeGenData *data);
 static int GenNewLine(TreeNode *node, CodeGenData *data);
 static int GenIf(TreeNode *node, CodeGenData *data);
@@ -30,11 +38,11 @@ static int GenCall(TreeNode *node, CodeGenData *data);
 static int GenRet(TreeNode *node, CodeGenData *data);
 
 static int DtorLocalVars(CodeGenData *data);
-static int GetVarValue(size_t var_code, CodeGenData *data);
-static int WriteVarValue(size_t var_code, CodeGenData *data);
+static int GetVarValue(int var_code, CodeGenData *data);
+static int WriteVarValue(int var_code, CodeGenData *data);
 static void CallMainPrint(FILE *fn);
-static VarSearchStatus IfVariableExsists(size_t var_code, CodeGenData *data);
-static int CreateVariable(CodeGenData *data, size_t var_index);
+static VarSearchStatus IfVariableExsists(int var_code, CodeGenData *data);
+static int CreateVariable(CodeGenData *data, int var_index);
 static int GenArgs(TreeNode *node, CodeGenData *data);
 
 static bool IsPunct(TreeNode *node, Punctuation sym);
@@ -74,7 +82,7 @@ int GenAsmCode(TreeStruct *tree, const char *filename) {
 
     CallMainPrint(fn);
 
-    CodeGenData data = {fn, 0, 0, 0, vars_data, local_vars, 0, 0};
+    CodeGenData data = {fn, 0, 0, 0, vars_data, local_vars, 0, 0, 0};
     if (GenFunction(tree->root, &data) != SUCCESS)
         return ERROR;
 
@@ -92,10 +100,12 @@ static int GenFunction(TreeNode *node, CodeGenData *data) {
     if (node->value.func_index == 0)
         fprintf(data->fn, ":main\n");
     else
-        fprintf(data->fn, ":func_%lu\n", node->value.func_index);
+        fprintf(data->fn, ":func_%d\n", node->value.func_index);
+
+    data->cur_func_exe = node->value.func_index;
 
     if (!node->left || !IsPunct(node->left, NEW_LINE)) {
-        printf(RED "gen asm error: " END_OF_COLOR "fucntion body expected\n");
+        printf(RED "gen asm error: " END_OF_COLOR "function body expected\n");
         return ERROR;
     }
 
@@ -119,7 +129,7 @@ static int GenArgs(TreeNode *node, CodeGenData *data) {
 
     CODE_GEN_ASSERT
 
-    if (CreateVariable(data, node->value.var_index) != SUCCESS)
+    if (CreateVariable(data, (int) node->value.var_index) != SUCCESS)
         return ERROR;
 
     if (WriteVarValue(node->value.var_index, data) != SUCCESS)
@@ -162,7 +172,6 @@ static int GenNewLine(TreeNode *node, CodeGenData *data) {
     if (IsType(node->left, FUNCTION)) {
         if (GenCall(node->left->right, data) != SUCCESS)
             return ERROR;
-        fprintf(data->fn, "\t\tcall func_%lu\n", node->left->value.func_index);
     }
 
     if (IsUnOp(node->left, RET))
@@ -211,9 +220,10 @@ static int GenCall(TreeNode *node, CodeGenData *data) {
 
     CODE_GEN_ASSERT
 
-    if (node->right && IsType(node->right, VARIABLE))
+    if (node->right && IsType(node->right, VARIABLE)) {
         if (GenCall(node->right, data) != SUCCESS)
             return ERROR;
+    }
 
     if (GetVarValue(node->value.var_index, data) != SUCCESS)
         return ERROR;
@@ -349,8 +359,9 @@ static int GenExpression(TreeNode *node, CodeGenData *data) {
         return SUCCESS;
     }
     if (IsType(node, BINARY_OP)) {
+
         if (GenExpression(node->left, data) != SUCCESS || GenExpression(node->right, data) != SUCCESS)
-            return ERROR;
+                return ERROR;
 
         if (GenBinaryOp(node, data) != SUCCESS)
             return ERROR;
@@ -371,7 +382,7 @@ static int GenExpression(TreeNode *node, CodeGenData *data) {
     if (IsType(node, FUNCTION)) {
         if (GenCall(node->right, data) != SUCCESS)
             return ERROR;
-        fprintf(data->fn, "\t\tcall func_%lu\n", node->value.func_index);
+        fprintf(data->fn, "\t\tcall func_%d\n", node->value.func_index);
         return SUCCESS;
     }
 
@@ -381,7 +392,7 @@ static int GenExpression(TreeNode *node, CodeGenData *data) {
 
 }
 
-static int CreateVariable(CodeGenData *data, size_t var_index) {
+static int CreateVariable(CodeGenData *data, int var_index) {
 
     assert(data);
     assert(data->vars_data.data);
@@ -409,10 +420,12 @@ static void CallMainPrint(FILE *fn) {
 
     assert(fn);
 
-    fprintf(fn, "\t\tcall main\n\t\thlt\n\n");
+    fprintf(fn, "\t\tcall main\n");
+    fprintf(fn, "\t\tpush %d\n\t\toutc\n", '\n');
+    fprintf(fn, "\t\thlt\n");
 }
 
-static int GetVarValue(size_t var_code, CodeGenData *data) {
+static int GetVarValue(int var_code, CodeGenData *data) {
 
     assert(data);
     assert(data->vars_data.data);
@@ -420,7 +433,7 @@ static int GetVarValue(size_t var_code, CodeGenData *data) {
     for (size_t i = 0; i < data->vars_data.size; i++) {
         if (data->vars_data.data[i].var_code == var_code) {
             if (data->vars_data.data[i].place == VarPlaceRAM) {
-                fprintf(data->fn, "\t\tpush [%lu]\n", data->vars_data.data[i].var_index);
+                fprintf(data->fn, "\t\tpop rax\n\t\tpush %lu\n\t\tadd\n\t\tpop rbx\n\t\tpush [rbx]\n", data->vars_data.data[i].var_index);
             }
             else {
                 fprintf(data->fn, "\t\tpush %s\n", REGS[data->vars_data.data[i].var_index]);
@@ -434,15 +447,17 @@ static int GetVarValue(size_t var_code, CodeGenData *data) {
     return ERROR;
 }
 
-static int WriteVarValue(size_t var_code, CodeGenData *data) {
+static int WriteVarValue(int var_code, CodeGenData *data) {
 
     assert(data);
     assert(data->vars_data.data);
 
     for (size_t i = 0; i < data->vars_data.size; i++) {
         if (data->vars_data.data[i].var_code == var_code) {
+            fprintf(data->fn, "\t\tpush rax\n");
+            fprintf(data->fn, "\t\tpush %d\n\t\tadd\n\t\tpop rbx\n", var_code);
             if (data->vars_data.data[i].place == VarPlaceRAM) {
-                fprintf(data->fn, "\t\tpop [%lu]\n", data->vars_data.data[i].var_index);
+                fprintf(data->fn, "\t\tpop [rbx]\n");
             }
             else {
                 fprintf(data->fn, "\t\tpop %s\n", REGS[data->vars_data.data[i].var_index]);
@@ -571,7 +586,7 @@ static int DtorLocalVars(CodeGenData *data) {
     return SUCCESS;
 }
 
-static VarSearchStatus IfVariableExsists(size_t var_code, CodeGenData *data) {
+static VarSearchStatus IfVariableExsists(int var_code, CodeGenData *data) {
 
     assert(data);
 

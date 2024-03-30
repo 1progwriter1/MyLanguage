@@ -96,11 +96,11 @@ static int PrintNode(FILE *fn, const TreeNode *node, const size_t index) {
             break;
         }
         case (VARIABLE): {
-            fprintf(fn, "%lu", node->value.var_index);
+            fprintf(fn, "%d", node->value.var_index);
             break;
         }
         case (FUNCTION): {
-            fprintf(fn, "%lu", node->value.func_index);
+            fprintf(fn, "%d", node->value.func_index);
             break;
         }
         case (STRING): {

@@ -1,6 +1,3 @@
-#ifndef MY_LANG_SYNTAX
-#define MY_LANG_SYNTAX
-
 const char *KEY_WORDS[] = {
     "sin",                                  // sin
     "cos",                                  // cos
@@ -32,5 +29,3 @@ const char *KEY_WORDS[] = {
     "go right",                             // words to make code be like fairytale
     "fairytale character"                   //
 };
-
-#endif

@@ -10,7 +10,7 @@ enum VarsAddressesChangeSize {
 };
 
 const int INCREASE = 2;
-const size_t INITIAL_SIZE = 8;
+const size_t INITIAL_SIZE = 16;
 
 static int VarsAddressesResize(VarsAddresses *data, VarsAddressesChangeSize action);
 static int VarsAddressesVerify(VarsAddresses *data);
@@ -33,7 +33,7 @@ int VarsAddressesDtor(VarsAddresses *data) {
 
     assert(data);
 
-    // free(data->data);
+    free(data->data);
     data->data = NULL;
     data->size = 0;
     data->capacity = 0;

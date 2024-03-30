@@ -1,6 +1,8 @@
 #ifndef KEY_WORDS_CODES
 #define KEY_WORDS_CODES
 
+extern const char *KEY_WORDS[];
+
 enum ValueType {
     PUNCT_SYM =  0,
     BINARY_OP =  1,

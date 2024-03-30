@@ -136,11 +136,11 @@ static int GetValue(TreeNode *node, FileBuffer *buffer) {
             break;
         }
         case (VARIABLE): {
-            value = (Token) {VARIABLE, {.var_index = index}};
+            value = (Token) {VARIABLE, {.var_index = (int) index}};
             break;
         }
         case (FUNCTION): {
-            value = (Token) {FUNCTION, {.func_index = index}};
+            value = (Token) {FUNCTION, {.func_index = (int) index}};
             break;
         }
         case (STRING): {

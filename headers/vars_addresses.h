@@ -9,7 +9,7 @@ enum VarPlace {
 };
 
 struct Address {
-    size_t var_code;
+    int var_code;
     VarPlace place;
     size_t var_index;
 };

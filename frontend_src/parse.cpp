@@ -8,7 +8,7 @@
 
 /*
     G  ::= B '\0'
-    F  ::= '(' ARGS ')' '{' B '}' ';'
+    F  ::= '(' (ARGS) ')' '{' B '}' ';'
     B  ::= K | A | O | I | C | R
 
     R ::= "end" '(' ( E ) ')' ';'
@@ -145,9 +145,9 @@ TreeNode *GetFunction(StringParseData *data, TreeStruct *tree) {
     data->position++;
 
     TreeNode *next = GetFunction(data, tree);
-    RETURN_ON_ERROR(next, ptr)
-
     func_ptr->right = next;
+    RETURN_ON_ERROR(func_ptr, NULL)
+
 
     return func_ptr;
 }

@@ -4,12 +4,13 @@
 #include "../../MyLibraries/headers/systemdata.h"
 #include "../../MyLibraries/headers/file_func.h"
 
-static int PrintNode(TreeNode *node, FILE *fn);
+static int PrintNode(TreeNode *node, NamesTable *data, FILE *fn);
 
-int PrintInFile(TreeStruct *tree, const char *filename) {
+int PrintInFile(TreeStruct *tree, NamesTable *data, const char *filename) {
 
     assert(tree);
     assert(filename);
+    assert(data);
 
     if (TreeVerify(tree) != SUCCESS)
         return ERROR;
@@ -17,7 +18,7 @@ int PrintInFile(TreeStruct *tree, const char *filename) {
     FILE *fn = fileopen(filename, WRITE);
     if (!fn) return FILE_OPEN_ERROR;
 
-    if (PrintNode(tree->root, fn) != SUCCESS)
+    if (PrintNode(tree->root, data, fn) != SUCCESS)
         return ERROR;
 
     fileclose(fn);
@@ -25,10 +26,11 @@ int PrintInFile(TreeStruct *tree, const char *filename) {
     return SUCCESS;
 }
 
-static int PrintNode(TreeNode *node, FILE *fn) {
+static int PrintNode(TreeNode *node, NamesTable *data, FILE *fn) {
 
     assert(node);
     assert(fn);
+    assert(data);
 
     fprintf(fn, "( ");
 
@@ -56,11 +58,14 @@ static int PrintNode(TreeNode *node, FILE *fn) {
             break;
         }
         case (VARIABLE): {
-            fprintf(fn, "%lu ", node->value.var_index);
+            fprintf(fn, "\"%s\" ", data->names[node->value.var_index].name);
             break;
         }
         case (FUNCTION): {
-            fprintf(fn, "%lu ", node->value.func_index);
+            if (node->value.func_index == 0)
+                fprintf(fn, "\"main\" ");
+            else
+                fprintf(fn, "\"%s\" ", data->names[node->value.func_index].name);
             break;
         }
         case (STRING): {
@@ -74,7 +79,7 @@ static int PrintNode(TreeNode *node, FILE *fn) {
     }
 
     if (node->left) {
-        if (PrintNode(node->left, fn) != SUCCESS)
+        if (PrintNode(node->left, data, fn) != SUCCESS)
             return ERROR;
     }
     else {
@@ -82,7 +87,7 @@ static int PrintNode(TreeNode *node, FILE *fn) {
     }
 
     if (node->right) {
-        if (PrintNode(node->right, fn) != SUCCESS)
+        if (PrintNode(node->right, data, fn) != SUCCESS)
             return ERROR;
     }
     else {

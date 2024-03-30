@@ -9,15 +9,22 @@
 
 struct CodeGenData {
     FILE *fn;
-    size_t cur_func;
+    int cur_func;
     size_t cur_if;
     size_t cur_while;
     VarsAddresses vars_data;
     Stack local_vars;
     size_t cur_ram_ind;
     size_t cur_reg_ind;
+    int cur_func_exe;
 };
 
 int GenAsmCode(TreeStruct *tree, const char *filename);
 
 #endif
+
+/*
+call recursion
+pop rax
+pop rbx
+*/
