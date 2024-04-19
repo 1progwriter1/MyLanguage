@@ -28,7 +28,7 @@ all: $(SOURCES)
 	$(COMP) $(CFLAGS) $(OBJ_MOVED) $(LIB_OBJ)
 
 front:
-	$(COMP) $(CFLAGS) -c $(FRONT_SRC) $(GRAPH_SRC) frontend.cpp
+	$(COMP) $(CFLAGS) -c $(FRONT_SRC) $(GRAPH_SRC)
 	$(COMP) $(CFLAGS) $(FRONT_OBJ) $(LIB_OBJ) $(GRAPH_OBJ) frontend.o -o front.out
 	mv $(FRONT_OBJ) $(GRAPH_OBJ) frontend.o $(OBJ_DIR)/
 
@@ -58,3 +58,9 @@ run_fact:
 
 clean:
 	rm -f $(OBJ_MOVED)
+
+clean_obj:
+	rm *.o
+
+clean_exe:
+	rm *.out

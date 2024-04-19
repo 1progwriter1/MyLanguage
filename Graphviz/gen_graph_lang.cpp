@@ -7,9 +7,9 @@
 
 const size_t MAX_CMD_LEN = 60;
 
-const char *TYPES[]  = {"punct_sym", "binary_op", "unary_op", "key_op", "number", "variable", "fucntion", "string"};
+const char *TYPES[]  = {"punct_sym", "binary_op", "unary_op", "key_op", "number", "variable", "function", "string"};
 const char *VALUES[] = {"sin", "cos", "sqrt", "ln", "not", "out", "out_s", "in", "call", "ret", "+", "-",
-                        "mul", "\\\\", "^", "==", "stronger", "weeker", "not weeker", "not stronger", "!=", "=", "if", "while", ";"};
+                        "mul", "\\\\", "^", "==", "stronger", "weaker", "not weaker", "not stronger", "!=", "=", "if", "while", ";"};
 
 static int GenNodes(FILE *fn, const TreeNode *node, size_t *index);
 static int PrintNode(FILE *fn, const TreeNode *node, const size_t index);
@@ -19,7 +19,7 @@ int GenGraphLang(const TreeStruct *tree, const char *filename) {
     assert(tree);
     assert(filename);
 
-    FILE *fn = fileopen(GRAPH_SRC, WRITE);
+    FILE *fn = openFile(GRAPH_SRC, WRITE);
     if (!fn) return FILE_OPEN_ERROR;
 
     size_t index = 0;
@@ -34,7 +34,7 @@ int GenGraphLang(const TreeStruct *tree, const char *filename) {
     fprintf(fn, "\n");
     fprintf(fn, "}");
 
-    fileclose(fn);
+    closeFile(fn);
 
     char command[MAX_CMD_LEN] = "";
 

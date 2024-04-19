@@ -4,22 +4,22 @@ const char *KEY_WORDS[] = {
     "sqrt",                                 // sqrt
     "ln",                                   // ln
     "not true",                             // not
-    "say the magic number",                 // printf("%lg")
+    "say the magic number",                 // printf("%g")
     "say the magic word",                   // printf("%s")
-    "guess the riddle",                     // scanf("%lg")
+    "guess the riddle",                     // scanf("%g")
     "tell the story",                       // return main
     "end",                                  // return from function
     "+",                                    // +
     "-",                                    // -
-    "*",                                    // *
+    "*",                                    // "*"
     "/",                                    // /
     "^",                                    // pow
     "turned into",                          // ==
     "stronger",                             // >
-    "weeker",                               // <
-    "not weeker",                           // >=
+    "weaker",                               // <
+    "not weaker",                           // >=
     "not stronger",                         // <=
-    "did not turn into",                    // !=
+    "did not turn into",                    // "!="
     "turn into",                            // =
     "stone",                                // if
     "fell into a dead sleep while",         // while

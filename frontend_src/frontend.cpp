@@ -1,11 +1,10 @@
 #include <stdio.h>
 #include <assert.h>
 #include "../MyLibraries/headers/systemdata.h"
-#include "headers/names_table.h"
-#include "headers/lex_analysis.h"
-#include "headers/parse.h"
+#include "lex_analysis.h"
+#include "parse.h"
 #include "Graphviz/gen_graph_lang.h"
-#include "headers/prog_output.h"
+#include "prog_output.h"
 
 int main(const int argc, const char *argv[]) {
 

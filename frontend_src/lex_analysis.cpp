@@ -1,99 +1,162 @@
 #include <stdio.h>
 #include <assert.h>
-#include "../headers/lex_analysis.h"
+#include "lex_analysis.h"
 #include "../../MyLibraries/headers/systemdata.h"
 #include "../../MyLibraries/headers/file_func.h"
 #include <string.h>
 
-enum ReadStatus
-{
+enum ReadStatus {
     kReadStatusFound,
     kReadStatusNoMemory,
     kReadStatusNotFound,
 };
 
-#define KEY_WORD_LEN strlen(data->names[i].name)
-
+#define KEY_WORD_LEN strlen(((Name *) getPtr(names_table, i))->name)
 #define IfFuncBegins (tokens->data[tokens->size - 1].type == FUNCTION)
 
+#define BEGIN_OF_MAIN "once upon the time"
+#define BEGIN_OF_FUNCTIONS "fairytale"
 
-static ReadStatus ReadNumber(char **buf, Vector *tokens);
-static ReadStatus ReadKeyWord(char **buf, Vector *tokens, NamesTable *data);
-static ReadStatus ReadName(char **buf, NamesTable *data, Vector *tokens);
-static ReadStatus ReadPunctuation(char **buf, Vector *tokens);
-static ReadStatus ReadString(char **buf, Vector *tokens);
-static int PrototypesAnalysis(char **buf, NamesTable *data);
-static bool IfNameExists(const char *str, NamesTable *data, int *index);
-static bool IfFunctionExists(const char *str, NamesTable *data, int *func_index);
+static int prepareToAnalyze(Vector *names_table, Vector *tokens);
+
+static int prototypesAnalysis(char **buf, Vector *data);
+
+static ReadStatus readNumber     (char **buf, Vector *tokens);
+static ReadStatus readString     (char **buf, Vector *tokens);
+static ReadStatus readKeyWord    (char **buf, Vector *tokens, Vector *names_table);
+static ReadStatus readPunctuation(char **buf, Vector *tokens);
+static ReadStatus readName       (char **buf, Vector *tokens, Vector *names_table);
+
+// static int readName(char **buf, NameType type, Vector *tokens);
+
+static bool IfNameExists(const char *str, Vector *names_table, int *index);
+static bool IfFunctionExists(const char *str, Vector *names_table, int *func_index);
 static bool IsValidSymbol(const char sym);
-static void SkipSpaces(char **buf);
-static void SkipComments(char **buf);
-static char *GetName(char **buf);
+static void skipSpaces(char **buf);
+static void skipComments(char **buf);
+
+static Name *getName(char **buf, NameType type);
+void nameDtor(Name *name);
+void *getPtr(Vector *data, size_t index);
 
 
-int LexicalAnalysis(NamesTable *data, Vector *tokens, const char *filename) {
+int analyzeLexis(Vector *names_table, Vector *tokens, const char *filename) {
 
     assert(filename);
     assert(tokens);
-    assert(data);
+    assert(names_table);
 
-    char *buf = readbuf(filename);
+    char *buf = readFileToBuffer(filename);
     if (!buf) return ERROR;
 
-    if (NamesTableCtor(data) != SUCCESS) {
-        free(buf);
+    if (prepareToAnalyze(names_table, tokens) != SUCCESS)
         return ERROR;
-    }
-    const size_t INITIAL_NUM_OF_TOKENS = 8;
-    if (VectorCtor(tokens, INITIAL_NUM_OF_TOKENS) != SUCCESS) {
-        free(buf);
-        NamesTableDtor(data);
-        return ERROR;
-    }
 
     char *tmp = buf;
-    if (PrototypesAnalysis(&tmp, data) != SUCCESS)
+    if (prototypesAnalysis(&tmp, names_table) != SUCCESS)
         return ERROR;
 
     while (*tmp != '\0') {
 
-        SkipSpaces(&tmp);
-        SkipComments(&tmp);
-        SkipSpaces(&tmp);
+        skipSpaces(&tmp);
+        skipComments(&tmp);
+        skipSpaces(&tmp);
 
         ReadStatus status = kReadStatusFound;
         if (*tmp == '"') {
             tmp++;
-            status = ReadString(&tmp, tokens);
+            status = readString(&tmp, tokens);
             if (status == kReadStatusNoMemory) return NO_MEMORY;
             else if (status == kReadStatusFound) continue;
         }
 
-        status = ReadPunctuation(&tmp, tokens);
+        status = readPunctuation(&tmp, tokens);
         if (status == kReadStatusFound) continue;
         else if (status == kReadStatusNoMemory) return NO_MEMORY;
 
-        status = ReadNumber(&tmp, tokens);
+        status = readNumber(&tmp, tokens);
         if (status == kReadStatusNoMemory) return NO_MEMORY;
         else if (status == kReadStatusFound) continue;
 
-        status = ReadKeyWord(&tmp, tokens, data);
+        status = readKeyWord(&tmp, tokens, names_table);
         if (status == kReadStatusNoMemory) return NO_MEMORY;
         else if (status == kReadStatusFound) continue;;
 
-        status = ReadName(&tmp, data, tokens);
+        status = readName(&tmp, tokens, names_table);
         if (status == kReadStatusNoMemory) return NO_MEMORY;
         else if (status == kReadStatusNotFound) return ERROR;
     }
 
-    if (PushBack(tokens, {PUNCT_SYM, {.sym_code = END_SYMBOL}}) != SUCCESS)
+    if (pushBack(tokens, {PUNCT_SYM, NULL) != SUCCESS)
         return ERROR;
+
+    free(buf);
 
     return SUCCESS;
 }
 
+static int prepareToAnalyze(Vector *names_table, Vector *tokens) {
 
-static ReadStatus ReadPunctuation(char **buf, Vector *tokens) {
+    assert(names_table);
+    assert(tokens);
+
+    if (vectorCtor(names_table, NUMBER_OF_KEY_WORDS, sizeof(Token)) != SUCCESS)
+        return ERROR;
+
+    if (vectorCtor(tokens, 8, sizeof(Token)) != SUCCESS)
+        return ERROR;
+
+    Name *tmp = (Name *) calloc (1, sizeof(Name));
+    if (!tmp) {
+        printf(RED "LA error: " END_OF_COLOR "failed to allocate memory during preparation\n");
+        return ERROR;
+    }
+
+    for (size_t i = 0; i < NUMBER_OF_KEY_WORDS; i++) {
+        tmp->name = KEY_WORDS[i];
+        tmp->type = KEY_WORD;
+        if (pushBack(names_table, tmp) != SUCCESS)
+            return ERROR;
+    }
+
+    free(tmp);
+
+    return SUCCESS;
+}
+
+static int prototypesAnalysis(char **buf, Vector *names_table) {
+
+    assert(buf);
+    assert(*buf);
+    assert(names_table);
+
+    while (true) {
+
+        skipSpaces(buf);
+        skipComments(buf);
+        skipSpaces(buf);
+
+        if (strncmp(*buf, BEGIN_OF_MAIN, sizeof(BEGIN_OF_MAIN) - 1) == 0)
+            return SUCCESS;
+
+        if (strncmp(*buf, BEGIN_OF_FUNCTIONS, sizeof (BEGIN_OF_FUNCTIONS) - 1) == 0) {
+            *buf += sizeof (BEGIN_OF_FUNCTIONS) - 1;
+            skipSpaces(buf);
+
+            if (readName(buf, FUNC_NAME, names_table) != SUCCESS)
+                return ERROR;
+
+            while (**buf != ';' && **buf != '\0')
+                *buf += 1;
+            *buf += 1;
+        }
+
+        *buf += 1;
+    }
+}
+
+
+static ReadStatus readPunctuation(char **buf, Vector *tokens) {
 
     assert(buf);
     assert(tokens);
@@ -134,44 +197,55 @@ static ReadStatus ReadPunctuation(char **buf, Vector *tokens) {
         }
     }
 
+    Token *tmp = (Token *) calloc (1, sizeof(Token));
+    if (!tmp)   return kReadStatusNoMemory;
+
+    tmp->type = PUNCT_SYM;
+    tmp->sym_code = code;
+
     *buf += 1;
-    if (PushBack(tokens, {PUNCT_SYM, {.sym_code = code}}) != SUCCESS)
+
+    if (pushBack(tokens, tmp) != SUCCESS)
         return kReadStatusNoMemory;
 
     return kReadStatusFound;
 }
 
-static ReadStatus ReadKeyWord(char **buf, Vector *tokens, NamesTable *data) {
+static ReadStatus readKeyWord(char **buf, Vector *tokens, Vector *names_table) {
 
     assert(buf);
     assert(*buf);
     assert(tokens);
-    assert(data);
-    assert(data->names);
+    assert(names_table);
 
     for (size_t i = 0; i < NUMBER_OF_KEY_WORDS; i++) {
-        if (strncmp(*buf, data->names[i].name, KEY_WORD_LEN) == 0) {
+        if (strncmp(*buf, ((Name *) getPtr(names_table, i))->name, KEY_WORD_LEN) == 0) {
 
             *buf += KEY_WORD_LEN;
-            Token value = {};
+            Token *value = (Token *) calloc (1, sizeof(Token));
+            if (!value) return kReadStatusNoMemory;
 
-            if (i < BINARY_OP_INDEX)
-                value = {UNARY_OP, {.un_op = (Unary_Op) i}};
+            if (i < BINARY_OP_INDEX) {
+                value->type  = UNARY_OP;
+                value->un_op = (Unary_Op) i;
+            }
+            else if (i < KEY_OP_INDEX) {
+                value->type = BINARY_OP;
+                value->bin_op = (Binary_Op) i;
+            }
 
-            else if (i < KEY_OP_INDEX)
-                value = {BINARY_OP, {.bin_op = (Binary_Op) i}};
-
-            else if (i < FUNCTION_DEF_INDEX)
-                value = {KEY_OP, {.key_op = (Key_Op) i}};
-
+            else if (i < FUNCTION_DEF_INDEX) {
+                value->type = KEY_OP;
+                value->key_op = (Key_Op) i;
+            }
             else if (i < ADD_WORDS_INDEX) {
-                value = {FUNCTION, {.func_index = 0}};
-                data->start_search_index = data->size;
+                value->type = FUNCTION;
+                value->func_index = 0;
             }
             else
                 return kReadStatusFound;
 
-            if (PushBack(tokens, value) != SUCCESS)
+            if (pushBack(tokens, value) != SUCCESS)
                 return kReadStatusNoMemory;
 
             return kReadStatusFound;
@@ -182,7 +256,7 @@ static ReadStatus ReadKeyWord(char **buf, Vector *tokens, NamesTable *data) {
 }
 
 
-static ReadStatus ReadNumber(char **buf, Vector *tokens) {
+static ReadStatus readNumber(char **buf, Vector *tokens) {
 
     assert(buf);
     assert(*buf);
@@ -193,8 +267,13 @@ static ReadStatus ReadNumber(char **buf, Vector *tokens) {
 
     if (end == *buf) return kReadStatusNotFound;
 
-    if (PushBack(tokens, {NUMBER, {.number = num}}) != SUCCESS)
+    Token *tmp = (Token *) calloc (1, sizeof(Token));
+    if (!tmp)   return kReadStatusNoMemory;
+
+    if (pushBack(tokens, tmp) != SUCCESS)
         return kReadStatusNoMemory;
+
+    free(tmp);
 
     *buf = end;
 
@@ -202,14 +281,14 @@ static ReadStatus ReadNumber(char **buf, Vector *tokens) {
 }
 
 
-static ReadStatus ReadName(char **buf, NamesTable *data, Vector *tokens) {
+static ReadStatus readName(char **buf, Vector *tokens, Vector *names_table) {
 
     assert(buf);
     assert(*buf);
-    assert(data);
+    assert(names_table);
     assert(tokens);
 
-    char *name = GetName(buf);
+    char *name = getName(buf);
 
     NameType type = IfFuncBegins ? FUNC_NAME : VAR_NAME;
 
@@ -252,7 +331,7 @@ static ReadStatus ReadName(char **buf, NamesTable *data, Vector *tokens) {
 }
 
 
-static ReadStatus ReadString(char **buf, Vector *tokens) {
+static ReadStatus readString(char **buf, Vector *tokens) {
 
     assert(buf);
     assert(*buf);
@@ -262,13 +341,23 @@ static ReadStatus ReadString(char **buf, Vector *tokens) {
     while ((*buf)[len_of_str] != '\"' && (*buf)[len_of_str] != '\0')
         len_of_str++;
 
-    char *string = (char *) calloc (len_of_str + 1, sizeof (char));
-    if (!string) return kReadStatusNoMemory;
+    char *str = (char *) calloc (len_of_str + 1, sizeof (char));
+    if (!str) return kReadStatusNoMemory;
 
-    sscanf(*buf, "%[^\"]", string);
+    sscanf(*buf, "%[^\"]", str);
 
-    if (PushBack(tokens, {STRING, {.string = string}}) != SUCCESS)
+    Name *tmp = (Name *) calloc (1, sizeof(Name));
+    if (!tmp) {
+        free(str);
         return kReadStatusNoMemory;
+    }
+    tmp->name = str;
+    tmp->type = STRING;
+
+    if (pushBack(tokens, tmp) != SUCCESS)
+        return kReadStatusNoMemory;
+
+    free(tmp);
 
     *buf += len_of_str + 1;
 
@@ -283,9 +372,9 @@ static int PrototypesAnalysis(char **buf, NamesTable *data) {
 
     while (true) {
 
-        SkipSpaces(buf);
-        SkipComments(buf);
-        SkipSpaces(buf);
+        skipSpaces(buf);
+        skipComments(buf);
+        skipSpaces(buf);
 
         if (strncmp(*buf, "once upon the time", sizeof ("once upon the time") - 1) == 0)
             return SUCCESS;
@@ -302,7 +391,7 @@ static int PrototypesAnalysis(char **buf, NamesTable *data) {
 
             while (**buf != ';' && **buf != '\0')
                 *buf += 1;
-            *buf += 1;
+            *buf += 1;`
         }
 
         *buf += 1;
@@ -355,7 +444,7 @@ static bool IsValidSymbol(const char sym) {
     return true;
 }
 
-static void SkipSpaces(char **buf) {
+static void skipComments(char **buf) {
 
     assert(buf);
     assert(*buf);
@@ -364,7 +453,7 @@ static void SkipSpaces(char **buf) {
         *buf += 1;
 }
 
-static void SkipComments(char **buf) {
+static void skipComments(char **buf) {
 
     assert(buf);
     assert(*buf);
@@ -377,26 +466,55 @@ static void SkipComments(char **buf) {
     }
 }
 
-static char *GetName(char **buf) {
+static int readName(char **buf, NameType type, Vector *names_table) {
 
     assert(buf);
     assert(*buf);
+    assert(names_table);
 
     size_t len_of_str = 0;
     while (IsValidSymbol((*buf)[len_of_str]))
         len_of_str++;
 
     if (len_of_str == 0) {
-        printf(RED "error: " END_OF_COLOR "invalid name \"%s\"\n", *buf);
-        return NULL;
+        printf(RED "LA error: " END_OF_COLOR "invalid name \"%s\"\n", *buf);
+        return ERROR;
     }
 
     char *str = (char *) calloc (len_of_str + 1, sizeof (char));
-    if (!str) return NULL;
+    if (!str) return NO_MEMORY;
 
     sscanf(*buf, "%[^(){} \n\";-+*\\^,]", str);
 
     *buf += len_of_str;
 
-    return str;
+    Name *tmp = (Name *) calloc (1, sizeof (Name));
+    if (!tmp) {
+        free(str);
+        return NO_MEMORY;
+    }
+    tmp->name = str;
+    tmp->type = type;
+
+    if (pushBack(names_table, tmp) != SUCCESS)
+        return NO_MEMORY;
+
+    nameDtor(tmp);
+
+    return SUCCESS;
+}
+
+void nameDtor(Name *name) {
+
+    assert(name);
+
+    free(&name->name);
+    free(name);
+}
+
+void *getPtr(Vector *data, size_t index) {
+
+    assert(data);
+
+    return (data->data + index * data->element_size);
 }

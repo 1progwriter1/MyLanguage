@@ -1,8 +1,6 @@
 #ifndef KEY_WORDS_CODES
 #define KEY_WORDS_CODES
 
-extern const char *KEY_WORDS[];
-
 enum ValueType {
     PUNCT_SYM =  0,
     BINARY_OP =  1,
@@ -77,5 +75,19 @@ enum KeyWordIndex {
 };
 
 extern const char *KEY_WORDS[NUMBER_OF_KEY_WORDS];
+
+struct Token {
+    ValueType type;
+    union {
+        double number;
+        Binary_Op bin_op;
+        Unary_Op un_op;
+        Key_Op key_op;
+        int var_index;
+        int func_index;
+        Punctuation sym_code;
+        char *string;
+    };
+};
 
 #endif
