@@ -83,10 +83,9 @@ struct Token {
         Binary_Op bin_op;
         Unary_Op un_op;
         Key_Op key_op;
-        int var_index;
-        int func_index;
         Punctuation sym_code;
-        char *string;
+        size_t func_index;
+        size_t var_index;
     };
 };
 

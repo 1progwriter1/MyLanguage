@@ -19,7 +19,7 @@ int main(const int argc, const char *argv[]) {
             output_file = argv[2];
     }
 
-    NamesTable data = {};
+    Vector data = {};
     Vector tokens = {};
     TreeStruct tree = {};
 
@@ -42,8 +42,8 @@ int main(const int argc, const char *argv[]) {
         return ERROR;
 
     TreeRootDtor(&tree);
-    VectorDtor(&tokens);
-    NamesTableDtor(&data);
+    vectorDtor(&tokens);
+    vectorDtor(&data);
 
     return SUCCESS;
 }

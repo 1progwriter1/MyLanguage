@@ -9,16 +9,16 @@ enum ReadStatus {
     kReadStatusFound,
     kReadStatusNoMemory,
     kReadStatusNotFound,
+    kReadStatusError,
 };
 
-#define KEY_WORD_LEN strlen(((Name *) getPtr(names_table, i))->name)
+#define KEY_WORD_LEN strlen(getStrPtr(names_table, i))
 #define IfFuncBegins (tokens->data[tokens->size - 1].type == FUNCTION)
 
 #define BEGIN_OF_MAIN "once upon the time"
 #define BEGIN_OF_FUNCTIONS "fairytale"
 
-static int prepareToAnalyze(Vector *names_table, Vector *tokens);
-
+static int prepareToAnalyze  (Vector *names_table, Vector *tokens);
 static int prototypesAnalysis(char **buf, Vector *data);
 
 static ReadStatus readNumber     (char **buf, Vector *tokens);
@@ -27,17 +27,18 @@ static ReadStatus readKeyWord    (char **buf, Vector *tokens, Vector *names_tabl
 static ReadStatus readPunctuation(char **buf, Vector *tokens);
 static ReadStatus readName       (char **buf, Vector *tokens, Vector *names_table);
 
-// static int readName(char **buf, NameType type, Vector *tokens);
 
-static bool IfNameExists(const char *str, Vector *names_table, int *index);
-static bool IfFunctionExists(const char *str, Vector *names_table, int *func_index);
-static bool IsValidSymbol(const char sym);
-static void skipSpaces(char **buf);
+static bool ifNameExists    (const char *str, Vector *names_table, size_t *index);
+static bool ifFunctionExists(const char *str, Vector *names_table, size_t *func_index);
+static bool isValidSymbol   (const char sym);
+
+static void skipSpaces  (char **buf);
 static void skipComments(char **buf);
 
-static Name *getName(char **buf, NameType type);
-void nameDtor(Name *name);
-void *getPtr(Vector *data, size_t index);
+static const char *getName    (char **buf);
+static const char *getStrPtr  (Vector *data, size_t index);
+
+static NameType    getNameType(Vector *names_table, size_t index);
 
 
 int analyzeLexis(Vector *names_table, Vector *tokens, const char *filename) {
@@ -55,6 +56,12 @@ int analyzeLexis(Vector *names_table, Vector *tokens, const char *filename) {
     char *tmp = buf;
     if (prototypesAnalysis(&tmp, names_table) != SUCCESS)
         return ERROR;
+
+    Token *null_symbol = (Token *) calloc (1, sizeof(Token));
+    if (!null_symbol)  return ERROR;
+
+    null_symbol->type = PUNCT_SYM;
+    null_symbol->sym_code = END_SYMBOL;
 
     while (*tmp != '\0') {
 
@@ -87,9 +94,11 @@ int analyzeLexis(Vector *names_table, Vector *tokens, const char *filename) {
         else if (status == kReadStatusNotFound) return ERROR;
     }
 
-    if (pushBack(tokens, {PUNCT_SYM, NULL) != SUCCESS)
+
+    if (pushBack(tokens, null_symbol) != SUCCESS)
         return ERROR;
 
+    free(null_symbol);
     free(buf);
 
     return SUCCESS;
@@ -143,8 +152,19 @@ static int prototypesAnalysis(char **buf, Vector *names_table) {
             *buf += sizeof (BEGIN_OF_FUNCTIONS) - 1;
             skipSpaces(buf);
 
-            if (readName(buf, FUNC_NAME, names_table) != SUCCESS)
+            const char *func_name = getName(buf);
+            if (!func_name) return ERROR;
+
+            Name *tmp = (Name *) calloc (1, sizeof(Name));
+            if (!tmp)   return ERROR;
+
+            tmp->name = func_name;
+            tmp->type = FUNC_NAME;
+
+            if (pushBack(names_table, tmp) != SUCCESS)
                 return ERROR;
+
+            nameDtor(tmp);
 
             while (**buf != ';' && **buf != '\0')
                 *buf += 1;
@@ -219,7 +239,7 @@ static ReadStatus readKeyWord(char **buf, Vector *tokens, Vector *names_table) {
     assert(names_table);
 
     for (size_t i = 0; i < NUMBER_OF_KEY_WORDS; i++) {
-        if (strncmp(*buf, ((Name *) getPtr(names_table, i))->name, KEY_WORD_LEN) == 0) {
+        if (strncmp(*buf, getStrPtr(names_table, i), KEY_WORD_LEN) == 0) {
 
             *buf += KEY_WORD_LEN;
             Token *value = (Token *) calloc (1, sizeof(Token));
@@ -288,44 +308,38 @@ static ReadStatus readName(char **buf, Vector *tokens, Vector *names_table) {
     assert(names_table);
     assert(tokens);
 
-    char *name = getName(buf);
+    const char *name = getName(buf);
+    if (!name)  return kReadStatusError;
 
-    NameType type = IfFuncBegins ? FUNC_NAME : VAR_NAME;
+    Token *tmp = (Token *) calloc (1, sizeof(Token));
+    if (!tmp)   return kReadStatusNoMemory;
 
-    int name_index = 0;
+    size_t index = 0;
+    NameType type = ifFunctionExists(name, names_table, &index) ? FUNC_NAME : VAR_NAME;
+
     if (type == FUNC_NAME) {
-        if (!IfFunctionExists(name, data, &name_index)) {
-            name_index = (int) data->size;
-            if (PushName(data, {name, type}) != SUCCESS)
-                return kReadStatusNoMemory;
-        }
-        else {
-            free(name);
-            name = NULL;
-        }
-        tokens->data[tokens->size - 1].func_index = name_index;
-        return kReadStatusFound;
-    }
-
-    if (IfFunctionExists(name, data, &name_index)) {
-        if (PushBack(tokens, {FUNCTION, {.func_index = name_index}}) != SUCCESS)
-            return kReadStatusNoMemory;
-        return kReadStatusFound;
-    }
-
-    if (!IfNameExists(name, data, &name_index)) {
-        name_index = (int) data->size;
-
-        if (PushName(data, {name, type}) != SUCCESS)
-            return kReadStatusNoMemory;
+        tmp->type = FUNCTION;
+        tmp->func_index = index;
     }
     else {
-        free(name);
-        name = NULL;
+        if (!ifNameExists(name, names_table, &index)) {
+            Name *tmp = (Name *) calloc (1, sizeof(Name));
+            if (!tmp)   return kReadStatusNoMemory;
+
+            tmp->name = name;
+            tmp->type = VAR_NAME;
+
+            index = names_table->size - 1;
+        }
+        tmp->type = VARIABLE;
+        tmp->var_index = index;
     }
 
-    if (PushBack(tokens, {VARIABLE, {.var_index = name_index}}) != SUCCESS)
+    if (pushBack(tokens, tmp) != SUCCESS)
         return kReadStatusNoMemory;
+
+    free(tmp);
+    free((void *) name);
 
     return kReadStatusFound;
 }
@@ -352,7 +366,7 @@ static ReadStatus readString(char **buf, Vector *tokens) {
         return kReadStatusNoMemory;
     }
     tmp->name = str;
-    tmp->type = STRING;
+    tmp->type = STR;
 
     if (pushBack(tokens, tmp) != SUCCESS)
         return kReadStatusNoMemory;
@@ -364,50 +378,15 @@ static ReadStatus readString(char **buf, Vector *tokens) {
     return kReadStatusFound;
 }
 
-static int PrototypesAnalysis(char **buf, NamesTable *data) {
-
-    assert(buf);
-    assert(*buf);
-    assert(data);
-
-    while (true) {
-
-        skipSpaces(buf);
-        skipComments(buf);
-        skipSpaces(buf);
-
-        if (strncmp(*buf, "once upon the time", sizeof ("once upon the time") - 1) == 0)
-            return SUCCESS;
-
-        if (strncmp(*buf, "fairytale", sizeof ("fairytale") - 1) == 0) {
-            *buf += sizeof ("fairytale") - 1;
-            SkipSpaces(buf);
-            char *func_name = GetName(buf);
-            if (!func_name)
-                return ERROR;
-
-            if (PushName(data, {func_name, FUNC_NAME}) != SUCCESS)
-                return ERROR;
-
-            while (**buf != ';' && **buf != '\0')
-                *buf += 1;
-            *buf += 1;`
-        }
-
-        *buf += 1;
-    }
-}
-
-static bool IfNameExists(const char *str, NamesTable *data, int *name_index) {
+static bool ifNameExists(const char *str, Vector *names_table, size_t *name_index) {
 
     assert(str);
-    assert(data);
+    assert(names_table);
     assert(name_index);
-    assert(data->names);
 
-    for (size_t i = data->start_search_index; i < data->size; i++) {
-        if (strcmp(data->names[i].name, str) == 0 && data->names[i].type == VAR_NAME) {
-            *name_index = (int) i;
+    for (size_t i = NUMBER_OF_KEY_WORDS; i < names_table->size; i++) {
+        if (strcmp(getStrPtr(names_table, i), str) == 0 && getNameType(names_table, i) == VAR_NAME) {
+            *name_index = i;
             return true;
         }
     }
@@ -415,14 +394,14 @@ static bool IfNameExists(const char *str, NamesTable *data, int *name_index) {
     return false;
 }
 
-static bool IfFunctionExists(const char *str, NamesTable *data, int *func_index) {
+static bool ifFunctionExists(const char *str, Vector *names_table, size_t *func_index) {
 
     assert(str);
-    assert(data);
+    assert(names_table);
     assert(func_index);
 
-    for (size_t i = NUMBER_OF_KEY_WORDS - 1; i < data->size; i++) {
-        if (strcmp(str, data->names[i].name) == 0 && data->names[i].type == FUNC_NAME) {
+    for (size_t i = NUMBER_OF_KEY_WORDS - 1; i < names_table->size; i++) {
+        if (strcmp(str, getStrPtr(names_table, i)) == 0 && getNameType(names_table, i) == FUNC_NAME) {
             *func_index = (int) i;
             return true;
         }
@@ -432,7 +411,7 @@ static bool IfFunctionExists(const char *str, NamesTable *data, int *func_index)
 }
 
 
-static bool IsValidSymbol(const char sym) {
+static bool isValidSymbol(const char sym) {
 
     const size_t PUNC_SYM_NUM = 15;
     char punct_symbols[PUNC_SYM_NUM] = {'(', ')', '{', '}', ';', '\n', ' ', '"', '*', '\\', '-', '+', '^', ' ', ','};
@@ -444,7 +423,7 @@ static bool IsValidSymbol(const char sym) {
     return true;
 }
 
-static void skipComments(char **buf) {
+static void skipSpaces(char **buf) {
 
     assert(buf);
     assert(*buf);
@@ -466,55 +445,48 @@ static void skipComments(char **buf) {
     }
 }
 
-static int readName(char **buf, NameType type, Vector *names_table) {
+static const char *getName(char **buf) {
 
     assert(buf);
     assert(*buf);
-    assert(names_table);
 
     size_t len_of_str = 0;
-    while (IsValidSymbol((*buf)[len_of_str]))
+    while (isValidSymbol((*buf)[len_of_str]))
         len_of_str++;
 
     if (len_of_str == 0) {
         printf(RED "LA error: " END_OF_COLOR "invalid name \"%s\"\n", *buf);
-        return ERROR;
+        return NULL;
     }
 
     char *str = (char *) calloc (len_of_str + 1, sizeof (char));
-    if (!str) return NO_MEMORY;
+    if (!str) return NULL;
 
     sscanf(*buf, "%[^(){} \n\";-+*\\^,]", str);
 
     *buf += len_of_str;
 
-    Name *tmp = (Name *) calloc (1, sizeof (Name));
-    if (!tmp) {
-        free(str);
-        return NO_MEMORY;
-    }
-    tmp->name = str;
-    tmp->type = type;
-
-    if (pushBack(names_table, tmp) != SUCCESS)
-        return NO_MEMORY;
-
-    nameDtor(tmp);
-
-    return SUCCESS;
+    return str;
 }
 
 void nameDtor(Name *name) {
 
     assert(name);
 
-    free(&name->name);
+    free((void *) name->name);
     free(name);
 }
 
-void *getPtr(Vector *data, size_t index) {
+static const char *getStrPtr(Vector *names_table, size_t index) {
 
-    assert(data);
+    assert(names_table);
 
-    return (data->data + index * data->element_size);
+    return ((Name *) ((char *) names_table->data + index * names_table->element_size))->name;
+}
+
+static NameType getNameType(Vector *names_table, size_t index) {
+
+    assert(names_table);
+
+    return ((Name *) ((char *) names_table->data + index * names_table->element_size))->type;
 }

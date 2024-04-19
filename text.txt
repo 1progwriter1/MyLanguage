@@ -1,7 +1,3 @@
-// factorial
-
-fairytale Fact(n);
-
 once upon the time () {
 
     n turn into 0;
@@ -9,23 +5,10 @@ once upon the time () {
     say the magic word ("Enter n: ");
     guess the riddle (n);
 
-    ans turn into Fact(n);
+    n turn into n + 1;
 
     say the magic word ("Answer: ");
-    say the magic number (ans);
+    say the magic number (n);
 
     end();
-}
-
-
-fairytale Fact(n) {
-
-    stone (n not stronger 1)
-    go right {
-        end(1);
-    }
-
-    tmp turn into n - 1;
-
-    end(Fact(tmp) * n);
 }

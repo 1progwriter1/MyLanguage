@@ -10,7 +10,7 @@ enum NameType {
     VAR_NAME  = 0,
     KEY_WORD  = 1,
     FUNC_NAME = 2,
-    STRING    = 3,
+    STR       = 3,
 };
 
 struct Name {
@@ -19,5 +19,7 @@ struct Name {
 };
 
 int analyzeLexis(Vector *names_table, Vector *tokens, const char *filename);
+
+void nameDtor(Name *name);
 
 #endif
