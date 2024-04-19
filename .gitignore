@@ -5,3 +5,5 @@
 *.out
 *.txt
 *.bin
+*.gitignore
+*.DS_Store

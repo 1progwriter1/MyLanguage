@@ -33,36 +33,36 @@ struct StringParseData {
     ParseError error;
 };
 
-int StringParse(Vector *tokens, TreeStruct *tree);
+int stringParse(Vector *tokens, TreeStruct *tree);
 
-TreeNode *GetFunction(StringParseData *data, TreeStruct *tree);
+TreeNode *getFunction(StringParseData *data, TreeStruct *tree);
 
-TreeNode *GetExpression(StringParseData *data, TreeStruct *tree);
+TreeNode *getExpression(StringParseData *data, TreeStruct *tree);
 
-TreeNode *GetTerm(StringParseData *data, TreeStruct *tree);
+TreeNode *getTerm(StringParseData *data, TreeStruct *tree);
 
-TreeNode *GetPrimaryExpression(StringParseData *data, TreeStruct *tree);
+TreeNode *getPrimaryExpression(StringParseData *data, TreeStruct *tree);
 
-TreeNode *GetNumber(StringParseData *data, TreeStruct *tree);
+TreeNode *getNumber(StringParseData *data, TreeStruct *tree);
 
-TreeNode *GetUnary(StringParseData *data, TreeStruct *tree);
+TreeNode *getUnary(StringParseData *data, TreeStruct *tree);
 
-TreeNode *GetKeyOp(StringParseData *data, TreeStruct *tree);
+TreeNode *getKeyOp(StringParseData *data, TreeStruct *tree);
 
-TreeNode *GetAssign(StringParseData *data, TreeStruct *tree);
+TreeNode *getAssign(StringParseData *data, TreeStruct *tree);
 
-TreeNode *GetCondition(StringParseData *data, TreeStruct *tree);
+TreeNode *getCondition(StringParseData *data, TreeStruct *tree);
 
-TreeNode *GetOutput(StringParseData *data, TreeStruct *tree);
+TreeNode *getOutput(StringParseData *data, TreeStruct *tree);
 
-TreeNode *GetBody(StringParseData *data, TreeStruct *tree);
+TreeNode *getBody(StringParseData *data, TreeStruct *tree);
 
-TreeNode *GetInput(StringParseData *data, TreeStruct *tree);
+TreeNode *getInput(StringParseData *data, TreeStruct *tree);
 
-TreeNode *GetCall(StringParseData *data, TreeStruct *tree);
+TreeNode *getCall(StringParseData *data, TreeStruct *tree);
 
-TreeNode *GetRet(StringParseData *data, TreeStruct *tree);
+TreeNode *getRet(StringParseData *data, TreeStruct *tree);
 
-TreeNode *GetArgs(StringParseData *data, TreeStruct *tree);
+TreeNode *getArgs(StringParseData *data, TreeStruct *tree);
 
 #endif

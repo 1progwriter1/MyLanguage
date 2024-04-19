@@ -18,7 +18,7 @@
     K ::= "stone" Cond B B | "fell into a dead sleep while" Cond B
     O ::= say '(' N | S ')' ';'
     A ::= N 'turn into' E ';'
-    Cond ::= '(' N ['turned into','not stronger','not weeker','stronger','weeker'] N ')'
+    Cond ::= '(' N ['turned into','not stronger','not weaker','stronger','weaker'] N ')'
 
     E  ::= T (['+','-'] T)*
     T  ::= P (['*,'/'] P)*
@@ -33,7 +33,7 @@
                         } while (0);
 
 #define PUNCT_ASSERT(sym, err, ptr1, ptr2)  do {                                \
-                                                if (!IsPunct(data, sym)) {      \
+                                                if (!isPunct(data, sym)) {      \
                                                     data->error = err;          \
                                                     RETURN_ON_ERROR(ptr1, ptr2) \
                                                 }                               \
@@ -44,8 +44,8 @@
                     NodeDtor(tree, node1);  NodeDtor(tree, node2);      \
                     return NULL;}
 
-#define BinaryOp(data) data->tokens->data[data->position].bin_op
-#define UnaryOp(data)  data->tokens->data[data->position].un_op
+#define BinaryOp(data) getTokenPtr(data, data->position)->bin_op
+#define UnaryOp(data)  getTokenPtr(data, data->position)->un_op
 
 const char *PARSE_ERRORS[] = {
 [NO_ERROR]              = "no_error",
@@ -65,15 +65,18 @@ const char *PARSE_ERRORS[] = {
 [ARGS_ERROR]            = "argument after comma expected"
                         };
 
-static bool IsType(StringParseData *data, ValueType type);
-static bool IsBinOp(StringParseData *data, Binary_Op operation);
-static bool IsUnOp(StringParseData *data, Unary_Op operation);
-static bool IsPunct(StringParseData *data, Punctuation punct_sym);
-static bool IsKeyOp(StringParseData *data, Key_Op operation);
+static bool isType(StringParseData *data, ValueType type);
+static bool isBinOp(StringParseData *data, Binary_Op operation);
+static bool isUnOp(StringParseData *data, Unary_Op operation);
+static bool isPunct(StringParseData *data, Punctuation punct_sym);
+static bool isKeyOp(StringParseData *data, Key_Op operation);
 
-static char *CopyStr(char *src);
+static ValueType getType(StringParseData *data);
+static Token *getTokenPtr(StringParseData *data, size_t index);
 
-int StringParse(Vector *tokens, TreeStruct *tree) {
+static char *copyStr(char *src);
+
+int stringParse(Vector *tokens, TreeStruct *tree) {
 
     assert(tokens);
     assert(tree);
@@ -81,11 +84,11 @@ int StringParse(Vector *tokens, TreeStruct *tree) {
     StringParseData data = {tokens, 0, NO_ERROR};
     size_t start_position = data.position;
 
-    tree->root = GetFunction(&data, tree);
+    tree->root = getFunction(&data, tree);
     if (data.error != NO_ERROR) {
         printf(RED "error: " END_OF_COLOR "%s\nposition: %lu\n", PARSE_ERRORS[data.error], data.position);
         for (size_t i = 0; i < tokens->size; i++) {
-            printf(BRIGHT_GREEN "%5lu) " END_OF_COLOR "type = %d ", i, tokens->data[i].type);
+            printf(BRIGHT_GREEN "%5lu) " END_OF_COLOR "type = %d ", i, getTokenPtr(&data, i)->type);
             if (i % 10 == 0)
                 printf("\n");
         }
@@ -94,7 +97,7 @@ int StringParse(Vector *tokens, TreeStruct *tree) {
         return ERROR;
     }
 
-    if (!IsPunct(&data, END_SYMBOL)) {
+    if (!isPunct(&data, END_SYMBOL)) {
         fprintf(stderr, "\n%lu\n", data.position);
         printf(RED "error: " END_OF_COLOR "expected: \\0\n");
         TreeRootDtor(tree);
@@ -111,21 +114,21 @@ int StringParse(Vector *tokens, TreeStruct *tree) {
     return SUCCESS;
 }
 
-TreeNode *GetFunction(StringParseData *data, TreeStruct *tree) {
+TreeNode *getFunction(StringParseData *data, TreeStruct *tree) {
 
     PARSE_ASSERT
 
     TreeNode *func_ptr = NULL;
 
-    if (data->tokens->data[data->position].type == FUNCTION) {
+    if (getType(data) == FUNCTION) {
         func_ptr = NEW(FUNC(data->tokens->data[data->position].func_index), NEW(PUNCT(NEW_LINE), NULL, NULL), NULL);
         data->position++;
 
         PUNCT_ASSERT(OP_PARENTHESIS, OP_PARENTHESIS_MISSED, func_ptr, NULL)
         data->position++;
 
-        if (data->tokens->data[data->position].func_index != 0) {
-            TreeNode *args = GetArgs(data, tree);
+        if (getTokenPtr(data, data->position)->func_index != 0) {
+            TreeNode *args = getArgs(data, tree);
             func_ptr->left->right = args;
         }
 
@@ -134,10 +137,10 @@ TreeNode *GetFunction(StringParseData *data, TreeStruct *tree) {
     }
     else return NULL;
 
-    if (!IsPunct(data, OP_BRACE)) return NULL;
+    if (!isPunct(data, OP_BRACE)) return NULL;
     data->position++;
 
-    TreeNode *ptr = GetBody(data, tree);
+    TreeNode *ptr = getBody(data, tree);
     RETURN_ON_ERROR(ptr, NULL)
 
     func_ptr->left->left = ptr;
@@ -145,7 +148,7 @@ TreeNode *GetFunction(StringParseData *data, TreeStruct *tree) {
     PUNCT_ASSERT(CL_BRACE, CL_BRACE_MISSED, func_ptr, NULL)
     data->position++;
 
-    TreeNode *next = GetFunction(data, tree);
+    TreeNode *next = getFunction(data, tree);
     func_ptr->right = next;
     RETURN_ON_ERROR(func_ptr, NULL)
 
@@ -153,33 +156,33 @@ TreeNode *GetFunction(StringParseData *data, TreeStruct *tree) {
     return func_ptr;
 }
 
-TreeNode *GetArgs(StringParseData *data, TreeStruct *tree) {
+TreeNode *getArgs(StringParseData *data, TreeStruct *tree) {
 
     PARSE_ASSERT
 
-    if (!IsType(data, VARIABLE))
+    if (!isType(data, VARIABLE))
         return NULL;
 
     TreeNode *ptr = NEW(VAR(data->tokens->data[data->position].var_index), NULL, NULL);
     data->position++;
 
-    if (!IsPunct(data, COMMA))
+    if (!isPunct(data, COMMA))
         return ptr;
     data->position++;
 
-    if (!IsType(data, VARIABLE)) {
+    if (!isType(data, VARIABLE)) {
         data->error = ARGS_ERROR;
         RETURN_ON_ERROR(ptr, NULL);
     }
 
-    TreeNode *next = GetArgs(data, tree);
+    TreeNode *next = getArgs(data, tree);
     RETURN_ON_ERROR(ptr, next);
     ptr->right = next;
 
     return ptr;
 }
 
-TreeNode *GetBody(StringParseData *data, TreeStruct *tree) {
+TreeNode *getBody(StringParseData *data, TreeStruct *tree) {
 
     PARSE_ASSERT
 
@@ -188,56 +191,56 @@ TreeNode *GetBody(StringParseData *data, TreeStruct *tree) {
 
     TreeNode *ptr = NULL;
 
-    ptr = GetKeyOp(data, tree);
+    ptr = getKeyOp(data, tree);
     RETURN_ON_ERROR(ptr, NULL)
 
     if (!ptr) {
-        ptr = GetAssign(data, tree);
+        ptr = getAssign(data, tree);
         RETURN_ON_ERROR(ptr, NULL)
     }
 
     if (!ptr) {
-        ptr = GetOutput(data, tree);
+        ptr = getOutput(data, tree);
         RETURN_ON_ERROR(ptr, NULL)
     }
 
     if (!ptr) {
-        ptr = GetInput(data, tree);
+        ptr = getInput(data, tree);
         RETURN_ON_ERROR(ptr, NULL)
     }
 
     if (!ptr) {
-        ptr = GetCall(data, tree);
+        ptr = getCall(data, tree);
         RETURN_ON_ERROR(ptr, NULL)
     }
 
     if (!ptr) {
-        ptr = GetRet(data, tree);
+        ptr = getRet(data, tree);
         RETURN_ON_ERROR(ptr, NULL)
     }
 
     if (!ptr) return NULL;
 
-    TreeNode *next = GetBody(data, tree);
+    TreeNode *next = getBody(data, tree);
 
     return NEW_S(PUNCT(NEW_LINE), ptr, next);
 
 }
 
-TreeNode *GetRet(StringParseData *data, TreeStruct *tree) {
+TreeNode *getRet(StringParseData *data, TreeStruct *tree) {
 
     PARSE_ASSERT
 
     TreeNode *ptr = NULL;
-    if (IsUnOp(data, RET)) {
+    if (isUnOp(data, RET)) {
         data->position++;
         ptr = NEW(UN_OP(RET), NULL, NULL);
 
         PUNCT_ASSERT(OP_PARENTHESIS, OP_PARENTHESIS_MISSED, ptr, NULL)
         data->position++;
 
-        if (!IsPunct(data, CL_PARENTHESIS)) {
-            ptr->right = GetExpression(data, tree);
+        if (!isPunct(data, CL_PARENTHESIS)) {
+            ptr->right = getExpression(data, tree);
             RETURN_ON_ERROR(ptr, NULL)
         }
 
@@ -251,12 +254,12 @@ TreeNode *GetRet(StringParseData *data, TreeStruct *tree) {
     return ptr;
 }
 
-TreeNode *GetCall(StringParseData *data, TreeStruct *tree) {
+TreeNode *getCall(StringParseData *data, TreeStruct *tree) {
 
     PARSE_ASSERT
 
     TreeNode *ptr = NULL;
-    if (IsType(data, FUNCTION)) {
+    if (isType(data, FUNCTION)) {
         ptr = NEW(FUNC(data->tokens->data[data->position].func_index), NULL, NULL);
     }
     else {
@@ -267,7 +270,7 @@ TreeNode *GetCall(StringParseData *data, TreeStruct *tree) {
     PUNCT_ASSERT(OP_PARENTHESIS, OP_PARENTHESIS_MISSED, ptr, NULL)
     data->position++;
 
-    TreeNode *args = GetArgs(data, tree);
+    TreeNode *args = getArgs(data, tree);
     RETURN_ON_ERROR(args, ptr);
 
     ptr->right = args;
@@ -281,22 +284,22 @@ TreeNode *GetCall(StringParseData *data, TreeStruct *tree) {
     return ptr;
 }
 
-TreeNode *GetInput(StringParseData *data, TreeStruct *tree) {
+TreeNode *getInput(StringParseData *data, TreeStruct *tree) {
 
     PARSE_ASSERT
 
-    if (IsUnOp(data, IN)) {
+    if (isUnOp(data, IN)) {
         data->position++;
 
         PUNCT_ASSERT(OP_PARENTHESIS, OP_PARENTHESIS_MISSED, NULL, NULL)
         data->position++;
 
-        if (!IsType(data, VARIABLE)) {
+        if (!isType(data, VARIABLE)) {
             data->error = INPUT_ERROR;
             return NULL;
         }
 
-        TreeNode *ptr = GetNumber(data, tree);
+        TreeNode *ptr = getNumber(data, tree);
         RETURN_ON_ERROR(ptr, NULL)
 
         PUNCT_ASSERT(CL_PARENTHESIS, CL_PARENTHESIS_MISSED, ptr, NULL)
@@ -311,13 +314,13 @@ TreeNode *GetInput(StringParseData *data, TreeStruct *tree) {
     return NULL;
 }
 
-TreeNode *GetOutput(StringParseData *data, TreeStruct *tree) {
+TreeNode *getOutput(StringParseData *data, TreeStruct *tree) {
 
     PARSE_ASSERT
 
-    if (IsUnOp(data, OUT) || IsUnOp(data, OUT_S)) {
+    if (isUnOp(data, OUT) || isUnOp(data, OUT_S)) {
 
-        Unary_Op operation = IsUnOp(data, OUT) ? OUT : OUT_S;
+        Unary_Op operation = isUnOp(data, OUT) ? OUT : OUT_S;
         data->position++;
 
         PUNCT_ASSERT(OP_PARENTHESIS, OP_PARENTHESIS_MISSED, NULL, NULL)
@@ -325,10 +328,10 @@ TreeNode *GetOutput(StringParseData *data, TreeStruct *tree) {
 
         TreeNode *value = NULL;
         if (operation == OUT) {
-            value = GetNumber(data, tree);
+            value = getNumber(data, tree);
         }
         else {
-            char *str = CopyStr(data->tokens->data[data->position].string);
+            char *str = copyStr(getTokenPtr(data)->string);
             if (!str) {
                 data->error = COPY_ERROR;
                 return NULL;
@@ -351,35 +354,35 @@ TreeNode *GetOutput(StringParseData *data, TreeStruct *tree) {
     return NULL;
 }
 
-TreeNode *GetKeyOp(StringParseData *data, TreeStruct *tree) {
+TreeNode *getKeyOp(StringParseData *data, TreeStruct *tree) {
 
     PARSE_ASSERT
 
-    if (!IsKeyOp(data, IF) && !IsKeyOp(data, WHILE))
+    if (!isKeyOp(data, IF) && !isKeyOp(data, WHILE))
         return NULL;
 
-    Key_Op operation = IsKeyOp(data, IF) ? IF : WHILE;
+    Key_Op operation = isKeyOp(data, IF) ? IF : WHILE;
 
     data->position++;
-    TreeNode *cond = GetCondition(data, tree);
+    TreeNode *cond = getCondition(data, tree);
     RETURN_ON_ERROR(cond, NULL)
     if (!cond)
 
-    if (!IsPunct(data, OP_BRACE))
+    if (!isPunct(data, OP_BRACE))
         return NEW_S(KEY_OP(operation), cond, NEW(PUNCT(NEW_LINE), NULL, NULL));
     data->position++;
 
-    TreeNode *body_yes = GetBody(data, tree);
+    TreeNode *body_yes = getBody(data, tree);
     RETURN_ON_ERROR(cond, body_yes);
 
     PUNCT_ASSERT(CL_BRACE, CL_BRACE_MISSED, body_yes, cond)
     data->position++;
 
-    if (!IsPunct(data, OP_BRACE))
+    if (!isPunct(data, OP_BRACE))
         return NEW_S(KEY_OP(operation), cond, NEW(PUNCT(NEW_LINE), body_yes, NULL));
     data->position++;
 
-    TreeNode *body_no = GetBody(data, tree);
+    TreeNode *body_no = getBody(data, tree);
     if (data->error != NO_ERROR) {
         NodeDtor(tree, cond);
         NodeDtor(tree, body_yes);
@@ -387,7 +390,7 @@ TreeNode *GetKeyOp(StringParseData *data, TreeStruct *tree) {
         return NULL;
     }
 
-    if (!IsPunct(data, CL_BRACE)) {
+    if (!isPunct(data, CL_BRACE)) {
         data->error = CL_BRACE_MISSED;
         NodeDtor(tree, cond);
         NodeDtor(tree, body_yes);
@@ -403,24 +406,24 @@ TreeNode *GetKeyOp(StringParseData *data, TreeStruct *tree) {
 
 }
 
-TreeNode *GetCondition(StringParseData *data, TreeStruct *tree) {
+TreeNode *getCondition(StringParseData *data, TreeStruct *tree) {
 
     PARSE_ASSERT
 
     PUNCT_ASSERT(OP_PARENTHESIS, OP_PARENTHESIS_MISSED, NULL, NULL)
     data->position++;
 
-    TreeNode *left = GetExpression(data, tree);
+    TreeNode *left = getExpression(data, tree);
     RETURN_ON_ERROR(left, NULL)
 
-    if (!IsType(data, BINARY_OP) || (BinaryOp(data) < EQUAL || NOT_EQ < BinaryOp(data))) {
+    if (!isType(data, BINARY_OP) || (BinaryOp(data) < EQUAL || NOT_EQ < BinaryOp(data))) {
         data->error = LOGICAL_OP_ERROR;
         RETURN_ON_ERROR(left, NULL)
     }
     Binary_Op operation = BinaryOp(data);
     data->position++;
 
-    TreeNode *right = GetExpression(data, tree);
+    TreeNode *right = getExpression(data, tree);
     RETURN_ON_ERROR(left, right)
 
     PUNCT_ASSERT(CL_PARENTHESIS, CL_PARENTHESIS_MISSED, left, right);
@@ -429,24 +432,24 @@ TreeNode *GetCondition(StringParseData *data, TreeStruct *tree) {
     return NEW_S(BIN_OP(operation), left, right);
 }
 
-TreeNode *GetAssign(StringParseData *data, TreeStruct *tree) {
+TreeNode *getAssign(StringParseData *data, TreeStruct *tree) {
 
     PARSE_ASSERT
 
-    if (data->tokens->data[data->position].type != VARIABLE)
+    if (getType(data) != VARIABLE)
         return NULL;
 
-    TreeNode *var = GetNumber(data, tree);
+    TreeNode *var = getNumber(data, tree);
     RETURN_ON_ERROR(var, NULL)
 
-    if (!IsBinOp(data, ASSIGN)) {
+    if (!isBinOp(data, ASSIGN)) {
         data->error = ASSIGN_ERROR;
         RETURN_ON_ERROR(var, NULL)
     }
 
     data->position++;
 
-    TreeNode *value = GetExpression(data, tree);
+    TreeNode *value = getExpression(data, tree);
     RETURN_ON_ERROR(value, var)
 
     PUNCT_ASSERT(NEW_LINE, NEW_LINE_ERROR, var, value)
@@ -456,20 +459,20 @@ TreeNode *GetAssign(StringParseData *data, TreeStruct *tree) {
     return NEW_S(BIN_OP(ASSIGN), var, value);
 }
 
-TreeNode *GetExpression(StringParseData *data, TreeStruct *tree) {
+TreeNode *getExpression(StringParseData *data, TreeStruct *tree) {
 
     PARSE_ASSERT
 
-    TreeNode *ptr_fst = GetTerm(data, tree);
+    TreeNode *ptr_fst = getTerm(data, tree);
     RETURN_ON_ERROR(ptr_fst, NULL)
     if (!ptr_fst) return NULL;
 
-    while (IsBinOp(data, ADD) || IsBinOp(data, SUB)) {
+    while (isBinOp(data, ADD) || isBinOp(data, SUB)) {
 
         Binary_Op operation = BinaryOp(data);
         data->position++;
 
-        TreeNode *ptr_snd = GetTerm(data, tree);
+        TreeNode *ptr_snd = getTerm(data, tree);
         RETURN_ON_ERROR(ptr_fst, ptr_snd)
 
 
@@ -480,20 +483,20 @@ TreeNode *GetExpression(StringParseData *data, TreeStruct *tree) {
     return ptr_fst;
 }
 
-TreeNode *GetTerm(StringParseData *data, TreeStruct *tree) {
+TreeNode *getTerm(StringParseData *data, TreeStruct *tree) {
 
     PARSE_ASSERT
 
-    TreeNode *ptr_fst = GetPrimaryExpression(data, tree);
+    TreeNode *ptr_fst = getPrimaryExpression(data, tree);
     RETURN_ON_ERROR(ptr_fst, NULL);
     if (!ptr_fst) return NULL;
 
-    while (IsBinOp(data, MUL) || IsBinOp(data, DIV) || IsBinOp(data, POW)) {
+    while (isBinOp(data, MUL) || isBinOp(data, DIV) || isBinOp(data, POW)) {
 
         Binary_Op operation = BinaryOp(data);
         data->position++;
 
-        TreeNode *ptr_snd = GetPrimaryExpression(data, tree);
+        TreeNode *ptr_snd = getPrimaryExpression(data, tree);
         RETURN_ON_ERROR(ptr_fst, ptr_snd);
         ptr_fst = NEW(BIN_OP(operation), ptr_fst, ptr_snd);
     }
@@ -501,14 +504,14 @@ TreeNode *GetTerm(StringParseData *data, TreeStruct *tree) {
     return ptr_fst;
 }
 
-TreeNode *GetPrimaryExpression(StringParseData *data, TreeStruct *tree) {
+TreeNode *getPrimaryExpression(StringParseData *data, TreeStruct *tree) {
 
     PARSE_ASSERT
 
-    if (IsPunct(data, OP_PARENTHESIS)) {
+    if (isPunct(data, OP_PARENTHESIS)) {
 
         data->position++;
-        TreeNode *ptr = GetExpression(data, tree);
+        TreeNode *ptr = getExpression(data, tree);
         RETURN_ON_ERROR(ptr, NULL)
 
         PUNCT_ASSERT(CL_PARENTHESIS, CL_PARENTHESIS_MISSED, ptr, NULL)
@@ -517,17 +520,17 @@ TreeNode *GetPrimaryExpression(StringParseData *data, TreeStruct *tree) {
         return ptr;
     }
     else {
-        return GetUnary(data, tree);
+        return getUnary(data, tree);
     }
 }
 
-TreeNode *GetUnary(StringParseData *data, TreeStruct *tree) {
+TreeNode *getUnary(StringParseData *data, TreeStruct *tree) {
 
     PARSE_ASSERT
 
     TreeNode *ptr = NULL;
-    if (!IsType(data, UNARY_OP)) {
-        ptr = GetNumber(data, tree);
+    if (!isType(data, UNARY_OP)) {
+        ptr = getNumber(data, tree);
         RETURN_ON_ERROR(ptr, NULL)
         return ptr;
     }
@@ -542,7 +545,7 @@ TreeNode *GetUnary(StringParseData *data, TreeStruct *tree) {
     PUNCT_ASSERT(OP_PARENTHESIS, OP_PARENTHESIS_MISSED, NULL, NULL);
     data->position++;
 
-    ptr = GetExpression(data, tree);
+    ptr = getExpression(data, tree);
     RETURN_ON_ERROR(ptr, NULL);
     if (!ptr) return NULL;
 
@@ -552,17 +555,17 @@ TreeNode *GetUnary(StringParseData *data, TreeStruct *tree) {
     return NEW_S(UN_OP(operation), NULL, ptr);
 }
 
-TreeNode *GetNumber(StringParseData *data, TreeStruct *tree) {
+TreeNode *getNumber(StringParseData *data, TreeStruct *tree) {
 
     PARSE_ASSERT
 
-    if (IsType(data, NUMBER)) {
+    if (isType(data, NUMBER)) {
         return NEW(NUM(data->tokens->data[data->position++].number), NULL, NULL);
     }
-    else if (IsType(data, VARIABLE)) {
+    else if (isType(data, VARIABLE)) {
         return NEW(VAR(data->tokens->data[data->position++].var_index), NULL, NULL);
     }
-    else if (IsType(data, FUNCTION)) {
+    else if (isType(data, FUNCTION)) {
 
         TreeNode *ptr = NEW(FUNC(data->tokens->data[data->position].func_index), NULL, NULL);
         data->position++;
@@ -570,7 +573,7 @@ TreeNode *GetNumber(StringParseData *data, TreeStruct *tree) {
         PUNCT_ASSERT(OP_PARENTHESIS, OP_PARENTHESIS_MISSED, ptr, NULL)
         data->position++;
 
-        ptr->right = GetArgs(data, tree);
+        ptr->right = getArgs(data, tree);
         RETURN_ON_ERROR(ptr, NULL);
 
         PUNCT_ASSERT(CL_PARENTHESIS, CL_PARENTHESIS_MISSED, ptr, NULL)
@@ -584,7 +587,7 @@ TreeNode *GetNumber(StringParseData *data, TreeStruct *tree) {
     }
 }
 
-static char *CopyStr(char *src) {
+static char *copyStr(char *src) {
 
     assert(src);
 
@@ -599,42 +602,56 @@ static char *CopyStr(char *src) {
 }
 
 
-static bool IsType(StringParseData *data, ValueType type) {
+static bool isType(StringParseData *data, ValueType type) {
 
     assert(data);
     assert(data->tokens);
 
-    return data->tokens->data[data->position].type == type;
+    return getType(data) == type;
 }
 
-static bool IsBinOp(StringParseData *data, Binary_Op operation) {
+static bool isBinOp(StringParseData *data, Binary_Op operation) {
 
     assert(data);
     assert(data->tokens);
 
-    return IsType(data, BINARY_OP)  && data->tokens->data[data->position].bin_op == operation;
+    return isType(data, BINARY_OP)  && getTokenPtr(data, data->position)->bin_op == operation;
 }
 
-static bool IsUnOp(StringParseData *data, Unary_Op operation) {
+static bool isUnOp(StringParseData *data, Unary_Op operation) {
 
     assert(data);
     assert(data->tokens);
 
-    return IsType(data, UNARY_OP) && data->tokens->data[data->position].un_op == operation;
+    return isType(data, UNARY_OP) && getTokenPtr(data, data->position)->un_op == operation;
 }
 
-static bool IsPunct(StringParseData *data, Punctuation punct_sym) {
+static bool isPunct(StringParseData *data, Punctuation punct_sym) {
 
     assert(data);
     assert(data->tokens);
 
-    return IsType(data, PUNCT_SYM) && data->tokens->data[data->position].sym_code == punct_sym;
+    return isType(data, PUNCT_SYM) && getTokenPtr(data, data->position)->sym_code == punct_sym;
 }
 
-static bool IsKeyOp(StringParseData *data, Key_Op operation) {
+static bool isKeyOp(StringParseData *data, Key_Op operation) {
 
     assert(data);
     assert(data->tokens);
 
-    return IsType(data, KEY_OP) && data->tokens->data[data->position].key_op == operation;
+    return isType(data, KEY_OP) && getTokenPtr(data, data->position)->key_op == operation;
+}
+
+static ValueType getType(StringParseData *data) {
+
+    assert(data);
+
+    return getTokenPtr(data)->type;
+}
+
+static Token *getTokenPtr(StringParseData *data, size_t index) {
+
+    assert(data);
+
+    return (Token *) getPtr(data->tokens, index);
 }

@@ -28,7 +28,7 @@ int main(const int argc, const char *argv[]) {
         return ERROR;
     }
 
-    if (StringParse(&tokens, &tree) != SUCCESS) {
+    if (stringParse(&tokens, &tree) != SUCCESS) {
         printf(RED "error: " END_OF_COLOR "string parse failed\n");
         return ERROR;
     }

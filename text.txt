@@ -1,14 +1,4 @@
 once upon the time () {
 
-    n turn into 0;
-
-    say the magic word ("Enter n: ");
-    guess the riddle (n);
-
-    n turn into n + 1;
-
-    say the magic word ("Answer: ");
-    say the magic number (n);
-
     end();
 }
