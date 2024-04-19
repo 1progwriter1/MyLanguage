@@ -3,7 +3,7 @@
 #include "../../MyLibraries/headers/systemdata.h"
 #include <string.h>
 #include "../../MyLibraries/headers/file_func.h"
-#include "../headers/parse.h"
+#include "parse.h"
 #include "../headers/diff_dsl.h"
 
 /*
@@ -70,6 +70,7 @@ static bool IsBinOp(StringParseData *data, Binary_Op operation);
 static bool IsUnOp(StringParseData *data, Unary_Op operation);
 static bool IsPunct(StringParseData *data, Punctuation punct_sym);
 static bool IsKeyOp(StringParseData *data, Key_Op operation);
+
 static char *CopyStr(char *src);
 
 int StringParse(Vector *tokens, TreeStruct *tree) {

@@ -22,4 +22,7 @@ int analyzeLexis(Vector *names_table, Vector *tokens, const char *filename);
 
 void nameDtor(Name *name);
 
+NameType    getNameType(Vector *names_table, size_t index);
+const char *getStrPtr  (Vector *data, size_t index);
+
 #endif

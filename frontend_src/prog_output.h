@@ -2,9 +2,11 @@
 #define PROGRAM_OUTPUT_FILE
 
 #include "../bin_tree/bin_tree.h"
-#include "../headers/names_table.h"
+#include "../../MyLibraries/headers/my_vector.h"
+#include "../headers/key_words_codes.h"
+#include "lex_analysis.h"
 
-int PrintInFile(TreeStruct *tree, NamesTable *data, const char *fileanme);
+int printInFile(TreeStruct *tree, Vector *names_table, const char *filename);
 
 #define DST_FILE "prog.txt"
 

@@ -86,6 +86,7 @@ struct Token {
         Punctuation sym_code;
         size_t func_index;
         size_t var_index;
+        char *string;
     };
 };
 

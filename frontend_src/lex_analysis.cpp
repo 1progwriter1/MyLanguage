@@ -35,11 +35,7 @@ static bool isValidSymbol   (const char sym);
 static void skipSpaces  (char **buf);
 static void skipComments(char **buf);
 
-static const char *getName    (char **buf);
-static const char *getStrPtr  (Vector *data, size_t index);
-
-static NameType    getNameType(Vector *names_table, size_t index);
-
+static const char *getName  (char **buf);
 
 int analyzeLexis(Vector *names_table, Vector *tokens, const char *filename) {
 
@@ -360,18 +356,19 @@ static ReadStatus readString(char **buf, Vector *tokens) {
 
     sscanf(*buf, "%[^\"]", str);
 
-    Name *tmp = (Name *) calloc (1, sizeof(Name));
+    Token *tmp = (Token *) calloc (1, sizeof(Token));
     if (!tmp) {
         free(str);
         return kReadStatusNoMemory;
     }
-    tmp->name = str;
-    tmp->type = STR;
+    tmp->type = STRING;
+    tmp->string = str;
 
     if (pushBack(tokens, tmp) != SUCCESS)
         return kReadStatusNoMemory;
 
     free(tmp);
+    free(str);
 
     *buf += len_of_str + 1;
 
@@ -477,14 +474,14 @@ void nameDtor(Name *name) {
     free(name);
 }
 
-static const char *getStrPtr(Vector *names_table, size_t index) {
+const char *getStrPtr(Vector *names_table, size_t index) {
 
     assert(names_table);
 
     return ((Name *) ((char *) names_table->data + index * names_table->element_size))->name;
 }
 
-static NameType getNameType(Vector *names_table, size_t index) {
+NameType getNameType(Vector *names_table, size_t index) {
 
     assert(names_table);
 

@@ -1,36 +1,36 @@
 #include <stdio.h>
-#include "../headers/prog_output.h"
+#include "prog_output.h"
 #include <assert.h>
 #include "../../MyLibraries/headers/systemdata.h"
 #include "../../MyLibraries/headers/file_func.h"
 
-static int PrintNode(TreeNode *node, NamesTable *data, FILE *fn);
+static int printNode(TreeNode *node, Vector *names_table, FILE *fn);
 
-int PrintInFile(TreeStruct *tree, NamesTable *data, const char *filename) {
+int printInFile(TreeStruct *tree, Vector *names_table, const char *filename) {
 
     assert(tree);
     assert(filename);
-    assert(data);
+    assert(names_table);
 
     if (TreeVerify(tree) != SUCCESS)
         return ERROR;
 
-    FILE *fn = fileopen(filename, WRITE);
+    FILE *fn = openFile(filename, WRITE);
     if (!fn) return FILE_OPEN_ERROR;
 
-    if (PrintNode(tree->root, data, fn) != SUCCESS)
+    if (printNode(tree->root, names_table, fn) != SUCCESS)
         return ERROR;
 
-    fileclose(fn);
+    closeFile(fn);
 
     return SUCCESS;
 }
 
-static int PrintNode(TreeNode *node, NamesTable *data, FILE *fn) {
+static int printNode(TreeNode *node, Vector *names_table, FILE *fn) {
 
     assert(node);
     assert(fn);
-    assert(data);
+    assert(names_table);
 
     fprintf(fn, "( ");
 
@@ -58,14 +58,14 @@ static int PrintNode(TreeNode *node, NamesTable *data, FILE *fn) {
             break;
         }
         case (VARIABLE): {
-            fprintf(fn, "\"%s\" ", data->names[node->value.var_index].name);
+            fprintf(fn, "\"%s\" ", getStrPtr(names_table, node->value.var_index));
             break;
         }
         case (FUNCTION): {
             if (node->value.func_index == 0)
                 fprintf(fn, "\"main\" ");
             else
-                fprintf(fn, "\"%s\" ", data->names[node->value.func_index].name);
+                fprintf(fn, "\"%s\" ", getStrPtr(names_table, node->value.func_index));
             break;
         }
         case (STRING): {
@@ -79,7 +79,7 @@ static int PrintNode(TreeNode *node, NamesTable *data, FILE *fn) {
     }
 
     if (node->left) {
-        if (PrintNode(node->left, data, fn) != SUCCESS)
+        if (printNode(node->left, names_table, fn) != SUCCESS)
             return ERROR;
     }
     else {
@@ -87,7 +87,7 @@ static int PrintNode(TreeNode *node, NamesTable *data, FILE *fn) {
     }
 
     if (node->right) {
-        if (PrintNode(node->right, data, fn) != SUCCESS)
+        if (printNode(node->right, names_table, fn) != SUCCESS)
             return ERROR;
     }
     else {

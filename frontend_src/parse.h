@@ -1,9 +1,9 @@
-#ifndef STRING_PARSE
-#define STRING_PARSE
+#ifndef STRING_PARSE_FUNCTIONS
+#define STRING_PARSE_FUNCTIONS
 
 #include <stdio.h>
-#include "my_vector.h"
-#include "key_words_codes.h"
+#include "../../MyLibraries/headers/my_vector.h"
+#include "../headers/key_words_codes.h"
 #include "../bin_tree/bin_tree.h"
 
 #define INPUT_FILE "expr.txt"
