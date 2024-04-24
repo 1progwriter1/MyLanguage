@@ -7,6 +7,6 @@
 #define GRAPH_FILE "Graphviz/graph.png"
 #define GRAPH_SRC  "Graphviz/graph.dot"
 
-int GenGraphLang(const TreeStruct *tree, const char *filename);
+int genGraphLang(const TreeStruct *tree, const char *filename);
 
 #endif

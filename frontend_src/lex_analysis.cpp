@@ -286,6 +286,9 @@ static ReadStatus readNumber(char **buf, Vector *tokens) {
     Token *tmp = (Token *) calloc (1, sizeof(Token));
     if (!tmp)   return kReadStatusNoMemory;
 
+    tmp->type = NUMBER;
+    tmp->number = num;
+
     if (pushBack(tokens, tmp) != SUCCESS)
         return kReadStatusNoMemory;
 
@@ -307,15 +310,15 @@ static ReadStatus readName(char **buf, Vector *tokens, Vector *names_table) {
     const char *name = getName(buf);
     if (!name)  return kReadStatusError;
 
-    Token *tmp = (Token *) calloc (1, sizeof(Token));
-    if (!tmp)   return kReadStatusNoMemory;
+    Token *tmp_token = (Token *) calloc (1, sizeof(Token));
+    if (!tmp_token)   return kReadStatusNoMemory;
 
     size_t index = 0;
     NameType type = ifFunctionExists(name, names_table, &index) ? FUNC_NAME : VAR_NAME;
 
     if (type == FUNC_NAME) {
-        tmp->type = FUNCTION;
-        tmp->func_index = index;
+        tmp_token->type = FUNCTION;
+        tmp_token->func_index = index;
     }
     else {
         if (!ifNameExists(name, names_table, &index)) {
@@ -327,14 +330,14 @@ static ReadStatus readName(char **buf, Vector *tokens, Vector *names_table) {
 
             index = names_table->size - 1;
         }
-        tmp->type = VARIABLE;
-        tmp->var_index = index;
+        tmp_token->type = VARIABLE;
+        tmp_token->var_index = index;
     }
 
-    if (pushBack(tokens, tmp) != SUCCESS)
+    if (pushBack(tokens, tmp_token) != SUCCESS)
         return kReadStatusNoMemory;
 
-    free(tmp);
+    free(tmp_token);
     free((void *) name);
 
     return kReadStatusFound;
@@ -399,7 +402,7 @@ static bool ifFunctionExists(const char *str, Vector *names_table, size_t *func_
 
     for (size_t i = NUMBER_OF_KEY_WORDS - 1; i < names_table->size; i++) {
         if (strcmp(str, getStrPtr(names_table, i)) == 0 && getNameType(names_table, i) == FUNC_NAME) {
-            *func_index = (int) i;
+            *func_index = i;
             return true;
         }
     }

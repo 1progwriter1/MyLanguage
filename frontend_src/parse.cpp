@@ -121,7 +121,7 @@ TreeNode *getFunction(StringParseData *data, TreeStruct *tree) {
     TreeNode *func_ptr = NULL;
 
     if (getType(data) == FUNCTION) {
-        func_ptr = NEW(FUNC(data->tokens->data[data->position].func_index), NEW(PUNCT(NEW_LINE), NULL, NULL), NULL);
+        func_ptr = NEW(FUNC(getTokenPtr(data, data->position)->func_index), NEW(PUNCT(NEW_LINE), NULL, NULL), NULL);
         data->position++;
 
         PUNCT_ASSERT(OP_PARENTHESIS, OP_PARENTHESIS_MISSED, func_ptr, NULL)
@@ -163,7 +163,7 @@ TreeNode *getArgs(StringParseData *data, TreeStruct *tree) {
     if (!isType(data, VARIABLE))
         return NULL;
 
-    TreeNode *ptr = NEW(VAR(data->tokens->data[data->position].var_index), NULL, NULL);
+    TreeNode *ptr = NEW(VAR(getTokenPtr(data, data->position)->var_index), NULL, NULL);
     data->position++;
 
     if (!isPunct(data, COMMA))
@@ -260,7 +260,7 @@ TreeNode *getCall(StringParseData *data, TreeStruct *tree) {
 
     TreeNode *ptr = NULL;
     if (isType(data, FUNCTION)) {
-        ptr = NEW(FUNC(data->tokens->data[data->position].func_index), NULL, NULL);
+        ptr = NEW(FUNC(getTokenPtr(data, data->position)->func_index), NULL, NULL);
     }
     else {
         return NULL;
@@ -331,7 +331,7 @@ TreeNode *getOutput(StringParseData *data, TreeStruct *tree) {
             value = getNumber(data, tree);
         }
         else {
-            char *str = copyStr(getTokenPtr(data)->string);
+            char *str = copyStr(getTokenPtr(data, data->position)->string);
             if (!str) {
                 data->error = COPY_ERROR;
                 return NULL;
@@ -560,14 +560,14 @@ TreeNode *getNumber(StringParseData *data, TreeStruct *tree) {
     PARSE_ASSERT
 
     if (isType(data, NUMBER)) {
-        return NEW(NUM(data->tokens->data[data->position++].number), NULL, NULL);
+        return NEW(NUM(getTokenPtr(data, data->position)->number), NULL, NULL);
     }
     else if (isType(data, VARIABLE)) {
-        return NEW(VAR(data->tokens->data[data->position++].var_index), NULL, NULL);
+        return NEW(VAR(getTokenPtr(data, data->position)->var_index), NULL, NULL);
     }
     else if (isType(data, FUNCTION)) {
 
-        TreeNode *ptr = NEW(FUNC(data->tokens->data[data->position].func_index), NULL, NULL);
+        TreeNode *ptr = NEW(FUNC(getTokenPtr(data, data->position)->func_index), NULL, NULL);
         data->position++;
 
         PUNCT_ASSERT(OP_PARENTHESIS, OP_PARENTHESIS_MISSED, ptr, NULL)
@@ -646,7 +646,7 @@ static ValueType getType(StringParseData *data) {
 
     assert(data);
 
-    return getTokenPtr(data)->type;
+    return getTokenPtr(data, data->position)->type;
 }
 
 static Token *getTokenPtr(StringParseData *data, size_t index) {

@@ -11,10 +11,10 @@ const char *TYPES[]  = {"punct_sym", "binary_op", "unary_op", "key_op", "number"
 const char *VALUES[] = {"sin", "cos", "sqrt", "ln", "not", "out", "out_s", "in", "call", "ret", "+", "-",
                         "mul", "\\\\", "^", "==", "stronger", "weaker", "not weaker", "not stronger", "!=", "=", "if", "while", ";"};
 
-static int GenNodes(FILE *fn, const TreeNode *node, size_t *index);
-static int PrintNode(FILE *fn, const TreeNode *node, const size_t index);
+static int genNodes(FILE *fn, const TreeNode *node, size_t *index);
+static int printNode(FILE *fn, const TreeNode *node, const size_t index);
 
-int GenGraphLang(const TreeStruct *tree, const char *filename) {
+int genGraphLang(const TreeStruct *tree, const char *filename) {
 
     assert(tree);
     assert(filename);
@@ -29,7 +29,7 @@ int GenGraphLang(const TreeStruct *tree, const char *filename) {
     if (!tree->root)
         return NULL_POINTER;
 
-    GenNodes(fn, tree->root, &index);
+    genNodes(fn, tree->root, &index);
 
     fprintf(fn, "\n");
     fprintf(fn, "}");
@@ -44,30 +44,30 @@ int GenGraphLang(const TreeStruct *tree, const char *filename) {
     return SUCCESS;
 }
 
-static int GenNodes(FILE *fn, const TreeNode *node, size_t *index) {
+static int genNodes(FILE *fn, const TreeNode *node, size_t *index) {
 
     assert(fn);
     assert(node);
     assert(index);
 
-    PrintNode(fn, node, *index);
+    printNode(fn, node, *index);
     size_t main_index = *index;
 
     if (node->left) {
         *index += 1;
         fprintf(fn, "%lu->%lu\n\t", main_index, *index);
-        GenNodes(fn, node->left, index);
+        genNodes(fn, node->left, index);
     }
     if (node->right) {
         *index += 1;
         fprintf(fn, "%lu->%lu\n\t", main_index, *index);
-        GenNodes(fn, node->right, index);
+        genNodes(fn, node->right, index);
     }
 
     return SUCCESS;
 }
 
-static int PrintNode(FILE *fn, const TreeNode *node, const size_t index) {
+static int printNode(FILE *fn, const TreeNode *node, const size_t index) {
 
     assert(fn);
     assert(node);
@@ -96,11 +96,11 @@ static int PrintNode(FILE *fn, const TreeNode *node, const size_t index) {
             break;
         }
         case (VARIABLE): {
-            fprintf(fn, "%d", node->value.var_index);
+            fprintf(fn, "%lu", node->value.var_index);
             break;
         }
         case (FUNCTION): {
-            fprintf(fn, "%d", node->value.func_index);
+            fprintf(fn, "%lu", node->value.func_index);
             break;
         }
         case (STRING): {

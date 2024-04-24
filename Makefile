@@ -3,21 +3,27 @@ CFLAGS=-fsanitize=address,alignment -D _DEBUG -ggdb3 -std=c++17 -O0 -Wall -Wextr
 COMP=g++
 
 OBJ_DIR=object_files
-LIB_DIR=libs_objects
+LIB_DIR=lib_obj
 FRONT_DIR=frontend_src
 GRAPH_DIR=Graphviz
 BACK_DIR=backend_src
 MID_DIR=middle_end_src
+
 SOURCES=$(wildcard src/*.cpp)
 OBJECTS=$(wildcard *.o)
+
 OBJ_MOVED=$(wildcard $(OBJ_DIR)/*.o)
-LIB_OBJ=$(wildcard $(LIB_DIR)/*.o)
+LIB_OBJ=$(wildcard $(LIB_DIR)/*.o) lang_syntax.cpp
+
 GRAPH_SRC=$(wildcard $(GRAPH_DIR)/*.cpp)
 GRAPH_OBJ=$(patsubst $(GRAPH_DIR)/%.cpp, %.o, $(GRAPH_SRC))
+
 FRONT_SRC=$(wildcard $(FRONT_DIR)/*.cpp)
 FRONT_OBJ=$(patsubst $(FRONT_DIR)/%.cpp, %.o, $(FRONT_SRC))
+
 BACK_SRC=$(wildcard $(BACK_DIR)/*.cpp)
 BACK_OBJ=$(patsubst $(BACK_DIR)/%.cpp, %.o, $(BACK_SRC))
+
 MID_SRC=$(wildcard $(MID_DIR)/*.cpp)
 MID_OBJ=$(patsubst $(MID_DIR)/%.cpp, %.o, $(MID_SRC))
 
@@ -27,10 +33,9 @@ all: $(SOURCES)
 	mv $(OBJECTS) $(OBJ_DIR)/
 	$(COMP) $(CFLAGS) $(OBJ_MOVED) $(LIB_OBJ)
 
-front:
-	$(COMP) $(CFLAGS) -c $(FRONT_SRC) $(GRAPH_SRC)
-	$(COMP) $(CFLAGS) $(FRONT_OBJ) $(LIB_OBJ) $(GRAPH_OBJ) frontend.o -o front.out
-	mv $(FRONT_OBJ) $(GRAPH_OBJ) frontend.o $(OBJ_DIR)/
+front: $(FRONT_SRC) $(GRAPH_SRC) $(LIB_OBJ)
+	$(COMP) $(CFLAGS) $(FRONT_SRC) $(GRAPH_SRC) $(LIB_OBJ) -o front.out
+
 
 back:
 	$(COMP) $(CFLAGS) -c $(BACK_SRC) $(GRAPH_SRC) backend.cpp

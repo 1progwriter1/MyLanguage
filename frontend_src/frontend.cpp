@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <assert.h>
-#include "../MyLibraries/headers/systemdata.h"
+#include "../../MyLibraries/headers/systemdata.h"
 #include "lex_analysis.h"
 #include "parse.h"
-#include "Graphviz/gen_graph_lang.h"
+#include "../graphviz/gen_graph_lang.h"
 #include "prog_output.h"
 
 int main(const int argc, const char *argv[]) {
@@ -23,7 +23,7 @@ int main(const int argc, const char *argv[]) {
     Vector tokens = {};
     TreeStruct tree = {};
 
-    if (LexicalAnalysis(&data, &tokens, input_file) != SUCCESS) {
+    if (analyzeLexis(&data, &tokens, input_file) != SUCCESS) {
         printf(RED "error: " END_OF_COLOR "lexical analysis failed\n");
         return ERROR;
     }
@@ -33,12 +33,12 @@ int main(const int argc, const char *argv[]) {
         return ERROR;
     }
 
-    if (GenGraphLang(&tree, GRAPH_FILE) != SUCCESS) {
+    if (genGraphLang(&tree, GRAPH_FILE) != SUCCESS) {
         printf(RED "error: " END_OF_COLOR "graph generation failed\n");
         return ERROR;
     }
 
-    if (PrintInFile(&tree, &data, output_file) != SUCCESS)
+    if (printInFile(&tree, &data, output_file) != SUCCESS)
         return ERROR;
 
     TreeRootDtor(&tree);

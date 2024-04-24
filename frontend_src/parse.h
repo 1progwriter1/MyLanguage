@@ -35,34 +35,34 @@ struct StringParseData {
 
 int stringParse(Vector *tokens, TreeStruct *tree);
 
-TreeNode *getFunction(StringParseData *data, TreeStruct *tree);
+TreeNode *getFunction         (StringParseData *data, TreeStruct *tree);
 
-TreeNode *getExpression(StringParseData *data, TreeStruct *tree);
+TreeNode *getExpression       (StringParseData *data, TreeStruct *tree);
 
-TreeNode *getTerm(StringParseData *data, TreeStruct *tree);
+TreeNode *getTerm             (StringParseData *data, TreeStruct *tree);
 
 TreeNode *getPrimaryExpression(StringParseData *data, TreeStruct *tree);
 
-TreeNode *getNumber(StringParseData *data, TreeStruct *tree);
+TreeNode *getNumber           (StringParseData *data, TreeStruct *tree);
 
-TreeNode *getUnary(StringParseData *data, TreeStruct *tree);
+TreeNode *getUnary            (StringParseData *data, TreeStruct *tree);
 
-TreeNode *getKeyOp(StringParseData *data, TreeStruct *tree);
+TreeNode *getKeyOp            (StringParseData *data, TreeStruct *tree);
 
-TreeNode *getAssign(StringParseData *data, TreeStruct *tree);
+TreeNode *getAssign           (StringParseData *data, TreeStruct *tree);
 
-TreeNode *getCondition(StringParseData *data, TreeStruct *tree);
+TreeNode *getCondition        (StringParseData *data, TreeStruct *tree);
 
-TreeNode *getOutput(StringParseData *data, TreeStruct *tree);
+TreeNode *getOutput           (StringParseData *data, TreeStruct *tree);
 
-TreeNode *getBody(StringParseData *data, TreeStruct *tree);
+TreeNode *getBody             (StringParseData *data, TreeStruct *tree);
 
-TreeNode *getInput(StringParseData *data, TreeStruct *tree);
+TreeNode *getInput            (StringParseData *data, TreeStruct *tree);
 
-TreeNode *getCall(StringParseData *data, TreeStruct *tree);
+TreeNode *getCall             (StringParseData *data, TreeStruct *tree);
 
-TreeNode *getRet(StringParseData *data, TreeStruct *tree);
+TreeNode *getRet              (StringParseData *data, TreeStruct *tree);
 
-TreeNode *getArgs(StringParseData *data, TreeStruct *tree);
+TreeNode *getArgs             (StringParseData *data, TreeStruct *tree);
 
 #endif
