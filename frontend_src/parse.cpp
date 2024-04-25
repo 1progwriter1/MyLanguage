@@ -93,12 +93,12 @@ int stringParse(Vector *tokens, TreeStruct *tree, Vector *names_table) {
         return ERROR;
     }
 
-    if (!isPunct(&data, END_SYMBOL)) {
-        fprintf(stderr, "\n%lu\n", data.position);
-        printf(RED "error: " END_OF_COLOR "expected: \\0\n");
-        TreeRootDtor(tree);
-        return ERROR;
-    }
+    // if (!isPunct(&data, END_SYMBOL)) {
+    //     fprintf(stderr, "\n%lu\n", data.position);
+    //     printf(RED "error: " END_OF_COLOR "expected: \\0\n");
+    //     TreeRootDtor(tree);
+    //     return ERROR;
+    // }
 
     if (start_position == data.position) {
         printf(MAGENTA "warning: " END_OF_COLOR "empty expression\n");
