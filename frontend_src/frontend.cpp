@@ -5,6 +5,7 @@
 #include "parse.h"
 #include "../graphviz/gen_graph_lang.h"
 #include "prog_output.h"
+#include "dump.h"
 
 int main(const int argc, const char *argv[]) {
 
@@ -19,31 +20,33 @@ int main(const int argc, const char *argv[]) {
             output_file = argv[2];
     }
 
-    Vector data = {};
+    Vector names_table = {};
     Vector tokens = {};
     TreeStruct tree = {};
 
-    if (analyzeLexis(&data, &tokens, input_file) != SUCCESS) {
+    if (analyzeLexis(&names_table, &tokens, input_file) != SUCCESS) {
         printf(RED "error: " END_OF_COLOR "lexical analysis failed\n");
         return ERROR;
     }
 
-    if (stringParse(&tokens, &tree) != SUCCESS) {
+    dumpAll(&tokens, &names_table, "dump.txt");
+
+    if (stringParse(&tokens, &tree, &names_table) != SUCCESS) {
         printf(RED "error: " END_OF_COLOR "string parse failed\n");
         return ERROR;
     }
 
-    if (genGraphLang(&tree, GRAPH_FILE) != SUCCESS) {
+    if (genGraphLang(&tree, GRAPH_FILE, &names_table) != SUCCESS) {
         printf(RED "error: " END_OF_COLOR "graph generation failed\n");
         return ERROR;
     }
 
-    if (printInFile(&tree, &data, output_file) != SUCCESS)
+    if (printInFile(&tree, &names_table, output_file) != SUCCESS)
         return ERROR;
 
     TreeRootDtor(&tree);
     vectorDtor(&tokens);
-    vectorDtor(&data);
+    vectorDtor(&names_table);
 
     return SUCCESS;
 }

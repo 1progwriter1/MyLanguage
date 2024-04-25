@@ -53,6 +53,7 @@ int analyzeLexis(Vector *names_table, Vector *tokens, const char *filename) {
     if (prototypesAnalysis(&tmp, names_table) != SUCCESS)
         return ERROR;
 
+
     Token *null_symbol = (Token *) calloc (1, sizeof(Token));
     if (!null_symbol)  return ERROR;
 
@@ -160,7 +161,7 @@ static int prototypesAnalysis(char **buf, Vector *names_table) {
             if (pushBack(names_table, tmp) != SUCCESS)
                 return ERROR;
 
-            nameDtor(tmp);
+            free(tmp);
 
             while (**buf != ';' && **buf != '\0')
                 *buf += 1;
@@ -317,28 +318,42 @@ static ReadStatus readName(char **buf, Vector *tokens, Vector *names_table) {
     NameType type = ifFunctionExists(name, names_table, &index) ? FUNC_NAME : VAR_NAME;
 
     if (type == FUNC_NAME) {
-        tmp_token->type = FUNCTION;
-        tmp_token->func_index = index;
-    }
-    else {
-        if (!ifNameExists(name, names_table, &index)) {
-            Name *tmp = (Name *) calloc (1, sizeof(Name));
-            if (!tmp)   return kReadStatusNoMemory;
-
-            tmp->name = name;
-            tmp->type = VAR_NAME;
-
-            index = names_table->size - 1;
+        if (((Token *) getPtr(tokens, tokens->size - 1))->type == FUNCTION)
+            ((Token *) getPtr(tokens, tokens->size - 1))->func_index = index;
+        else {
+            tmp_token->type = FUNCTION;
+            tmp_token->func_index = index;
+            if (pushBack(tokens, tmp_token) != SUCCESS)
+                return kReadStatusNoMemory;
         }
-        tmp_token->type = VARIABLE;
-        tmp_token->var_index = index;
+
+        free((void *) name);
+        free(tmp_token);
+        return kReadStatusFound;
     }
+
+    if (!ifNameExists(name, names_table, &index)) {
+        Name *tmp = (Name *) calloc (1, sizeof(Name));
+        if (!tmp)   return kReadStatusNoMemory;
+
+        tmp->name = name;
+        tmp->type = VAR_NAME;
+
+        if (pushBack(names_table, tmp) != SUCCESS)
+            return kReadStatusNoMemory;
+
+        free(tmp);
+
+        index = names_table->size - 1;
+    }
+
+    tmp_token->type = VARIABLE;
+    tmp_token->var_index = index;
 
     if (pushBack(tokens, tmp_token) != SUCCESS)
         return kReadStatusNoMemory;
 
     free(tmp_token);
-    free((void *) name);
 
     return kReadStatusFound;
 }
@@ -401,7 +416,7 @@ static bool ifFunctionExists(const char *str, Vector *names_table, size_t *func_
     assert(func_index);
 
     for (size_t i = NUMBER_OF_KEY_WORDS - 1; i < names_table->size; i++) {
-        if (strcmp(str, getStrPtr(names_table, i)) == 0 && getNameType(names_table, i) == FUNC_NAME) {
+        if (getStrPtr(names_table, i) && strcmp(str, getStrPtr(names_table, i)) == 0 && getNameType(names_table, i) == FUNC_NAME) {
             *func_index = i;
             return true;
         }
@@ -413,10 +428,10 @@ static bool ifFunctionExists(const char *str, Vector *names_table, size_t *func_
 
 static bool isValidSymbol(const char sym) {
 
-    const size_t PUNC_SYM_NUM = 15;
-    char punct_symbols[PUNC_SYM_NUM] = {'(', ')', '{', '}', ';', '\n', ' ', '"', '*', '\\', '-', '+', '^', ' ', ','};
+    const size_t PUNCT_SYM_NUM = 15;
+    char punct_symbols[PUNCT_SYM_NUM] = {'(', ')', '{', '}', ';', '\n', ' ', '"', '*', '\\', '-', '+', '^', ' ', ','};
 
-    for (size_t i = 0; i < PUNC_SYM_NUM; i++)
+    for (size_t i = 0; i < PUNCT_SYM_NUM; i++)
         if (sym == punct_symbols[i])
             return false;
 

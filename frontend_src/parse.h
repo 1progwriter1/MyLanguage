@@ -33,7 +33,7 @@ struct StringParseData {
     ParseError error;
 };
 
-int stringParse(Vector *tokens, TreeStruct *tree);
+int stringParse(Vector *tokens, TreeStruct *tree, Vector *names_table);
 
 TreeNode *getFunction         (StringParseData *data, TreeStruct *tree);
 
@@ -64,5 +64,7 @@ TreeNode *getCall             (StringParseData *data, TreeStruct *tree);
 TreeNode *getRet              (StringParseData *data, TreeStruct *tree);
 
 TreeNode *getArgs             (StringParseData *data, TreeStruct *tree);
+
+Token *getTokenPtr(StringParseData *data, size_t index);
 
 #endif

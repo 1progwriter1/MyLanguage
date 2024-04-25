@@ -76,6 +76,8 @@ enum KeyWordIndex {
 
 extern const char *KEY_WORDS[NUMBER_OF_KEY_WORDS];
 
+extern const char *PUNCT_SYMBOLS[];
+
 struct Token {
     ValueType type;
     union {
