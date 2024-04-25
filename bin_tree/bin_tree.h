@@ -31,4 +31,6 @@ int NodeDtor(TreeStruct *tree, TreeNode *node);
 
 int TreeVerify(TreeStruct *tree);
 
+int WalkTree(TreeNode *node, size_t *col_nodes);
+
 #endif

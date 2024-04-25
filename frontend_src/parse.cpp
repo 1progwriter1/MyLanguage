@@ -93,12 +93,12 @@ int stringParse(Vector *tokens, TreeStruct *tree, Vector *names_table) {
         return ERROR;
     }
 
-    // if (!isPunct(&data, END_SYMBOL)) {
-    //     fprintf(stderr, "\n%lu\n", data.position);
-    //     printf(RED "error: " END_OF_COLOR "expected: \\0\n");
-    //     TreeRootDtor(tree);
-    //     return ERROR;
-    // }
+    if (!isPunct(&data, END_SYMBOL)) {
+        fprintf(stderr, "\n%lu\n", data.position);
+        printf(RED "error: " END_OF_COLOR "expected: \\0\n");
+        TreeRootDtor(tree);
+        return ERROR;
+    }
 
     if (start_position == data.position) {
         printf(MAGENTA "warning: " END_OF_COLOR "empty expression\n");
@@ -139,7 +139,7 @@ TreeNode *getFunction(StringParseData *data, TreeStruct *tree) {
     TreeNode *ptr = getBody(data, tree);
     RETURN_ON_ERROR(ptr, NULL)
 
-    func_ptr->left = ptr;
+    func_ptr->left->left = ptr;
 
     PUNCT_ASSERT(CL_BRACE, CL_BRACE_MISSED, func_ptr, NULL)
     data->position++;
@@ -361,7 +361,6 @@ TreeNode *getKeyOp(StringParseData *data, TreeStruct *tree) {
     data->position++;
     TreeNode *cond = getCondition(data, tree);
     RETURN_ON_ERROR(cond, NULL)
-    if (!cond)
 
     if (!isPunct(data, OP_BRACE))
         return NEW_S(KEY_OP(operation), cond, NEW(PUNCT(NEW_LINE), NULL, NULL));
@@ -393,7 +392,6 @@ TreeNode *getKeyOp(StringParseData *data, TreeStruct *tree) {
         return NULL;
     }
     data->position++;
-
 
     TreeNode *node = NEW_S(KEY_OP(operation), cond, NEW_S(PUNCT(NEW_LINE), body_yes, body_no));
 
@@ -470,11 +468,10 @@ TreeNode *getExpression(StringParseData *data, TreeStruct *tree) {
         TreeNode *ptr_snd = getTerm(data, tree);
         RETURN_ON_ERROR(ptr_fst, ptr_snd)
 
-
-
         ptr_fst = NEW_S(BIN_OP(operation), ptr_fst, ptr_snd);
 
     }
+
     return ptr_fst;
 }
 

@@ -7,8 +7,6 @@
 #include "../../MyLibraries/headers/file_func.h"
 #include "../headers/calculate.h"
 
-static int WalkTree(TreeNode *node, size_t *col_nodes);
-
 int TreeRootCtor(TreeStruct *tree) {
 
     assert(tree);
@@ -105,21 +103,21 @@ int TreeVerify(TreeStruct *tree) {
     if (tree->root)
         col_nodes = 1;
     else {
-        printf(RED "Tree verifying: " END_OF_COLOR "NULL root\n");
+        printf(RED "tree error: " END_OF_COLOR "NULL root\n");
         return NULL_POINTER;
     }
 
     WalkTree(tree->root, &col_nodes);
 
     if (col_nodes != tree->size) {
-        printf(RED "Tree: verifying: " END_OF_COLOR "incorrect size of the tree\n");
+        printf(RED "tree error: " END_OF_COLOR "incorrect size of the tree\n");
         return ERROR;
     }
 
     return SUCCESS;
 }
 
-static int WalkTree(TreeNode *node, size_t *col_nodes) {
+int WalkTree(TreeNode *node, size_t *col_nodes) {
 
     assert(node);
     assert(col_nodes);
