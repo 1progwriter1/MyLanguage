@@ -1,4 +1,17 @@
+// fact
+
+fairytale sum(a, b);
+
 once upon the time () {
 
+    a turn into 0;
+    b turn into 10;
+
+    say the magic number (sum(a, b));
+
     end();
+}
+
+fairytale sum(a, b) {
+    end(a + b);
 }

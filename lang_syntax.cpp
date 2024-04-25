@@ -29,3 +29,13 @@ const char *KEY_WORDS[] = {
     "go right",                             // words to make code be like fairytale
     "fairytale character"                   //
 };
+
+const char *PUNCT_SYMBOLS[] = {
+    ";",
+    "0",
+    "(",
+    ")",
+    "{",
+    "}",
+    ","
+};

@@ -5,6 +5,8 @@
 #include "../../MyLibraries/headers/file_func.h"
 #include "parse.h"
 #include "../headers/diff_dsl.h"
+#include "lex_analysis.h"
+#include "dump.h"
 
 /*
     G  ::= B '\0'
@@ -72,11 +74,10 @@ static bool isPunct(StringParseData *data, Punctuation punct_sym);
 static bool isKeyOp(StringParseData *data, Key_Op operation);
 
 static ValueType getType(StringParseData *data);
-static Token *getTokenPtr(StringParseData *data, size_t index);
 
 static char *copyStr(char *src);
 
-int stringParse(Vector *tokens, TreeStruct *tree) {
+int stringParse(Vector *tokens, TreeStruct *tree, Vector *names_table) {
 
     assert(tokens);
     assert(tree);
@@ -87,22 +88,17 @@ int stringParse(Vector *tokens, TreeStruct *tree) {
     tree->root = getFunction(&data, tree);
     if (data.error != NO_ERROR) {
         printf(RED "error: " END_OF_COLOR "%s\nposition: %lu\n", PARSE_ERRORS[data.error], data.position);
-        for (size_t i = 0; i < tokens->size; i++) {
-            printf(BRIGHT_GREEN "%5lu) " END_OF_COLOR "type = %d ", i, getTokenPtr(&data, i)->type);
-            if (i % 10 == 0)
-                printf("\n");
-        }
-        printf("\n");
+        dumpErrors(&data, tokens, names_table);
         TreeRootDtor(tree);
         return ERROR;
     }
 
-    if (!isPunct(&data, END_SYMBOL)) {
-        fprintf(stderr, "\n%lu\n", data.position);
-        printf(RED "error: " END_OF_COLOR "expected: \\0\n");
-        TreeRootDtor(tree);
-        return ERROR;
-    }
+    // if (!isPunct(&data, END_SYMBOL)) {
+    //     fprintf(stderr, "\n%lu\n", data.position);
+    //     printf(RED "error: " END_OF_COLOR "expected: \\0\n");
+    //     TreeRootDtor(tree);
+    //     return ERROR;
+    // }
 
     if (start_position == data.position) {
         printf(MAGENTA "warning: " END_OF_COLOR "empty expression\n");
@@ -143,7 +139,7 @@ TreeNode *getFunction(StringParseData *data, TreeStruct *tree) {
     TreeNode *ptr = getBody(data, tree);
     RETURN_ON_ERROR(ptr, NULL)
 
-    func_ptr->left->left = ptr;
+    func_ptr->left = ptr;
 
     PUNCT_ASSERT(CL_BRACE, CL_BRACE_MISSED, func_ptr, NULL)
     data->position++;
@@ -151,7 +147,6 @@ TreeNode *getFunction(StringParseData *data, TreeStruct *tree) {
     TreeNode *next = getFunction(data, tree);
     func_ptr->right = next;
     RETURN_ON_ERROR(func_ptr, NULL)
-
 
     return func_ptr;
 }
@@ -560,10 +555,10 @@ TreeNode *getNumber(StringParseData *data, TreeStruct *tree) {
     PARSE_ASSERT
 
     if (isType(data, NUMBER)) {
-        return NEW(NUM(getTokenPtr(data, data->position)->number), NULL, NULL);
+        return NEW(NUM(getTokenPtr(data, data->position++)->number), NULL, NULL);
     }
     else if (isType(data, VARIABLE)) {
-        return NEW(VAR(getTokenPtr(data, data->position)->var_index), NULL, NULL);
+        return NEW(VAR(getTokenPtr(data, data->position++)->var_index), NULL, NULL);
     }
     else if (isType(data, FUNCTION)) {
 
@@ -600,7 +595,6 @@ static char *copyStr(char *src) {
 
     return dst;
 }
-
 
 static bool isType(StringParseData *data, ValueType type) {
 
@@ -649,7 +643,7 @@ static ValueType getType(StringParseData *data) {
     return getTokenPtr(data, data->position)->type;
 }
 
-static Token *getTokenPtr(StringParseData *data, size_t index) {
+Token *getTokenPtr(StringParseData *data, size_t index) {
 
     assert(data);
 

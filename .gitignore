@@ -7,3 +7,4 @@
 *.bin
 *.gitignore
 *.DS_Store
+*.out.dSYM
