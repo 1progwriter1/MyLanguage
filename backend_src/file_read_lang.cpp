@@ -1,95 +1,97 @@
 #include <stdio.h>
-#include "../headers/file_read_lang.h"
+#include "file_read_lang.h"
 #include "../../MyLibraries/headers/file_func.h"
 #include <assert.h>
 #include "../../MyLibraries/headers/systemdata.h"
 #include <string.h>
 #include "../bin_tree/bin_tree.h"
 #include "../headers/key_words_codes.h"
+#include "../frontend_src/lex_analysis.h"
 
-static int ReadNodeFile(TreeStruct *tree, TreeNode *node, FileBuffer *buffer);
-static bool IsNewNode(FileBuffer *buffer);
-static int GetValue(TreeNode *node, FileBuffer *buffer);
-static int EndNode(FileBuffer *buffer);
-static char *ReadStr(FileBuffer *buffer);
-static void SkipSpaces(FileBuffer *buffer);
-static int GetType(TreeNode *node, FileBuffer *buffer);
+static int readNodeFile(TreeStruct *tree, TreeNode *node, FileBuffer *buffer);
+static bool isNewNode(FileBuffer *buffer);
+static int getValue(TreeNode *node, FileBuffer *buffer);
+static int endNode(FileBuffer *buffer);
+static char *readStr(FileBuffer *buffer);
+static void skipSpaces(FileBuffer *buffer);
+static int getType(TreeNode *node, FileBuffer *buffer);
 
-int ReadFileLang(TreeStruct *tree, const char *filename) {
+int readFileLang(TreeStruct *tree, const char *filename, Vector *names_table) {
 
     assert(tree);
     assert(filename);
 
-    if (TreeRootCtor(tree) != SUCCESS)
+    if (treeRootCtor(tree) != SUCCESS)
         return ERROR;
 
     FileBuffer buffer = {};
-    buffer.buf = readbuf(filename);
+    buffer.names_table = names_table;
+    buffer.buf = readFileToBuffer(filename);
     if (!buffer.buf) {
-        printf(RED "Buffer creation error" END_OF_COLOR "\n");
+        printf(RED "backend error: " END_OF_COLOR "buffer creation failed\n");
         return ERROR;
     }
 
     buffer.index = 0;
 
-    if (IsNewNode(&buffer)) {
-        if (ReadNodeFile(tree, tree->root, &buffer) != SUCCESS) {
-            printf(RED "Error while reading the tree" END_OF_COLOR "\n");
-            TreeRootDtor(tree);
+    if (isNewNode(&buffer)) {
+        if (readNodeFile(tree, tree->root, &buffer) != SUCCESS) {
+            printf(RED "backend error: " END_OF_COLOR "failed to read file\n");
+            treeRootDtor(tree);
             return ERROR;
         }
     }
 
     free(buffer.buf);
 
-    if (TreeVerify(tree) != SUCCESS) {
-        TreeRootDtor(tree);
+    if (treeVerify(tree) != SUCCESS) {
+        treeRootDtor(tree);
         return ERROR;
     }
 
     return SUCCESS;
 }
 
-static int ReadNodeFile(TreeStruct *tree, TreeNode *node, FileBuffer *buffer) {
+static int readNodeFile(TreeStruct *tree, TreeNode *node, FileBuffer *buffer) {
 
     assert(node);
     assert(tree);
     assert(buffer);
     assert(buffer->buf);
 
-    if (GetValue(node, buffer) != SUCCESS)
+    if (getValue(node, buffer) != SUCCESS)
         return ERROR;
 
-    if (IsNewNode(buffer)) {
-        node->left = TreeNodeNew(tree, (Token) {}, NULL, NULL);
+    if (isNewNode(buffer)) {
+        node->left = treeNodeNew(tree, (Token) {}, NULL, NULL);
         if (!node->left) return NO_MEMORY;
-        if (ReadNodeFile(tree, node->left, buffer) != SUCCESS)
+        if (readNodeFile(tree, node->left, buffer) != SUCCESS)
             return ERROR;
     }
 
-    if (IsNewNode(buffer)) {
-        node->right = TreeNodeNew(tree, (Token) {}, NULL, NULL);
+    if (isNewNode(buffer)) {
+        node->right = treeNodeNew(tree, (Token) {}, NULL, NULL);
         if (!node->right) return NO_MEMORY;
-        if (ReadNodeFile(tree, node->right, buffer) != SUCCESS)
+        if (readNodeFile(tree, node->right, buffer) != SUCCESS)
             return ERROR;
     }
 
-    if (EndNode(buffer) != SUCCESS)
+    if (endNode(buffer) != SUCCESS)
         return ERROR;
 
     return SUCCESS;
 }
 
-static int GetValue(TreeNode *node, FileBuffer *buffer) {
+static int getValue(TreeNode *node, FileBuffer *buffer) {
 
     assert(node);
     assert(buffer);
     assert(buffer->buf);
 
-    if (GetType(node, buffer) != SUCCESS)
+    if (getType(node, buffer) != SUCCESS)
         return ERROR;
 
-    SkipSpaces(buffer);
+    skipSpaces(buffer);
 
     int sym_read = 0;
     size_t index = 0;
@@ -97,7 +99,7 @@ static int GetValue(TreeNode *node, FileBuffer *buffer) {
     char *str = NULL;
 
     if (node->value.type == STRING) {
-        str = ReadStr(buffer);
+        str = readStr(buffer);
         if (!str) {
             printf(RED "read error: " END_OF_COLOR "string read failed\n");
             return ERROR;
@@ -108,6 +110,36 @@ static int GetValue(TreeNode *node, FileBuffer *buffer) {
             printf(RED "read error: " END_OF_COLOR "number expected: %s\n", buffer->buf + buffer->index);
             return ERROR;
         }
+    }
+    else if (node->value.type == VARIABLE) {
+        str = readStr(buffer);
+        if (!str) {
+            printf(RED "read error: " END_OF_COLOR "string read failed\n");
+            return ERROR;
+        }
+        Name *tmp = (Name *) calloc (1, sizeof(Name));
+        if (!tmp)   return ERROR;
+        tmp->name = str;
+        tmp->type = VAR_NAME;
+        if (pushBack(buffer->names_table, tmp) != SUCCESS)
+            return ERROR;
+        free(tmp);
+        index = buffer->names_table->size - 1;
+    }
+    else if (node->value.type == FUNCTION) {
+        str = readStr(buffer);
+        if (!str) {
+            printf(RED "read error: " END_OF_COLOR "string read failed\n");
+            return ERROR;
+        }
+        Name *tmp = (Name *) calloc (1, sizeof(Name));
+        if (!tmp)   return ERROR;
+        tmp->name = str;
+        tmp->type = FUNC_NAME;
+        if (pushBack(buffer->names_table, tmp) != SUCCESS)
+            return ERROR;
+        free(tmp);
+        index = buffer->names_table->size - 1;
     }
     else {
         if (sscanf(buffer->buf + buffer->index, "%lu %n", &index, &sym_read) != 1) {
@@ -136,11 +168,11 @@ static int GetValue(TreeNode *node, FileBuffer *buffer) {
             break;
         }
         case (VARIABLE): {
-            value = (Token) {VARIABLE, {.var_index = (int) index}};
+            value = (Token) {VARIABLE, {.var_index = index}};
             break;
         }
         case (FUNCTION): {
-            value = (Token) {FUNCTION, {.func_index = (int) index}};
+            value = (Token) {FUNCTION, {.func_index = index}};
             break;
         }
         case (STRING): {
@@ -152,7 +184,7 @@ static int GetValue(TreeNode *node, FileBuffer *buffer) {
             break;
         }
         default: {
-            printf(RED "read error: " END_OF_COLOR "ivalid type\n");
+            printf(RED "read error: " END_OF_COLOR "invalid type\n");
             return ERROR;
         }
     }
@@ -162,12 +194,12 @@ static int GetValue(TreeNode *node, FileBuffer *buffer) {
     return SUCCESS;
 }
 
-static bool IsNewNode(FileBuffer *buffer) {
+static bool isNewNode(FileBuffer *buffer) {
 
     assert(buffer);
     assert(buffer->buf);
 
-    SkipSpaces(buffer);
+    skipSpaces(buffer);
 
     char *ptr = buffer->buf + buffer->index;
 
@@ -186,12 +218,12 @@ static bool IsNewNode(FileBuffer *buffer) {
 
 }
 
-static int EndNode(FileBuffer *buffer) {
+static int endNode(FileBuffer *buffer) {
 
     assert(buffer);
     assert(buffer->buf);
 
-    SkipSpaces(buffer);
+    skipSpaces(buffer);
 
     char *ptr = buffer->buf + buffer->index;
 
@@ -205,7 +237,7 @@ static int EndNode(FileBuffer *buffer) {
         }
 }
 
-static char *ReadStr(FileBuffer *buffer) {
+static char *readStr(FileBuffer *buffer) {
 
     assert(buffer);
     assert(buffer->buf);
@@ -222,13 +254,14 @@ static char *ReadStr(FileBuffer *buffer) {
     char *string = (char *) calloc (len_of_str + 1, sizeof (char));
     if (!string) return NULL;
 
-    sscanf(buffer->buf + buffer->index, "%[^\"]", string);
+    memcpy(string, buffer->buf + buffer->index, len_of_str * sizeof(char));
+    *(string + len_of_str) = '\0';
     buffer->index += len_of_str + 1;
 
     return string;
 }
 
-static void SkipSpaces(FileBuffer *buffer) {
+static void skipSpaces(FileBuffer *buffer) {
 
     assert(buffer);
     assert(buffer->buf);
@@ -237,13 +270,13 @@ static void SkipSpaces(FileBuffer *buffer) {
         buffer->index++;
 }
 
-static int GetType(TreeNode *node, FileBuffer *buffer) {
+static int getType(TreeNode *node, FileBuffer *buffer) {
 
     assert(node);
     assert(buffer);
     assert(buffer->buf);
 
-    SkipSpaces(buffer);
+    skipSpaces(buffer);
 
     char *ptr = buffer->buf + buffer->index;
 

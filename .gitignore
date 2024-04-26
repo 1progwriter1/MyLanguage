@@ -7,9 +7,4 @@
 *.bin
 *.gitignore
 *.DS_Store
-<<<<<<< HEAD
-*.out.dSYM
 *.mo
-=======
-*.out.dSYM
->>>>>>> 7285212e463005df9ca2fc7cd49875d870d43d07

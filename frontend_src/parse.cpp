@@ -43,7 +43,7 @@
 
 #define RETURN_ON_ERROR(node1, node2) if (data->error != NO_ERROR)      \
                     {fprintf(stderr, "error on line: %d\n", __LINE__);  \
-                    NodeDtor(tree, node1);  NodeDtor(tree, node2);      \
+                    nodeDtor(tree, node1);  nodeDtor(tree, node2);      \
                     return NULL;}
 
 #define BinaryOp(data) getTokenPtr(data, data->position)->bin_op
@@ -89,14 +89,14 @@ int stringParse(Vector *tokens, TreeStruct *tree, Vector *names_table) {
     if (data.error != NO_ERROR) {
         printf(RED "error: " END_OF_COLOR "%s\nposition: %lu\n", PARSE_ERRORS[data.error], data.position);
         dumpErrors(&data, tokens, names_table);
-        TreeRootDtor(tree);
+        treeRootDtor(tree);
         return ERROR;
     }
 
     if (!isPunct(&data, END_SYMBOL)) {
         fprintf(stderr, "\n%lu\n", data.position);
         printf(RED "error: " END_OF_COLOR "expected: \\0\n");
-        TreeRootDtor(tree);
+        treeRootDtor(tree);
         return ERROR;
     }
 
@@ -104,7 +104,7 @@ int stringParse(Vector *tokens, TreeStruct *tree, Vector *names_table) {
         printf(MAGENTA "warning: " END_OF_COLOR "empty expression\n");
     }
 
-    if (TreeVerify(tree) != SUCCESS)
+    if (treeVerify(tree) != SUCCESS)
         return ERROR;
 
     return SUCCESS;
@@ -378,17 +378,17 @@ TreeNode *getKeyOp(StringParseData *data, TreeStruct *tree) {
 
     TreeNode *body_no = getBody(data, tree);
     if (data->error != NO_ERROR) {
-        NodeDtor(tree, cond);
-        NodeDtor(tree, body_yes);
-        NodeDtor(tree, body_no);
+        nodeDtor(tree, cond);
+        nodeDtor(tree, body_yes);
+        nodeDtor(tree, body_no);
         return NULL;
     }
 
     if (!isPunct(data, CL_BRACE)) {
         data->error = CL_BRACE_MISSED;
-        NodeDtor(tree, cond);
-        NodeDtor(tree, body_yes);
-        NodeDtor(tree, body_no);
+        nodeDtor(tree, cond);
+        nodeDtor(tree, body_yes);
+        nodeDtor(tree, body_no);
         return NULL;
     }
     data->position++;

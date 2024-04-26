@@ -12,7 +12,7 @@ int printInFile(TreeStruct *tree, Vector *names_table, const char *filename) {
     assert(filename);
     assert(names_table);
 
-    if (TreeVerify(tree) != SUCCESS)
+    if (treeVerify(tree) != SUCCESS)
         return ERROR;
 
     FILE *fn = openFile(filename, WRITE);

@@ -7,18 +7,18 @@
 #include "../../MyLibraries/headers/file_func.h"
 #include "../headers/calculate.h"
 
-int TreeRootCtor(TreeStruct *tree) {
+int treeRootCtor(TreeStruct *tree) {
 
     assert(tree);
 
-    tree->root = TreeNodeNew(tree, (Token) {}, NULL, NULL);
+    tree->root = treeNodeNew(tree, (Token) {}, NULL, NULL);
     if (!tree->root)
         return NO_MEMORY;
 
     return SUCCESS;
 }
 
-TreeNode *TreeNodeNew(TreeStruct *tree, Token value, TreeNode *left, TreeNode *right) {
+TreeNode *treeNodeNew(TreeStruct *tree, Token value, TreeNode *left, TreeNode *right) {
 
     TreeNode *node = (TreeNode *) calloc (1, sizeof (TreeNode));
     if (!node)
@@ -33,7 +33,7 @@ TreeNode *TreeNodeNew(TreeStruct *tree, Token value, TreeNode *left, TreeNode *r
     return node;
 }
 
-TreeNode *TreeNodeNewSafe(TreeStruct *tree, Token value, TreeNode *left, TreeNode *right) {
+TreeNode *treeNodeNewSafe(TreeStruct *tree, Token value, TreeNode *left, TreeNode *right) {
 
     assert(tree);
 
@@ -45,13 +45,13 @@ TreeNode *TreeNodeNewSafe(TreeStruct *tree, Token value, TreeNode *left, TreeNod
         if (!left || !right)
             return NULL;
 
-    TreeNode *node = TreeNodeNew(tree, value, left, right);
+    TreeNode *node = treeNodeNew(tree, value, left, right);
     if (!node) return NULL;
 
     return node;
 }
 
-int TreeRootDtor(TreeStruct *tree) {
+int treeRootDtor(TreeStruct *tree) {
 
     assert(tree);
 
@@ -59,7 +59,7 @@ int TreeRootDtor(TreeStruct *tree) {
         return SUCCESS;
 
     if (tree->root->left || tree->root->right) {
-        NodeDtor(tree, tree->root);
+        nodeDtor(tree, tree->root);
     }
 
     tree->root = NULL;
@@ -68,7 +68,7 @@ int TreeRootDtor(TreeStruct *tree) {
     return SUCCESS;
 }
 
-int NodeDtor(TreeStruct *tree, TreeNode *node) {
+int nodeDtor(TreeStruct *tree, TreeNode *node) {
 
     assert(tree);
 
@@ -76,11 +76,11 @@ int NodeDtor(TreeStruct *tree, TreeNode *node) {
         return SUCCESS;
 
     if (node->left) {
-        NodeDtor(tree, node->left);
+        nodeDtor(tree, node->left);
         node->left = NULL;
     }
     if (node->right) {
-        NodeDtor(tree, node->right);
+        nodeDtor(tree, node->right);
         node->right = NULL;
     }
 
@@ -95,7 +95,7 @@ int NodeDtor(TreeStruct *tree, TreeNode *node) {
     return SUCCESS;
 }
 
-int TreeVerify(TreeStruct *tree) {
+int treeVerify(TreeStruct *tree) {
 
     assert(tree);
 
@@ -107,7 +107,7 @@ int TreeVerify(TreeStruct *tree) {
         return NULL_POINTER;
     }
 
-    WalkTree(tree->root, &col_nodes);
+    walkTree(tree->root, &col_nodes);
 
     if (col_nodes != tree->size) {
         printf(RED "tree error: " END_OF_COLOR "incorrect size of the tree\n");
@@ -117,18 +117,18 @@ int TreeVerify(TreeStruct *tree) {
     return SUCCESS;
 }
 
-int WalkTree(TreeNode *node, size_t *col_nodes) {
+int walkTree(TreeNode *node, size_t *col_nodes) {
 
     assert(node);
     assert(col_nodes);
 
     if (node->left) {
         *col_nodes += 1;
-        WalkTree(node->left, col_nodes);
+        walkTree(node->left, col_nodes);
     }
     if (node->right) {
         *col_nodes += 1;
-        WalkTree(node->right, col_nodes);
+        walkTree(node->right, col_nodes);
     }
 
     return SUCCESS;

@@ -19,18 +19,18 @@ struct TreeStruct {
     size_t size;
 };
 
-int TreeRootCtor(TreeStruct *tree);
+int treeRootCtor(TreeStruct *tree);
 
-TreeNode *TreeNodeNew(TreeStruct *tree, Token value, TreeNode *left, TreeNode* rigth);
+TreeNode *treeNodeNew(TreeStruct *tree, Token value, TreeNode *left, TreeNode* rigth);
 
-TreeNode *TreeNodeNewSafe(TreeStruct *tree, Token value, TreeNode *left, TreeNode *right);
+TreeNode *treeNodeNewSafe(TreeStruct *tree, Token value, TreeNode *left, TreeNode *right);
 
-int TreeRootDtor(TreeStruct *tree);
+int treeRootDtor(TreeStruct *tree);
 
-int NodeDtor(TreeStruct *tree, TreeNode *node);
+int nodeDtor(TreeStruct *tree, TreeNode *node);
 
-int TreeVerify(TreeStruct *tree);
+int treeVerify(TreeStruct *tree);
 
-int WalkTree(TreeNode *node, size_t *col_nodes);
+int walkTree(TreeNode *node, size_t *col_nodes);
 
 #endif

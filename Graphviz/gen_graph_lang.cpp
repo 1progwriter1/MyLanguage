@@ -7,12 +7,25 @@
 
 const size_t MAX_CMD_LEN = 60;
 
+enum NameType {
+    VAR_NAME  = 0,
+    KEY_WORD  = 1,
+    FUNC_NAME = 2,
+    STR       = 3,
+};
+
+struct Name {
+    const char *name;
+    NameType type;
+};
+
 const char *TYPES[]  = {"punct_sym", "binary_op", "unary_op", "key_op", "number", "variable", "function", "string"};
 const char *VALUES[] = {"sin", "cos", "sqrt", "ln", "not", "out", "out_s", "in", "call", "ret", "+", "-",
                         "mul", "\\\\", "^", "==", "stronger", "weaker", "not weaker", "not stronger", "!=", "=", "if", "while", ";"};
 
 static int genNodes(FILE *fn, const TreeNode *node, size_t *index, Vector *names_table);
 static int printNode(FILE *fn, const TreeNode *node, const size_t index, Vector *names_table);
+static const char *getStrPtr(Vector *names_table, size_t index);
 
 int genGraphLang(const TreeStruct *tree, const char *filename, Vector *names_table) {
 
@@ -119,4 +132,11 @@ static int printNode(FILE *fn, const TreeNode *node, const size_t index, Vector 
     fprintf(fn, "\"]\n\t");
 
     return SUCCESS;
+}
+
+static const char *getStrPtr(Vector *names_table, size_t index) {
+
+    assert(names_table);
+
+    return ((Name *) ((char *) names_table->data + index * names_table->element_size))->name;
 }

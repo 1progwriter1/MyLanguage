@@ -20,9 +20,9 @@
 
 #define VAR(ind)     (Token) {VARIABLE, {.var_index = ind}}
 
-#define NEW(val, left, right)   TreeNodeNew(tree, val ,left, right)
+#define NEW(val, left, right)   treeNodeNew(tree, val ,left, right)
 
-#define NEW_S(val, left, right) TreeNodeNewSafe(tree, val ,left, right)
+#define NEW_S(val, left, right) treeNodeNewSafe(tree, val ,left, right)
 
 #define D(node) TakeNodeDerivative(tree, node, var_index)
 

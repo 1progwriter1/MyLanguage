@@ -5,7 +5,7 @@ COMP=g++
 OBJ_DIR=object_files
 LIB_DIR=lib_obj
 FRONT_DIR=frontend_src
-GRAPH_DIR=Graphviz
+GRAPH_DIR=graphviz
 BACK_DIR=backend_src
 MID_DIR=middle_end_src
 
@@ -35,12 +35,12 @@ all: $(SOURCES)
 
 front: $(FRONT_SRC) $(GRAPH_SRC) $(LIB_OBJ)
 	$(COMP) $(CFLAGS) $(FRONT_SRC) $(GRAPH_SRC) $(LIB_OBJ) -o front.out
+	rm -r *.dSYM
 
 
-back:
-	$(COMP) $(CFLAGS) -c $(BACK_SRC) $(GRAPH_SRC) backend.cpp
-	$(COMP) $(CFLAGS) $(BACK_OBJ) $(LIB_OBJ) $(GRAPH_OBJ) backend.o -o back.out
-	mv $(BACK_OBJ) $(GRAPH_OBJ) backend.o $(OBJ_DIR)/
+back: $(BACK_SRC) $(GRAPH_SRC) $(LIB_OBJ)
+	$(COMP) $(CFLAGS) $(BACK_SRC) $(GRAPH_SRC) $(LIB_OBJ) -o back.out
+	rm -r *.dSYM
 
 mid:
 	$(COMP) $(CFLAGS) -c $(MID_SRC) $(GRAPH_SRC) middle_end.cpp
