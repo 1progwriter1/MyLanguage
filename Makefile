@@ -8,6 +8,7 @@ FRONT_DIR=frontend_src
 GRAPH_DIR=graphviz
 BACK_DIR=backend_src
 MID_DIR=middle_end_src
+INTEL_DIR=backend_intel
 
 SOURCES=$(wildcard src/*.cpp)
 OBJECTS=$(wildcard *.o)
@@ -27,6 +28,9 @@ BACK_OBJ=$(patsubst $(BACK_DIR)/%.cpp, %.o, $(BACK_SRC))
 MID_SRC=$(wildcard $(MID_DIR)/*.cpp)
 MID_OBJ=$(patsubst $(MID_DIR)/%.cpp, %.o, $(MID_SRC))
 
+INTEL_SRC=$(wildcard $(INTEL_DIR)/*.cpp)
+INTEL_OBJ=$(patsubst $(INTEL_DIR)/%.cpp, %.o, $(INTEL_SRC))
+
 
 all: $(SOURCES)
 	$(COMP) $(CFLAGS) -c $(SOURCES)
@@ -41,6 +45,11 @@ front: $(FRONT_SRC) $(GRAPH_SRC) $(LIB_OBJ)
 back: $(BACK_SRC) $(GRAPH_SRC) $(LIB_OBJ)
 	$(COMP) $(CFLAGS) $(BACK_SRC) $(GRAPH_SRC) $(LIB_OBJ) -o back.out
 	rm -r *.dSYM
+
+intel: $(INTEL_SRC) $(GRAPH_SRC) $(LIB_OBJ)
+	$(COMP) $(CFLAGS) $(INTEL_SRC) $(GRAPH_SRC) $(LIB_OBJ) -o intel.out
+	rm -r *.dSYM
+
 
 mid:
 	$(COMP) $(CFLAGS) -c $(MID_SRC) $(GRAPH_SRC) middle_end.cpp

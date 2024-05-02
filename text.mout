@@ -1,0 +1,6 @@
+		call main
+		push 10
+		outc
+		hlt
+:main
+		push 0
