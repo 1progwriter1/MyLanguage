@@ -4,6 +4,7 @@
 #include "../../MyLibraries/headers/systemdata.h"
 #include "../../MyLibraries/headers/file_func.h"
 #include "../headers/key_words_codes.h"
+#include <stdlib.h>
 
 #define CODE_GEN_ASSERT assert(node);                   \
                         assert(data);                   \

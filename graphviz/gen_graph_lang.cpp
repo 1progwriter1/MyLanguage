@@ -4,6 +4,7 @@
 #include <assert.h>
 #include "../headers/key_words_codes.h"
 #include "../../MyLibraries/headers/systemdata.h"
+#include <stdlib.h>
 
 const size_t MAX_CMD_LEN = 60;
 

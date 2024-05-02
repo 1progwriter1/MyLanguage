@@ -7,6 +7,7 @@
 #include "../bin_tree/bin_tree.h"
 #include "../headers/key_words_codes.h"
 #include "../frontend_src/lex_analysis.h"
+#include <stdlib.h>
 
 static int readNodeFile(TreeStruct *tree, TreeNode *node, FileBuffer *buffer);
 static bool isNewNode(FileBuffer *buffer);
