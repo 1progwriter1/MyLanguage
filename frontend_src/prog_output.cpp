@@ -3,6 +3,7 @@
 #include <assert.h>
 #include "../../MyLibraries/headers/systemdata.h"
 #include "../../MyLibraries/headers/file_func.h"
+#include <stdlib.h>
 
 static int printNode(TreeNode *node, Vector *names_table, FILE *fn);
 

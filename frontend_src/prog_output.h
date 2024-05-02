@@ -8,6 +8,4 @@
 
 int printInFile(TreeStruct *tree, Vector *names_table, const char *filename);
 
-#define DST_FILE "prog.txt"
-
 #endif

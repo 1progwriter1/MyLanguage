@@ -5,8 +5,8 @@
 #include "../bin_tree/bin_tree.h"
 #include "../../MyLibraries/headers/my_vector.h"
 
-#define GRAPH_FILE "Graphviz/graph.png"
-#define GRAPH_SRC  "Graphviz/graph.dot"
+#define GRAPH_FILE "graphviz/graph.png"
+#define GRAPH_SRC  "graphviz/graph.dot"
 
 int genGraphLang(const TreeStruct *tree, const char *filename, Vector *names_table);
 

@@ -4,6 +4,7 @@
 #include "../../MyLibraries/headers/systemdata.h"
 #include "../../MyLibraries/headers/file_func.h"
 #include <string.h>
+#include <stdlib.h>
 
 enum ReadStatus {
     kReadStatusFound,
@@ -35,7 +36,7 @@ static bool isValidSymbol   (const char sym);
 static void skipSpaces  (char **buf);
 static void skipComments(char **buf);
 
-static const char *getName  (char **buf);
+static char *getName  (char **buf);
 
 int analyzeLexis(Vector *names_table, Vector *tokens, const char *filename) {
 
@@ -106,7 +107,7 @@ static int prepareToAnalyze(Vector *names_table, Vector *tokens) {
     assert(names_table);
     assert(tokens);
 
-    if (vectorCtor(names_table, NUMBER_OF_KEY_WORDS, sizeof(Token)) != SUCCESS)
+    if (vectorCtor(names_table, NUMBER_OF_KEY_WORDS, sizeof(Name)) != SUCCESS)
         return ERROR;
 
     if (vectorCtor(tokens, 8, sizeof(Token)) != SUCCESS)
@@ -118,9 +119,9 @@ static int prepareToAnalyze(Vector *names_table, Vector *tokens) {
         return ERROR;
     }
 
+    tmp->type = KEY_WORD;
     for (size_t i = 0; i < NUMBER_OF_KEY_WORDS; i++) {
         tmp->name = KEY_WORDS[i];
-        tmp->type = KEY_WORD;
         if (pushBack(names_table, tmp) != SUCCESS)
             return ERROR;
     }
@@ -225,6 +226,8 @@ static ReadStatus readPunctuation(char **buf, Vector *tokens) {
     if (pushBack(tokens, tmp) != SUCCESS)
         return kReadStatusNoMemory;
 
+    free(tmp);
+
     return kReadStatusFound;
 }
 
@@ -264,6 +267,8 @@ static ReadStatus readKeyWord(char **buf, Vector *tokens, Vector *names_table) {
 
             if (pushBack(tokens, value) != SUCCESS)
                 return kReadStatusNoMemory;
+
+            free(value);
 
             return kReadStatusFound;
         }
@@ -308,7 +313,7 @@ static ReadStatus readName(char **buf, Vector *tokens, Vector *names_table) {
     assert(names_table);
     assert(tokens);
 
-    const char *name = getName(buf);
+    char *name = getName(buf);
     if (!name)  return kReadStatusError;
 
     Token *tmp_token = (Token *) calloc (1, sizeof(Token));
@@ -327,7 +332,7 @@ static ReadStatus readName(char **buf, Vector *tokens, Vector *names_table) {
                 return kReadStatusNoMemory;
         }
 
-        free((void *) name);
+        free(name);
         free(tmp_token);
         return kReadStatusFound;
     }
@@ -345,6 +350,9 @@ static ReadStatus readName(char **buf, Vector *tokens, Vector *names_table) {
         free(tmp);
 
         index = names_table->size - 1;
+    }
+    else {
+        free(name);
     }
 
     tmp_token->type = VARIABLE;
@@ -386,7 +394,6 @@ static ReadStatus readString(char **buf, Vector *tokens) {
         return kReadStatusNoMemory;
 
     free(tmp);
-    free(str);
 
     *buf += len_of_str + 1;
 
@@ -460,7 +467,7 @@ static void skipComments(char **buf) {
     }
 }
 
-static const char *getName(char **buf) {
+static char *getName(char **buf) {
 
     assert(buf);
     assert(*buf);
@@ -488,7 +495,8 @@ void nameDtor(Name *name) {
 
     assert(name);
 
-    free((void *) name->name);
+    char *ptr = const_cast<char *>(name->name);
+    free(ptr);
     free(name);
 }
 
@@ -504,4 +512,15 @@ NameType getNameType(Vector *names_table, size_t index) {
     assert(names_table);
 
     return ((Name *) ((char *) names_table->data + index * names_table->element_size))->type;
+}
+
+void namesDtor(Vector *names_table) {
+
+    assert(names_table);
+
+    for (size_t i = NUMBER_OF_KEY_WORDS; i < names_table->size; i++) {
+        char *ptr = const_cast<char *>(((Name *) getPtr(names_table, i))->name);
+        free(ptr);
+        ((Name *) getPtr(names_table, i))->name = NULL;
+    }
 }

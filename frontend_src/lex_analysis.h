@@ -4,8 +4,6 @@
 #include "../headers/key_words_codes.h"
 #include "../../MyLibraries/headers/my_vector.h"
 
-#define SRC_FILE "text.txt"
-
 enum NameType {
     VAR_NAME  = 0,
     KEY_WORD  = 1,
@@ -21,6 +19,7 @@ struct Name {
 int analyzeLexis(Vector *names_table, Vector *tokens, const char *filename);
 
 void nameDtor(Name *name);
+void namesDtor(Vector *names_table);
 
 NameType    getNameType(Vector *names_table, size_t index);
 const char *getStrPtr  (Vector *data, size_t index);

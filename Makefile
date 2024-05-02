@@ -39,16 +39,14 @@ all: $(SOURCES)
 
 front: $(FRONT_SRC) $(GRAPH_SRC) $(LIB_OBJ)
 	$(COMP) $(CFLAGS) $(FRONT_SRC) $(GRAPH_SRC) $(LIB_OBJ) -o front.out
-	rm -r *.dSYM
 
 
 back: $(BACK_SRC) $(GRAPH_SRC) $(LIB_OBJ)
 	$(COMP) $(CFLAGS) $(BACK_SRC) $(GRAPH_SRC) $(LIB_OBJ) -o back.out
-	rm -r *.dSYM
+
 
 intel: $(INTEL_SRC) $(GRAPH_SRC) $(LIB_OBJ)
 	$(COMP) $(CFLAGS) $(INTEL_SRC) $(GRAPH_SRC) $(LIB_OBJ) -o intel.out
-	rm -r *.dSYM
 
 
 mid:

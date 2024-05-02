@@ -7,6 +7,7 @@
 #include "../headers/diff_dsl.h"
 #include "lex_analysis.h"
 #include "dump.h"
+#include <stdlib.h>
 
 /*
     G  ::= B '\0'

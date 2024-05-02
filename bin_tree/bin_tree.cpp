@@ -6,6 +6,7 @@
 #include <string.h>
 #include "../../MyLibraries/headers/file_func.h"
 #include "../headers/calculate.h"
+#include <stdlib.h>
 
 int treeRootCtor(TreeStruct *tree) {
 

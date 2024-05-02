@@ -24,7 +24,7 @@ once upon the time () {
 
     d turn into b * b - 4 * (a * c);
 
-    stone (d not weeker 0)
+    stone (d not weaker 0)
     go right {
         Square(a, b, c, d);
     }
