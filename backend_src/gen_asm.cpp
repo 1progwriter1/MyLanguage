@@ -5,6 +5,7 @@
 #include "../../MyLibraries/headers/file_func.h"
 #include "../headers/key_words_codes.h"
 #include <stdlib.h>
+#include "variables.h"
 
 #define CODE_GEN_ASSERT assert(node);                   \
                         assert(data);                   \
@@ -37,20 +38,15 @@ static VarSearchStatus ifVariableExists(size_t var_code, CodeGenData *data);
 static int createVariable(CodeGenData *data, size_t var_index);
 static int genArgs(TreeNode *node, CodeGenData *data);
 
-static bool isPunct(TreeNode *node, Punctuation sym);
-static bool isBinOp(TreeNode *node, Binary_Op operation);
-static bool isUnOp(TreeNode *node, Unary_Op operation);
-static bool isKeyOp(TreeNode *node, Key_Op operation);
-static bool isType(TreeNode *node, ValueType type);
-
 const char *REGS[] = {"rax", "rbx", "rcx", "rdx"};
 const size_t NUM_OF_REGS = 4;
 const size_t RAM_SIZE = 10000;
 
-int genAsmCode(TreeStruct *tree, const char *filename) {
+int genAsmCode(TreeStruct *tree, Vector *names_table, const char *filename) {
 
     assert(tree);
     assert(filename);
+    assert(names_table);
 
     if (treeVerify(tree) != SUCCESS)
         return ERROR;
@@ -60,28 +56,16 @@ int genAsmCode(TreeStruct *tree, const char *filename) {
         return ERROR;
     }
 
-    FILE *fn = openFile(filename, WRITE);
-    if (!fn) return FILE_OPEN_ERROR;
-
-    Vector vars_data = {};
-    if (vectorCtor(&vars_data, 8, sizeof(Address)) != SUCCESS) {
-        closeFile(fn);
-        return ERROR;
-    }
-
-    Vector local_vars = {};
-    if (vectorCtor(&local_vars, 8, sizeof(size_t)) != SUCCESS)
+    CodeGenData data = {};
+    if (prepareData(&data, filename, names_table) != SUCCESS)
         return ERROR;
 
-    callMainPrint(fn);
+    callMainPrint(data.fn);
 
-    CodeGenData data = {fn, 0, 0, 0, &vars_data, &local_vars, 0, 0, 0};
     if (genFunction(tree->root, &data) != SUCCESS)
         return ERROR;
 
-    vectorDtor(&local_vars);
-    vectorDtor(&vars_data);
-    closeFile(fn);
+    dtorData(&data);
 
     return SUCCESS;
 }
@@ -95,7 +79,6 @@ static int genFunction(TreeNode *node, CodeGenData *data) {
     else
         fprintf(data->fn, ":func_%lu\n", node->value.func_index);
 
-    data->cur_func_exe = node->value.func_index;
 
     if (!isPunct(node->left, NEW_LINE)) {
         printf(RED "gen asm error: " END_OF_COLOR "function body expected\n");
@@ -614,35 +597,35 @@ static VarSearchStatus ifVariableExists(size_t var_code, CodeGenData *data) {
     return kStatusNotFound;
 }
 
-static bool isPunct(TreeNode *node, Punctuation sym) {
+bool isPunct(TreeNode *node, Punctuation sym) {
 
     assert(node);
 
     return node && node->value.type == PUNCT_SYM && node->value.sym_code == sym;
 }
 
-static bool isBinOp(TreeNode *node, Binary_Op operation) {
+bool isBinOp(TreeNode *node, Binary_Op operation) {
 
     assert(node);
 
     return node && node->value.type == BINARY_OP && node->value.bin_op == operation;
 }
 
-static bool isUnOp(TreeNode *node, Unary_Op operation) {
+bool isUnOp(TreeNode *node, Unary_Op operation) {
 
     assert(node);
 
     return node && node->value.type == UNARY_OP && node->value.un_op == operation;
 }
 
-static bool isKeyOp(TreeNode *node, Key_Op operation) {
+bool isKeyOp(TreeNode *node, Key_Op operation) {
 
     assert(node);
 
     return node && node->value.type == KEY_OP && node->value.key_op == operation;
 }
 
-static bool isType(TreeNode *node, ValueType type) {
+bool isType(TreeNode *node, ValueType type) {
 
     assert(node);
 

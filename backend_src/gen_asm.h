@@ -3,8 +3,6 @@
 
 #include "../bin_tree/bin_tree.h"
 
-#define DST_FILE "asm.txt"
-
 enum VarPlace {
     VarPlaceRAM,
     VarPlaceREGS,
@@ -16,24 +14,37 @@ struct Address {
     size_t var_index;
 };
 
+struct Segment {
+    size_t ram_index;
+    size_t segment;
+};
+
 struct CodeGenData {
     FILE *fn;
-    size_t cur_func;
+    Variables vars;
+    GenIndexes indexes;
+};
+
+struct GenIndexes {
     size_t cur_if;
     size_t cur_while;
-    Vector *vars_data;
-    Vector *local_vars;
     size_t cur_ram_ind;
     size_t cur_reg_ind;
     size_t cur_func_exe;
 };
 
-int genAsmCode(TreeStruct *tree, const char *filename);
+struct Variables {
+    Vector *variables;
+    Vector *segments;
+    Vector *names_table;
+};
+
+int genAsmCode(TreeStruct *tree, Vector *names_table, const char *filename);
+
+bool isPunct(TreeNode *node, Punctuation sym);
+bool isBinOp(TreeNode *node, Binary_Op operation);
+bool isUnOp(TreeNode *node, Unary_Op operation);
+bool isKeyOp(TreeNode *node, Key_Op operation);
+bool isType(TreeNode *node, ValueType type);
 
 #endif
-
-/*
-call recursion
-pop rax
-pop rbx
-*/
