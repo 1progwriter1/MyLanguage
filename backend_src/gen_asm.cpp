@@ -97,12 +97,12 @@ static int genFunction(TreeNode *node, CodeGenData *data) {
 
     data->cur_func_exe = node->value.func_index;
 
-    if (!node->left || !isPunct(node->left, NEW_LINE)) {
+    if (!isPunct(node->left, NEW_LINE)) {
         printf(RED "gen asm error: " END_OF_COLOR "function body expected\n");
         return ERROR;
     }
 
-    if (node->left->right && isType(node->left->right, VARIABLE))
+    if (isType(node->left->right, VARIABLE))
         if (genArgs(node->left->right, data) != SUCCESS) return ERROR;
 
     size_t *tmp = (size_t *) calloc (1, sizeof(size_t));
@@ -112,10 +112,10 @@ static int genFunction(TreeNode *node, CodeGenData *data) {
 
     free(tmp);
 
-    if (node->left->left && isPunct(node->left->left, NEW_LINE))
+    if (isPunct(node->left->left, NEW_LINE))
         if (genNewLine(node->left->left, data) != SUCCESS) return ERROR;
 
-    if (node->right && node->right->value.type == FUNCTION)
+    if (isType(node->right, FUNCTION))
         if (genFunction(node->right, data) != SUCCESS) return ERROR;
 
     if (dtorLocalVars(data) != SUCCESS) return ERROR;
@@ -618,33 +618,33 @@ static bool isPunct(TreeNode *node, Punctuation sym) {
 
     assert(node);
 
-    return node->value.type == PUNCT_SYM && node->value.sym_code == sym;
+    return node && node->value.type == PUNCT_SYM && node->value.sym_code == sym;
 }
 
 static bool isBinOp(TreeNode *node, Binary_Op operation) {
 
     assert(node);
 
-    return node->value.type == BINARY_OP && node->value.bin_op == operation;
+    return node && node->value.type == BINARY_OP && node->value.bin_op == operation;
 }
 
 static bool isUnOp(TreeNode *node, Unary_Op operation) {
 
     assert(node);
 
-    return node->value.type == UNARY_OP && node->value.un_op == operation;
+    return node && node->value.type == UNARY_OP && node->value.un_op == operation;
 }
 
 static bool isKeyOp(TreeNode *node, Key_Op operation) {
 
     assert(node);
 
-    return node->value.type == KEY_OP && node->value.key_op == operation;
+    return node && node->value.type == KEY_OP && node->value.key_op == operation;
 }
 
 static bool isType(TreeNode *node, ValueType type) {
 
     assert(node);
 
-    return node->value.type == type;
+    return node && node->value.type == type;
 }

@@ -4,6 +4,7 @@
 #include "lex_analysis.h"
 #include "parse.h"
 #include "../graphviz/gen_graph_lang.h"
+#include "../lib_src/my_lan_lib.h"
 #include "prog_output.h"
 #include "dump.h"
 #include <string.h>

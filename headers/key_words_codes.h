@@ -1,6 +1,8 @@
 #ifndef KEY_WORDS_CODES
 #define KEY_WORDS_CODES
 
+#include <stdio.h>
+
 enum ValueType {
     PUNCT_SYM =  0,
     BINARY_OP =  1,
@@ -91,5 +93,18 @@ struct Token {
         char *string;
     };
 };
+
+enum NameType {
+    VAR_NAME  = 0,
+    KEY_WORD  = 1,
+    FUNC_NAME = 2,
+    STR       = 3,
+};
+
+struct Name {
+    const char *name;
+    NameType type;
+};
+
 
 #endif
