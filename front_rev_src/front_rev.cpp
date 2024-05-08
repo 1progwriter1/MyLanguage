@@ -1,11 +1,11 @@
 #include <stdio.h>
-#include "../MyLibraries/headers/systemdata.h"
-#include "../MyLibraries/headers/file_func.h"
-#include "headers/file_read_lang.h"
+#include "../../MyLibraries/headers/systemdata.h"
+#include "../../MyLibraries/headers/file_func.h"
+#include "../backend_intel/file_read_lang.h"
 #include <assert.h>
-#include "headers/gen_prog.h"
+#include "../headers/gen_prog.h"
 #include "headers/names_table.h"
-#include "headers/prepare_front_rev.h"
+#include "../headers/prepare_front_rev.h"
 
 int main(const int argc, const char *argv[]) {
 

@@ -39,20 +39,24 @@ all: $(SOURCES)
 
 front: $(FRONT_SRC) $(GRAPH_SRC) $(LIB_OBJ)
 	$(COMP) $(CFLAGS) $(FRONT_SRC) $(GRAPH_SRC) $(LIB_OBJ) -o front.out
-
+	rm -rf *.dSYM
+	mv front.out my_g--
 
 back: $(BACK_SRC) $(GRAPH_SRC) $(LIB_OBJ)
 	$(COMP) $(CFLAGS) $(BACK_SRC) $(GRAPH_SRC) $(LIB_OBJ) -o back.out
-
-
-intel: $(INTEL_SRC) $(GRAPH_SRC) $(LIB_OBJ)
-	$(COMP) $(CFLAGS) $(INTEL_SRC) $(GRAPH_SRC) $(LIB_OBJ) -o intel.out
-
+	rm -rf *.dSYM
+	mv back.out my_g--
 
 mid:
 	$(COMP) $(CFLAGS) -c $(MID_SRC) $(GRAPH_SRC) middle_end.cpp
 	$(COMP) $(CFLAGS) $(MID_OBJ) $(LIB_OBJ) $(GRAPH_OBJ) object_files/file_read_lang.o object_files/prog_output.o middle_end.o -o mid.out
 	mv $(MID_OBJ) $(GRAPH_OBJ) middle_end.o $(OBJ_DIR)/
+	rm -rf *.dSYM
+	mv mid.out my_g--
+
+
+intel: $(INTEL_SRC) $(GRAPH_SRC) $(LIB_OBJ)
+	$(COMP) $(CFLAGS) $(INTEL_SRC) $(GRAPH_SRC) $(LIB_OBJ) -o intel.out
 
 run_square:
 	./front.out square.txt back.txt

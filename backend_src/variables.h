@@ -11,4 +11,12 @@ void dtorData(CodeGenData *data);
 int createSegment(CodeGenData *data, TreeNode *node);
 int destroySegment(CodeGenData *data);
 
+int writeVariable(CodeGenData *data, TreeNode *node);
+
+size_t getSegment(CodeGenData *data);
+size_t getVarIndex(CodeGenData *data, size_t index);
+size_t getVarPlace(CodeGenData *data, size_t index);
+
+int getVariableValue(CodeGenData *data, size_t var_code);
+
 #endif

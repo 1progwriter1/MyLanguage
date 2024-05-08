@@ -19,12 +19,6 @@ struct Segment {
     size_t segment;
 };
 
-struct CodeGenData {
-    FILE *fn;
-    Variables vars;
-    GenIndexes indexes;
-};
-
 struct GenIndexes {
     size_t cur_if;
     size_t cur_while;
@@ -37,6 +31,12 @@ struct Variables {
     Vector *variables;
     Vector *segments;
     Vector *names_table;
+};
+
+struct CodeGenData {
+    FILE *fn;
+    Variables vars;
+    GenIndexes indexes;
 };
 
 int genAsmCode(TreeStruct *tree, Vector *names_table, const char *filename);

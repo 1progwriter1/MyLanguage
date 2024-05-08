@@ -11,7 +11,7 @@
 
 #define DTOR_DATA namesBackendDtor(&names_table);  treeRootDtor(&tree);  vectorDtor(&names_table); free(output_file);
 #define INPUT_FORMAT ".mo"
-#define OUTPUT_FORMAT ".mout"
+#define OUTPUT_FORMAT ".ms"
 
 char *createOutputFile(const char *filename);
 void namesBackendDtor(Vector *names_table);
@@ -44,17 +44,13 @@ int main(const int argc, const char *argv[]) {
         return ERROR;
     }
 
-    for (size_t i = 0; i < names_table.size; i++) {
-        printf("%lu) %s\n", i, ((Name *) getPtr(&names_table, i))->name);
-    }
-
     if (genGraphLang(&tree, GRAPH_FILE, &names_table) != SUCCESS) {
         printf(RED "error: " END_OF_COLOR "graph gen failed\n");
         DTOR_DATA
         return ERROR;
     }
 
-    if (genAsmCode(&tree, output_file) != SUCCESS) {
+    if (genAsmCode(&tree, &names_table, output_file) != SUCCESS) {
         printf(RED "error: " END_OF_COLOR "asm code gen failed\n");
         DTOR_DATA
         return ERROR;
