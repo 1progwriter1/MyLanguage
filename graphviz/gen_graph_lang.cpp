@@ -2,7 +2,7 @@
 #include "../../MyLibraries/headers/file_func.h"
 #include "gen_graph_lang.h"
 #include <assert.h>
-#include "../headers/key_words_codes.h"
+#include "../data/key_words_codes.h"
 #include "../../MyLibraries/headers/systemdata.h"
 #include <stdlib.h>
 
@@ -100,7 +100,7 @@ static int printNode(FILE *fn, const TreeNode *node, const size_t index, Vector 
             break;
         }
         case (VARIABLE): {
-            fprintf(fn, "%s [%lu]", getStrPtr(names_table, node->value.var_index), node->value.var_index);
+            fprintf(fn, "%s", getStrPtr(names_table, node->value.var_index));
             break;
         }
         case (FUNCTION): {

@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include "../../MyLibraries/headers/my_vector.h"
-#include "../headers/key_words_codes.h"
+#include "../data/key_words_codes.h"
 
 typedef Token Tree_t;
 #define tree_output_id "%d"

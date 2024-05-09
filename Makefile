@@ -14,7 +14,7 @@ SOURCES=$(wildcard src/*.cpp)
 OBJECTS=$(wildcard *.o)
 
 OBJ_MOVED=$(wildcard $(OBJ_DIR)/*.o)
-LIB_OBJ=$(wildcard $(LIB_DIR)/*.o) lang_syntax.cpp
+LIB_OBJ=$(wildcard $(LIB_DIR)/*.o) data/lang_syntax.cpp
 
 GRAPH_SRC=$(wildcard $(GRAPH_DIR)/*.cpp)
 GRAPH_OBJ=$(patsubst $(GRAPH_DIR)/%.cpp, %.o, $(GRAPH_SRC))

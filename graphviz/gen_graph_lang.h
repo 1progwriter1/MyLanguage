@@ -2,7 +2,7 @@
 #define GEN_GRAPH_LANG
 
 #include "gen_graph_lang.h"
-#include "../bin_tree/bin_tree.h"
+#include "../lib_src/bin_tree.h"
 #include "../../MyLibraries/headers/my_vector.h"
 
 #define GRAPH_FILE "graphviz/graph.png"

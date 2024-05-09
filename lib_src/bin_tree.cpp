@@ -5,7 +5,7 @@
 #include "../../MyLibraries/headers/func.h"
 #include <string.h>
 #include "../../MyLibraries/headers/file_func.h"
-#include "../headers/calculate.h"
+#include "../middle_end_src/calculate.h"
 #include <stdlib.h>
 
 int treeRootCtor(TreeStruct *tree) {

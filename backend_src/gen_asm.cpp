@@ -3,7 +3,7 @@
 #include <assert.h>
 #include "../../MyLibraries/headers/systemdata.h"
 #include "../../MyLibraries/headers/file_func.h"
-#include "../headers/key_words_codes.h"
+#include "../data/key_words_codes.h"
 #include <stdlib.h>
 #include "variables.h"
 #include "../lib_src/my_lan_lib.h"

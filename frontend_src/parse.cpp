@@ -4,7 +4,7 @@
 #include <string.h>
 #include "../../MyLibraries/headers/file_func.h"
 #include "parse.h"
-#include "../headers/diff_dsl.h"
+#include "../middle_end_src/diff_dsl.h"
 #include "lex_analysis.h"
 #include "dump.h"
 #include <stdlib.h>

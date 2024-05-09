@@ -3,8 +3,8 @@
 
 #include <stdio.h>
 #include "../../MyLibraries/headers/my_vector.h"
-#include "../headers/key_words_codes.h"
-#include "../bin_tree/bin_tree.h"
+#include "../data/key_words_codes.h"
+#include "../lib_src/bin_tree.h"
 
 #define INPUT_FILE "expr.txt"
 

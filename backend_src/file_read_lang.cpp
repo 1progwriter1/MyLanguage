@@ -4,8 +4,8 @@
 #include <assert.h>
 #include "../../MyLibraries/headers/systemdata.h"
 #include <string.h>
-#include "../bin_tree/bin_tree.h"
-#include "../headers/key_words_codes.h"
+#include "../lib_src/bin_tree.h"
+#include "../data/key_words_codes.h"
 #include "../frontend_src/lex_analysis.h"
 #include <stdlib.h>
 

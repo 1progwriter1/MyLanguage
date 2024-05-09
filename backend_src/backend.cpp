@@ -3,7 +3,7 @@
 #include "../../MyLibraries/headers/systemdata.h"
 #include "../graphviz/gen_graph_lang.h"
 #include "file_read_lang.h"
-#include "../bin_tree/bin_tree.h"
+#include "../lib_src/bin_tree.h"
 #include "gen_asm.h"
 #include "../frontend_src/lex_analysis.h"
 #include <string.h>
