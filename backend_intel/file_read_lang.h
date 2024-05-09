@@ -1,7 +1,7 @@
 #ifndef FILE_READ_DIFF
 #define FILE_READ_DIFF
 
-#include "../bin_tree/bin_tree.h"
+#include "../lib_src/bin_tree.h"
 #include "../../MyLibraries/headers/my_vector.h"
 
 #define BACK_SRC_FILE "prog.txt"

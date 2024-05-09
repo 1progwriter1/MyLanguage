@@ -1,9 +1,7 @@
 #ifndef ASM_CODE_GEN
 #define ASM_CODE_GEN
 
-#include "../bin_tree/bin_tree.h"
-
-#define DST_FILE "asm.txt"
+#include "../lib_src/bin_tree.h"
 
 enum VarPlace {
     VarPlaceRAM,
@@ -16,24 +14,31 @@ struct Address {
     size_t var_index;
 };
 
-struct CodeGenData {
-    FILE *fn;
-    size_t cur_func;
+struct GenIndexes {
     size_t cur_if;
     size_t cur_while;
-    Vector *vars_data;
-    Vector *local_vars;
     size_t cur_ram_ind;
     size_t cur_reg_ind;
     size_t cur_func_exe;
 };
 
-int genAsmCode(TreeStruct *tree, const char *filename);
+struct Variables {
+    Vector *variables;
+    Vector *names_table;
+};
+
+struct CodeGenData {
+    FILE *fn;
+    Variables vars;
+    GenIndexes indexes;
+};
+
+int genAsmCode(TreeStruct *tree, Vector *names_table, const char *filename);
+
+bool isPunct(TreeNode *node, Punctuation sym);
+bool isBinOp(TreeNode *node, Binary_Op operation);
+bool isUnOp(TreeNode *node, Unary_Op operation);
+bool isKeyOp(TreeNode *node, Key_Op operation);
+bool isType(TreeNode *node, ValueType type);
 
 #endif
-
-/*
-call recursion
-pop rax
-pop rbx
-*/

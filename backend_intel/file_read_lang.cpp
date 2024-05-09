@@ -4,8 +4,8 @@
 #include <assert.h>
 #include "../../MyLibraries/headers/systemdata.h"
 #include <string.h>
-#include "../bin_tree/bin_tree.h"
-#include "../headers/key_words_codes.h"
+#include "../lib_src/bin_tree.h"
+#include "../data/key_words_codes.h"
 #include "../frontend_src/lex_analysis.h"
 #include <stdlib.h>
 
@@ -16,6 +16,8 @@ static int endNode(FileBuffer *buffer);
 static char *readStr(FileBuffer *buffer);
 static void skipSpaces(FileBuffer *buffer);
 static int getType(TreeNode *node, FileBuffer *buffer);
+bool ifNameExists(Vector *names_table, const char *name, size_t *index);
+int pushName(Vector *names_table, char *name, NameType type, size_t *index);
 
 int readFileLang(TreeStruct *tree, const char *filename, Vector *names_table) {
 
@@ -118,14 +120,8 @@ static int getValue(TreeNode *node, FileBuffer *buffer) {
             printf(RED "read error: " END_OF_COLOR "string read failed\n");
             return ERROR;
         }
-        Name *tmp = (Name *) calloc (1, sizeof(Name));
-        if (!tmp)   return ERROR;
-        tmp->name = str;
-        tmp->type = VAR_NAME;
-        if (pushBack(buffer->names_table, tmp) != SUCCESS)
+        if (pushName(buffer->names_table, str, VAR_NAME, &index) != SUCCESS)
             return ERROR;
-        free(tmp);
-        index = buffer->names_table->size - 1;
     }
     else if (node->value.type == FUNCTION) {
         str = readStr(buffer);
@@ -133,14 +129,8 @@ static int getValue(TreeNode *node, FileBuffer *buffer) {
             printf(RED "read error: " END_OF_COLOR "string read failed\n");
             return ERROR;
         }
-        Name *tmp = (Name *) calloc (1, sizeof(Name));
-        if (!tmp)   return ERROR;
-        tmp->name = str;
-        tmp->type = FUNC_NAME;
-        if (pushBack(buffer->names_table, tmp) != SUCCESS)
+        if (pushName(buffer->names_table, str, FUNC_NAME, &index) != SUCCESS)
             return ERROR;
-        free(tmp);
-        index = buffer->names_table->size - 1;
     }
     else {
         if (sscanf(buffer->buf + buffer->index, "%lu %n", &index, &sym_read) != 1) {
@@ -287,12 +277,55 @@ static int getType(TreeNode *node, FileBuffer *buffer) {
         return ERROR;
     }
     if (type > STRING) {
-        printf(RED "read error: " END_OF_COLOR "ivalid type\n");
+        printf(RED "read error: " END_OF_COLOR "invalid type\n");
         return ERROR;
     }
     buffer->index++;
 
     node->value.type = (ValueType) type;
+
+    return SUCCESS;
+}
+
+bool ifNameExists(Vector *names_table, const char *name, size_t *index) {
+
+    assert(name);
+    assert(names_table);
+    assert(index);
+
+    for (size_t i = 0; i < names_table->size; i++) {
+        if (strcmp(getStrPtr(names_table, i), name) == 0) {
+            *index = i;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+int pushName(Vector *names_table, char *name, NameType type, size_t *index) {
+
+    assert(names_table);
+    assert(name);
+    assert(index);
+
+    if (ifNameExists(names_table, name, index)) {
+        free(name);
+        return SUCCESS;
+    }
+
+    Name *tmp = (Name *) calloc (1, sizeof(Name));
+    if (!tmp)   return NO_MEMORY;
+
+    tmp->name = name;
+    tmp->type = type;
+
+    if (pushBack(names_table, tmp) != SUCCESS)
+        return ERROR;
+
+    *index = names_table->size - 1;
+
+    free(tmp);
 
     return SUCCESS;
 }
