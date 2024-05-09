@@ -25,16 +25,9 @@ int prepareData(CodeGenData *data, const char *filename, Vector *names_table) {
     data->indexes.cur_reg_ind = 0;
     data->indexes.cur_func_exe = 0;
 
-    if (vectorCtor(data->vars.segments, 8, sizeof(Segment)) != SUCCESS) {
-        closeFile(fn);
-        vectorDtor(names_table);
-        return ERROR;
-    }
-
     if (vectorCtor(data->vars.variables, 8, sizeof(Address)) != SUCCESS) {
         closeFile(fn);
         vectorDtor(names_table);
-        vectorDtor(data->vars.segments);
         return ERROR;
     }
 
@@ -54,7 +47,6 @@ void dtorData(CodeGenData *data) {
     data->indexes.cur_func_exe = 0;
 
     vectorDtor(data->vars.names_table);
-    vectorDtor(data->vars.segments);
     vectorDtor(data->vars.variables);
 
 }
@@ -63,23 +55,14 @@ int createSegment(CodeGenData *data, TreeNode *node) {
 
     assert(data);
 
-    Segment *tmp = (Segment *) calloc (1, sizeof(Segment));
-    if (!tmp)   return ERROR;
-
-    tmp->ram_index = data->indexes.cur_ram_ind;
-    tmp->segment = data->vars.variables->size;
-    if (pushBack(data->vars.segments, tmp) != SUCCESS) {
-        free(tmp);
-        return ERROR;
-    }
-
-    free(tmp);
-
     if (!node)  return SUCCESS;
+
+    data->indexes.cur_ram_ind = 0;
 
     Address *variable = (Address *) calloc (1, sizeof(Address));
     if (!variable)  return ERROR;
 
+    fprintf(data->fn, ";save arguments to memory\n");
     TreeNode *cur_arg = node;
     while (cur_arg) {
         if (!isType(node, VARIABLE)) {
@@ -87,16 +70,7 @@ int createSegment(CodeGenData *data, TreeNode *node) {
             free(variable);
             return ERROR;
         }
-        fprintf(data->fn,  "\t\tpop [%lu]\t\t;[%s] save to ram\n", data->indexes.cur_ram_ind, getStrPtr(data->vars.names_table, cur_arg->value.var_index));
-
-        variable->var_code = cur_arg->value.var_index;
-        variable->place = VarPlaceRAM;
-        variable->var_index = data->indexes.cur_ram_ind++;
-
-        if (pushBack(data->vars.variables, variable) != SUCCESS) {
-            free(variable);
-            return ERROR;
-        }
+        if (writeVariable(data, cur_arg) != SUCCESS)    return ERROR;
         cur_arg = cur_arg->right;
     }
 
@@ -109,31 +83,20 @@ int destroySegment(CodeGenData *data) {
 
     assert(data);
 
-    Segment *tmp = (Segment *) calloc (1, sizeof(Segment));
-    if (!tmp)   return ERROR;
-
-    if (pop(data->vars.segments, tmp) != SUCCESS) {
-        free(tmp);
-        return ERROR;
-    }
-
-    data->indexes.cur_ram_ind = tmp->ram_index;
+    data->indexes.cur_ram_ind = 0;
 
     Address *variable = (Address *) calloc (1, sizeof(Address));
     if (!variable) {
-        free(tmp);
         return ERROR;
     }
 
-    while (data->vars.variables->size > tmp->segment) {
+    while (data->vars.variables->size > 0) {
         if (pop(data->vars.variables, variable) != SUCCESS) {
-            free(tmp);
             free(variable);
             return ERROR;
         }
     }
 
-    free(tmp);
     free(variable);
 
     return SUCCESS;
@@ -148,9 +111,10 @@ int writeVariable(CodeGenData *data, TreeNode *node) {
         return ERROR;
     }
 
-    for (size_t i = getSegment(data); i < data->vars.variables->size; i++) {
+    for (size_t i = 0; i < data->vars.variables->size; i++) {
         if (node->value.var_index == getVarIndex(data, i)) {
-            fprintf(data->fn, "\t\tpop [%lu]\t\t;fill variable [%s]\n", getVarPlace(data, i), getStrPtr(data->vars.names_table, node->value.var_index));
+            setRbx(data, getVarPlace(data, i));
+            fprintf(data->fn, "\t\tpop [rbx]\t\t;write value [%s]\n", getStrPtr(data->vars.names_table, node->value.var_index));
             return SUCCESS;
         }
     }
@@ -172,21 +136,13 @@ int writeVariable(CodeGenData *data, TreeNode *node) {
         return ERROR;
     }
 
-    assert(data->indexes.cur_ram_ind - 1 == data->vars.variables->size - 1);
-
-    fprintf(data->fn, "\t\tpop [%lu]\t\t;fill variable [%s]\n", data->indexes.cur_ram_ind - 1, getStrPtr(data->vars.names_table, node->value.var_index));
+    setRbx(data, data->indexes.cur_ram_ind - 1);
+    fprintf(data->fn, "\t\tpop [rbx]\t\t;fill variable [%s]\n", getStrPtr(data->vars.names_table, node->value.var_index));
+    incRdx(data);
 
     free(new_var);
 
     return SUCCESS;
-}
-
-size_t getSegment(CodeGenData *data) {
-
-    assert(data);
-
-    size_t segment = ((Segment *) getPtr(data->vars.segments, data->vars.segments->size - 1))->segment;
-    return segment;
 }
 
 size_t getVarIndex(CodeGenData *data, size_t index) {
@@ -207,26 +163,87 @@ int getVariableValue(CodeGenData *data, size_t var_code) {
 
     assert(data);
 
-    for (size_t i = getSegment(data); i < data->vars.variables->size; i++) {
+    for (size_t i = 0; i < data->vars.variables->size; i++) {
         if (var_code == getVarIndex(data, i)) {
-            fprintf(data->fn, "\t\tpush [%lu]\t\t;get value [%s]\n", getVarPlace(data, i), getStrPtr(data->vars.names_table, var_code));
+            setRbx(data, getVarPlace(data, i));
+            fprintf(data->fn, "\t\tpush [rbx]\t\t;get value [%s]\n", getStrPtr(data->vars.names_table, var_code));
             return SUCCESS;
         }
     }
 
-    printf(RED "get variable value: " END_OF_COLOR "variable does not exist\n");
-
     return ERROR;
 }
 
-int saveArgs(CodeGenData *data) {
+int saveArgs(CodeGenData *data, TreeNode *node) {
 
     assert(data);
 
+    if (!isType(node, VARIABLE))  return SUCCESS;
+
+    if (node->right) saveArgs(data, node->right);
+
+    getVariableValue(data, node->value.var_index);
+
+    return SUCCESS;
+}
+
+int restoreArgs(CodeGenData *data, TreeNode *node) {
+
+    assert(data);
+
+    TreeNode *cur = node;
+    while (isType(cur, VARIABLE)) {
+        writeVariable(data, cur);
+        cur = cur->right;
+    }
+
+    return SUCCESS;
+}
+
+void zeroRegs(CodeGenData *data) {
+
+    assert(data);
+
+    fprintf(data->fn, ";zero registers\n");
+    fprintf(data->fn, "\t\tpush 0\n\t\tpush 0\n");
+    fprintf(data->fn, "\t\tpop rcx\n\t\tpop rdx\n\n");
 
 }
 
-int restoreArgs(CodeGenData *data) {
+void setSegment(CodeGenData *data) {
 
     assert(data);
+
+    fprintf(data->fn, ";set segment\n");
+    fprintf(data->fn, "\t\tpush rcx\n\t\tpush rdx\n\t\tadd\n\t\tpop rcx\n\t\tpush 0\n\t\tpop rdx\n\n");
+}
+
+void incRdx(CodeGenData *data) {
+
+    assert(data);
+
+    fprintf(data->fn, ";inc rdx\n");
+    fprintf(data->fn, "\t\tpush 1\n\t\tpush rdx\n\t\tadd\n\t\tpop rdx\n\n");
+}
+
+void setRbx(CodeGenData *data, size_t index) {
+
+    assert(data);
+
+    fprintf(data->fn, ";set variable index [%lu]\n", index);
+    fprintf(data->fn, "\t\tpush %lu\n\t\tpush rcx\n\t\tadd\n\t\tpop rbx\n\n", index);
+}
+
+void saveRdxRcx(CodeGenData *data) {
+
+    assert(data);
+
+    fprintf(data->fn, "\t\tpush rcx\n\t\tpush rdx\n");
+}
+
+void restoreRdxRcx(CodeGenData *data) {
+
+    assert(data);
+
+    fprintf(data->fn, "\t\tpop rdx\n\t\tpop rcx\n");
 }

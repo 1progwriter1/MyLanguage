@@ -7,7 +7,7 @@ once upon the time () {
     a turn into 0;
     b turn into 10;
 
-    say the magic number (difference(a, b));
+    say the magic number (difference(b, a));
 
     end();
 }

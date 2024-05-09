@@ -13,10 +13,21 @@ int destroySegment(CodeGenData *data);
 
 int writeVariable(CodeGenData *data, TreeNode *node);
 
-size_t getSegment(CodeGenData *data);
 size_t getVarIndex(CodeGenData *data, size_t index);
 size_t getVarPlace(CodeGenData *data, size_t index);
 
 int getVariableValue(CodeGenData *data, size_t var_code);
+
+int saveArgs(CodeGenData *data, TreeNode *node);
+int restoreArgs(CodeGenData *data, TreeNode *node);
+
+void zeroRegs(CodeGenData *data);
+void setSegment(CodeGenData *data);
+
+void incRdx(CodeGenData *data);
+void setRbx(CodeGenData *data, size_t index);
+
+void saveRdxRcx(CodeGenData *data);
+void restoreRdxRcx(CodeGenData *data);
 
 #endif

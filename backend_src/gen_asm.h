@@ -14,11 +14,6 @@ struct Address {
     size_t var_index;
 };
 
-struct Segment {
-    size_t ram_index;
-    size_t segment;
-};
-
 struct GenIndexes {
     size_t cur_if;
     size_t cur_while;
@@ -29,7 +24,6 @@ struct GenIndexes {
 
 struct Variables {
     Vector *variables;
-    Vector *segments;
     Vector *names_table;
 };
 

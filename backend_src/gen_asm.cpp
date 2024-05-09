@@ -47,9 +47,8 @@ int genAsmCode(TreeStruct *tree, Vector *names_table, const char *filename) {
         return ERROR;
     }
 
-    Vector segments  = {};
     Vector variables = {};
-    CodeGenData data = {.vars.segments = &segments, .vars.variables = &variables, .vars.names_table = names_table};
+    CodeGenData data = {.vars.variables = &variables, .vars.names_table = names_table};
     if (prepareData(&data, filename, names_table) != SUCCESS)
         return ERROR;
 
@@ -67,10 +66,14 @@ static int genFunction(TreeNode *node, CodeGenData *data) {
 
     CODE_GEN_ASSERT
 
-    if (node->value.func_index == 0)
+    if (node->value.func_index == 0) {
         fprintf(data->fn, ":main\n");
-    else
+        zeroRegs(data);
+    }
+    else {
         fprintf(data->fn, ":%s\n", getStrPtr(data->vars.names_table, node->value.func_index));
+        setSegment(data);
+    }
 
     if (!isPunct(node->left, NEW_LINE)) {
         printf(RED "gen asm error: " END_OF_COLOR "function body expected\n");
@@ -83,10 +86,10 @@ static int genFunction(TreeNode *node, CodeGenData *data) {
     if (isPunct(node->left->left, NEW_LINE))
         if (genNewLine(node->left->left, data) != SUCCESS) return ERROR;
 
+    if (destroySegment(data) != SUCCESS) return ERROR;
+
     if (isType(node->right, FUNCTION))
         if (genFunction(node->right, data) != SUCCESS) return ERROR;
-
-    if (destroySegment(data) != SUCCESS) return ERROR;
 
     return SUCCESS;
 }
@@ -119,8 +122,11 @@ static int genNewLine(TreeNode *node, CodeGenData *data) {
             return ERROR;
 
     if (isType(node->left, FUNCTION)) {
-        if (genCall(node->left, data) != SUCCESS)
+        saveRdxRcx(data);
+        if (genCall(node->left->right, data) != SUCCESS)
             return ERROR;
+        fprintf(data->fn, "\t\tcall %s\n", getStrPtr(data->vars.names_table, node->left->value.func_index));
+        restoreRdxRcx(data);
     }
 
     if (isUnOp(node->left, RET))
@@ -141,7 +147,7 @@ static int genRet(TreeNode *node, CodeGenData *data) {
     if (node->right) {
         if (genExpression(node->right, data) != SUCCESS)
             return ERROR;
-        fprintf(data->fn, "\t\tpush rax\n");
+        fprintf(data->fn, "\t\tpop rax\n");
     }
 
     fprintf(data->fn, "\t\tret\n");
@@ -170,14 +176,11 @@ static int genCall(TreeNode *node, CodeGenData *data) {
 
     CODE_GEN_ASSERT
 
-    TreeNode *cur = node->right;
-    while (isType(cur, VARIABLE)) {
-        if (getVariableValue(data, cur->value.var_index) != SUCCESS)
-            return ERROR;
-        cur = cur->right;
-    }
+    if (!isType(node, VARIABLE))  return SUCCESS;
 
-    fprintf(data->fn, "\t\tcall %s\n", getStrPtr(data->vars.names_table, node->value.func_index));
+    if (node->right) genCall(node->right, data);
+
+    getVariableValue(data, node->value.var_index);
 
     return SUCCESS;
 }
@@ -322,9 +325,12 @@ static int genExpression(TreeNode *node, CodeGenData *data) {
     }
 
     if (isType(node, FUNCTION)) {
+        saveRdxRcx(data);
         if (genCall(node->right, data) != SUCCESS)
             return ERROR;
-        fprintf(data->fn, "\t\tcall %s\n\t\tpop rax\n", getStrPtr(data->vars.names_table, node->value.func_index));
+        fprintf(data->fn, "\t\tcall %s\n", getStrPtr(data->vars.names_table, node->value.func_index));
+        restoreRdxRcx(data);
+        fprintf(data->fn, "\t\tpush rax\n");
         return SUCCESS;
     }
 

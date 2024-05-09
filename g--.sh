@@ -42,6 +42,8 @@ fi
 # Получаем имя файла без расширения
 filename="${filename%.*}"
 
+DATA_DIR="$filename.data"
+
 # Проверяем, существует ли файл
 if [ ! -e "$1" ]; then
     echo "Файл не найден: $1"
@@ -60,27 +62,24 @@ if [ ! -e "$filename.mo" ]; then
 fi
 
 # Создаем папку с именем файла и перемещаем файл .mo в эту папку
-execute_command "mkdir -p '$filename'"
-execute_command "mv '$filename.mo' '$filename/'"
-execute_command "mv 'graphviz/graph.png' '$filename/'"
+execute_command "mkdir -p '$DATA_DIR'"
+execute_command "mv '$filename.mo' '$DATA_DIR/'"
+execute_command "mv 'graphviz/graph.png' '$DATA_DIR/'"
 
 # Перемещаем файл dump.txt в папку с остальными созданными файлами
-execute_command "mv '$DUMP_FILE' '$filename/'"
+execute_command "mv '$DUMP_FILE' '$DATA_DIR/'"
 
 # Запускаем ./back.out с файлом .mo в качестве аргумента
-execute_command "$EXECUTABLES_DIR/back.out '$filename/$filename.mo'"
+execute_command "$EXECUTABLES_DIR/back.out '$DATA_DIR/$filename.mo'"
 
 # Проверяем, был ли создан файл .ms
-if [ ! -e "$filename/$filename.ms" ]; then
+if [ ! -e "$DATA_DIR/$filename.ms" ]; then
     echo "Не удалось создать файл .ms"
     exit 1
 fi
 
-# Перемещаем файл .ms в папку с остальными промежуточными файлами
-execute_command "mv '$filename.ms' '$filename/'"
-
 # Запускаем ./asm.out с файлом .ms в качестве аргумента и указываем имя выходного файла .mout
-execute_command "$EXECUTABLES_DIR/asm.out '$filename/$filename.ms' '$filename.mout'"
+execute_command "$EXECUTABLES_DIR/asm.out '$DATA_DIR/$filename.ms' '$filename.mout'"
 
 # Проверяем, был ли создан файл .mout
 if [ ! -e "$filename.mout" ]; then
