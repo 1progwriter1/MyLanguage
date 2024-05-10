@@ -120,8 +120,10 @@ static int getValue(TreeNode *node, FileBuffer *buffer) {
             printf(RED "read error: " END_OF_COLOR "string read failed\n");
             return ERROR;
         }
-        if (pushName(buffer->names_table, str, VAR_NAME, &index) != SUCCESS)
+        if (pushName(buffer->names_table, str, VAR_NAME, &index) != SUCCESS) {
+            free(str);
             return ERROR;
+        }
     }
     else if (node->value.type == FUNCTION) {
         str = readStr(buffer);
@@ -129,8 +131,10 @@ static int getValue(TreeNode *node, FileBuffer *buffer) {
             printf(RED "read error: " END_OF_COLOR "string read failed\n");
             return ERROR;
         }
-        if (pushName(buffer->names_table, str, FUNC_NAME, &index) != SUCCESS)
+        if (pushName(buffer->names_table, str, FUNC_NAME, &index) != SUCCESS) {
+            free(str);
             return ERROR;
+        }
     }
     else {
         if (sscanf(buffer->buf + buffer->index, "%lu %n", &index, &sym_read) != 1) {
@@ -315,13 +319,18 @@ int pushName(Vector *names_table, char *name, NameType type, size_t *index) {
     }
 
     Name *tmp = (Name *) calloc (1, sizeof(Name));
-    if (!tmp)   return NO_MEMORY;
+    if (!tmp)   {
+        free(name);
+        return NO_MEMORY;
+    }
 
     tmp->name = name;
     tmp->type = type;
 
-    if (pushBack(names_table, tmp) != SUCCESS)
+    if (pushBack(names_table, tmp) != SUCCESS) {
+        free(tmp);
         return ERROR;
+    }
 
     *index = names_table->size - 1;
 

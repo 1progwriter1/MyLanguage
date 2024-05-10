@@ -262,11 +262,15 @@ static ReadStatus readKeyWord(char **buf, Vector *tokens, Vector *names_table) {
                 value->type = FUNCTION;
                 value->func_index = 0;
             }
-            else
+            else {
+                free(value);
                 return kReadStatusFound;
+            }
 
-            if (pushBack(tokens, value) != SUCCESS)
+            if (pushBack(tokens, value) != SUCCESS) {
+                free(value);
                 return kReadStatusNoMemory;
+            }
 
             free(value);
 
@@ -390,8 +394,11 @@ static ReadStatus readString(char **buf, Vector *tokens) {
     tmp->type = STRING;
     tmp->string = str;
 
-    if (pushBack(tokens, tmp) != SUCCESS)
+    if (pushBack(tokens, tmp) != SUCCESS) {
+        free(tmp);
+        free(str);
         return kReadStatusNoMemory;
+    }
 
     free(tmp);
 

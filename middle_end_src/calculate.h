@@ -1,9 +1,9 @@
 #ifndef DIFFERENTIATOR
 #define DIFFERENTIATOR
 
-#include "../bin_tree/bin_tree.h"
+#include "../lib_src/bin_tree.h"
 
-int CalculateTree(TreeStruct *tree, double *answer);
+int CalculateTree(struct TreeStruct *tree, double *answer);
 
 int TreeCopy(TreeStruct *tree_src, TreeStruct *tree_dst);
 

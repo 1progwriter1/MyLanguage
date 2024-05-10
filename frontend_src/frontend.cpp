@@ -4,13 +4,13 @@
 #include "lex_analysis.h"
 #include "parse.h"
 #include "../graphviz/gen_graph_lang.h"
-#include "../lib_src/my_lan_lib.h"
+#include "../lib_src/my_lang_lib.h"
 #include "prog_output.h"
 #include "dump.h"
 #include <string.h>
 #include <stdlib.h>
 
-#define DTOR_DATA namesDtor(&names_table);  treeRootDtor(&tree);  vectorDtor(&tokens);    vectorDtor(&names_table); free(output_file);
+#define DTOR_DATA namesDtor(&names_table);  treeRootDtor(&tree);  tokensDtor(&tokens);    vectorDtor(&names_table); free(output_file);
 #define INPUT_FORMAT ".fly"
 #define OUTPUT_FORMAT ".mo"
 

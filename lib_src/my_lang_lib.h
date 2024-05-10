@@ -8,5 +8,6 @@ const char *getStrPtr(Vector *names_table, size_t index);
 void nameDtor(Name *name);
 NameType getNameType(Vector *names_table, size_t index);
 void namesDtor(Vector *names_table);
+void tokensDtor(Vector *tokens);
 
 #endif

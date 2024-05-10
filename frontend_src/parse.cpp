@@ -8,7 +8,7 @@
 #include "lex_analysis.h"
 #include "dump.h"
 #include <stdlib.h>
-#include "../lib_src/my_lan_lib.h"
+#include "../lib_src/my_lang_lib.h"
 
 /*
     G  ::= B '\0'

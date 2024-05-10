@@ -9,7 +9,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define DTOR_DATA namesBackendDtor(&names_table);  treeRootDtor(&tree);  vectorDtor(&names_table); free(output_file);
+#define DTOR_DATA namesBackendDtor(&names_table); treeRootDtor(&tree);  vectorDtor(&names_table); free(output_file);
 #define INPUT_FORMAT ".mo"
 #define OUTPUT_FORMAT ".ms"
 

@@ -1,9 +1,9 @@
-#include "my_lan_lib.h"
+#include "my_lang_lib.h"
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 
-
-void nameDtor(Name *name) {
+void nameDtor(struct Name *name) {
 
     assert(name);
 
@@ -35,4 +35,17 @@ void namesDtor(Vector *names_table) {
         free(ptr);
         ((Name *) getPtr(names_table, i))->name = NULL;
     }
+}
+
+void tokensDtor(Vector *tokens) {
+
+    assert(tokens);
+
+    for (size_t i = 0; i < tokens->size; i++) {
+        if (((Token *) getPtr(tokens, i))->type == STRING) {
+            free(((Token *) getPtr(tokens, i))->string);
+        }
+    }
+
+    vectorDtor(tokens);
 }

@@ -5,7 +5,7 @@
 #include "../../MyLibraries/headers/my_vector.h"
 #include "../data/key_words_codes.h"
 #include "lex_analysis.h"
-#include "../lib_src/my_lan_lib.h"
+#include "../lib_src/my_lang_lib.h"
 
 int printInFile(TreeStruct *tree, Vector *names_table, const char *filename);
 

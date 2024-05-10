@@ -3,10 +3,9 @@
 #include <assert.h>
 #include "../../MyLibraries/headers/systemdata.h"
 #include "../../MyLibraries/headers/file_func.h"
-#include "../lib_src/my_lan_lib.h"
+#include "../lib_src/my_lang_lib.h"
+#include <stdlib.h>
 
-const char *REGS[] = {"rax", "rbx", "rcx", "rdx"};
-// const size_t NUM_OF_REGS = 4;
 const size_t RAM_SIZE = 10000;
 
 int prepareData(CodeGenData *data, const char *filename, Vector *names_table) {
