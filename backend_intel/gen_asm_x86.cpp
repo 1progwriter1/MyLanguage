@@ -114,6 +114,8 @@ int genNewLine(TreeNode *node, CodeGenData *data) {
         if (genRet(node->left, data) != SUCCESS)
             return ERROR;
 
+    setRegisters(data);
+
     if (isPunct(node->right, NEW_LINE))
         if (genNewLine(node->right, data) != SUCCESS)
             return ERROR;
@@ -262,16 +264,7 @@ int genExpression(TreeNode *node, CodeGenData *data, ValueSrc *src) {
     if (!node)
         return SUCCESS;
 
-    if (isType(node, UNARY_OP)) {
-        if (genExpression(node->right, data, {}) != SUCCESS)
-            return ERROR;
-
-        if (genUnaryOp(node, data) != SUCCESS)
-            return ERROR;
-
-        return SUCCESS;
-    }
-    else if (isType(node, BINARY_OP)) {
+    if (isType(node, BINARY_OP)) {
         if (genBinaryOp(node, data, src) != SUCCESS)
             return ERROR;
         return SUCCESS;
@@ -367,15 +360,18 @@ int genBinaryOp(TreeNode *node, CodeGenData *data, ValueSrc *src) {
         return ERROR;
     }
 
-    if (node->value.bin_op == ADD)
-        fprintf(data->fn, "\t\tadd ");
-
+    if (node->value.bin_op == ADD) {
+        if (genAdd(node, data, src) != SUCCESS)
+            return ERROR;
+    }
     else if (node->value.bin_op == SUB) {
         if (genSub(node, data, src) != SUCCESS)
             return ERROR;
     }
-    else if (node->value.bin_op == MUL)
-        fprintf(data->fn, "\t\tmul\n");
+    else if (node->value.bin_op == MUL) {
+        if (genMul(node, data, src) != SUCCESS)
+            return ERROR;
+    }
 
     else if (node->value.bin_op == DIV)
         fprintf(data->fn, "\t\tdiv\n");

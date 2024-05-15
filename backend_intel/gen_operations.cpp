@@ -2,6 +2,70 @@
 #include "gen_operations.h"
 #include <assert.h>
 #include "../../MyLibraries/headers/systemdata.h"
+#include <stdlib.h>
+
+int genMul(TreeNode *node, CodeGenData *data, ValueSrc *src) {
+
+    CODE_GEN_ASSERT
+
+    ValueSrc left = {};
+    if (genExpression(node->left, data, &left) != SUCCESS)
+        return ERROR;
+
+    ValueSrc right = {};
+    if (genExpression(node->right, data, &right) != SUCCESS)
+        return ERROR;
+
+    if (left.type != TypeReg) {
+        if (moveToRegister(data, &left) != SUCCESS)
+            return ERROR;
+    }
+
+    fprintf(data->fn, "\t\timul ");
+    printPlace(data, left);
+    fprintf(data->fn, ", ");
+    printPlace(data, right);
+    fprintf(data->fn, "\n");
+
+    *src = left;
+
+    return SUCCESS;
+}
+
+int genAdd(TreeNode *node, CodeGenData *data, ValueSrc *src) {
+
+    CODE_GEN_ASSERT
+
+    ValueSrc left = {};
+    if (genExpression(node->left, data, &left) != SUCCESS)
+        return ERROR;
+
+    ValueSrc right = {};
+    if (genExpression(node->right, data, &right) != SUCCESS)
+        return ERROR;
+
+    if (left.type != TypeReg) {
+        if (right.type != TypeReg) {
+            if (moveToRegister(data, &left) != SUCCESS)
+                return ERROR;
+        }
+        else {
+            ValueSrc tmp = right;
+            right = left;
+            left = tmp;
+        }
+    }
+
+    fprintf(data->fn, "\t\tadd ");
+    printPlace(data, left);
+    fprintf(data->fn, ", ");
+    printPlace(data, right);
+    fprintf(data->fn, "\n");
+
+    *src = left;
+
+    return SUCCESS;
+}
 
 int genSub(TreeNode *node, CodeGenData *data, ValueSrc *src) {
 
@@ -15,17 +79,9 @@ int genSub(TreeNode *node, CodeGenData *data, ValueSrc *src) {
     if (genExpression(node->right, data, &right) != SUCCESS)
         return ERROR;
 
-    if (left.type == TypeStack) {
-        int reg = findFreeRegister(data);
-        if (reg < 0 || reg > 15) {
-            printf(RED "generation error: " END_OF_COLOR "can't find free register\n");
+    if (left.type != TypeReg) {
+        if (moveToRegister(data, &left) != SUCCESS)
             return ERROR;
-        }
-        fprintf(data->fn, "\t\tmov %s, ", REGS_NAMES[reg]);
-        printPlace(data, left);
-        fprintf(data->fn, "\n");
-        left.type = TypeReg;
-        left.reg = (Registers) reg;
     }
 
     fprintf(data->fn, "\t\tsub ");
@@ -75,6 +131,26 @@ int genOutput(TreeNode *node, CodeGenData *data) {
         printPlace(data, src);
         fprintf(data->fn, "\n\t\tcall my_printf\t\t;print number\n");
     }
+
+    return SUCCESS;
+}
+
+int moveToRegister(CodeGenData *data, ValueSrc *src) {
+
+    assert(data);
+    assert(src);
+
+    int reg = findFreeRegister(data);
+    if (reg < (int) RAX || reg > (int) R15) {
+        printf(RED "generation error: " END_OF_COLOR "can't find free register\n");
+        return ERROR;
+    }
+    data->vars.used_regs[reg].is_used = true;
+    fprintf(data->fn, "\t\tmov %s, ", REGS_NAMES[reg]);
+    printPlace(data, *src);
+    fprintf(data->fn, "\n");
+    src->type = TypeReg;
+    src->reg = (Registers) reg;
 
     return SUCCESS;
 }

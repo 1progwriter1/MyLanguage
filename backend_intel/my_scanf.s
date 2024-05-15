@@ -44,6 +44,11 @@ convert:
                 push rdx
                 push r8
                 xor rcx, rcx
+                mov dl, [rsi]
+                cmp dl, '-'
+                je .set_minus
+                mov r8, 1
+.back:
 
 .find_end:
                 mov dl, [rsi]                   ;current symbol
@@ -56,7 +61,6 @@ convert:
                 xor rax, rax
                 cmp rcx, 0
                 je .end                         ;check if empty string
-                mov r8, 1
                 dec rsi                         ;prev symbol
                 xor rdx, rdx
 .loop:
@@ -74,3 +78,8 @@ convert:
                 pop rcx
 
                 ret
+
+.set_minus:
+                mov r8, -1
+                inc rsi
+                jmp .back

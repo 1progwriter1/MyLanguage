@@ -25,7 +25,7 @@ main:
 		call my_printf
 		mov rdi, qword [rbp - 8]
 		mov rsi, qword [rbp - 16]
-		call difference
+		call test
 		mov rdi, STR1
 		mov rsi, rax
 		call my_printf		;print number
@@ -34,15 +34,15 @@ main:
 		leave
 		ret
 
-difference:
+test:
 		push rbp
 		mov rbp, rsp
 		sub rsp, 16			;allocate memory
 ;save arguments to memory
 		mov qword [rbp - 8], rdi		;write value [a]
 		mov qword [rbp - 16], rsi		;write value [b]
-		mov rax, [rbp - 16]
-		sub rax, [rbp - 8]
+		mov rax, [rbp - 8]
+		imul rax, [rbp - 16]
 		leave
 		ret
 
