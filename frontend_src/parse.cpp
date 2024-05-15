@@ -139,7 +139,7 @@ TreeNode *getFunction(StringParseData *data, TreeStruct *tree) {
     data->position++;
 
     TreeNode *ptr = getBody(data, tree);
-    RETURN_ON_ERROR(ptr, NULL)
+    RETURN_ON_ERROR(ptr, func_ptr)
 
     func_ptr->left->left = ptr;
 

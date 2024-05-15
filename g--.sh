@@ -19,13 +19,15 @@ execute_command() {
 
 # Путь к исполняемым файлам
 EXECUTABLES_DIR="$(dirname "$0")/my_g--"
+# Путь к папке с исходным кодом
+SOURCE_DIR="$(dirname "$0")/MyLanguage"
 
 # Путь к файлу dump.txt
 DUMP_FILE="dump.txt"
 
-# Проверяем, передан ли аргумент в скрипт
-if [ $# -ne 1 ]; then
-    echo "Использование: $0 <имя_файла.fly>"
+# Проверяем, переданы ли один или два аргумента в скрипт
+if [ $# -lt 1 ] || [ $# -gt 2 ]; then
+    echo "Использование: $0 <имя_файла.fly> [<-mout>]"
     exit 1
 fi
 
@@ -69,22 +71,47 @@ execute_command "mv 'graphviz/graph.png' '$DATA_DIR/'"
 # Перемещаем файл dump.txt в папку с остальными созданными файлами
 execute_command "mv '$DUMP_FILE' '$DATA_DIR/'"
 
-# Запускаем ./back.out с файлом .mo в качестве аргумента
-execute_command "$EXECUTABLES_DIR/back.out '$DATA_DIR/$filename.mo'"
+# Проверяем, передан ли второй аргумент
+if [ $# -eq 2 ]; then
+    # Проверяем второй аргумент
+    if [ "$2" != "-mout" ]; then
+        echo "Некорректный второй аргумент. Ожидается -mout"
+        exit 1
+    fi
 
-# Проверяем, был ли создан файл .ms
-if [ ! -e "$DATA_DIR/$filename.ms" ]; then
-    echo "Не удалось создать файл .ms"
-    exit 1
-fi
+    # Запускаем ./back.out с файлом .mo в качестве аргумента
+    execute_command "$EXECUTABLES_DIR/back.out '$DATA_DIR/$filename.mo'"
 
-# Запускаем ./asm.out с файлом .ms в качестве аргумента и указываем имя выходного файла .mout
-execute_command "$EXECUTABLES_DIR/asm.out '$DATA_DIR/$filename.ms' '$filename.mout'"
+    # Проверяем, был ли создан файл .ms
+    if [ ! -e "$DATA_DIR/$filename.ms" ]; then
+        echo "Не удалось создать файл .ms"
+        exit 1
+    fi
 
-# Проверяем, был ли создан файл .mout
-if [ ! -e "$filename.mout" ]; then
-    echo "Не удалось создать файл .mout"
-    exit 1
+    # Запускаем ./asm.out с файлом .ms в качестве аргумента и указываем имя выходного файла .mout
+    execute_command "$EXECUTABLES_DIR/asm.out '$DATA_DIR/$filename.ms' '$filename.mout'"
+
+    # Проверяем, был ли создан файл .mout
+    if [ ! -e "$filename.mout" ]; then
+        echo "Не удалось создать файл .mout"
+        exit 1
+    fi
+
+else
+    # Второго аргумента нет, вызываем ./intel.out
+    execute_command "$EXECUTABLES_DIR/intel.out '$DATA_DIR/$filename.mo'"
+
+    # Проверяем, был ли создан файл .s
+    if [ ! -e "$DATA_DIR/$filename.s" ]; then
+        echo "Ошибка: Файл .s не был создан"
+        exit 1
+    fi
+
+    # Запускаем make {file}.out
+    execute_command "make '$DATA_DIR/$filename.out'"
+
+    # Перемещаем файл .out в папку MyLanguage
+    execute_command "mv '$DATA_DIR/$filename.out' '../'"
 fi
 
 echo "Процесс завершен"

@@ -1,11 +1,12 @@
-#include "variables.h"
-#include "gen_asm.h"
+#include "variables_x86.h"
+#include "gen_asm_x86.h"
 #include <assert.h>
 #include "../../MyLibraries/headers/systemdata.h"
 #include "../../MyLibraries/headers/file_func.h"
 #include "../lib_src/my_lang_lib.h"
 #include <stdlib.h>
 
+const char *REGS[] = {"rax", "rbx", "rcx", "rdx"};
 const size_t RAM_SIZE = 10000;
 
 int prepareData(CodeGenData *data, const char *filename, Vector *names_table) {
@@ -45,7 +46,6 @@ void dtorData(CodeGenData *data) {
     data->indexes.cur_reg_ind = 0;
     data->indexes.cur_func_exe = 0;
 
-    vectorDtor(data->vars.names_table);
     vectorDtor(data->vars.variables);
 
 }

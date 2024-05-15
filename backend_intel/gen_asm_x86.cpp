@@ -1,12 +1,12 @@
 #include <stdio.h>
-#include "gen_asm.h"
+#include "gen_asm_x86.h"
 #include <assert.h>
 #include "../../MyLibraries/headers/systemdata.h"
 #include "../../MyLibraries/headers/file_func.h"
 #include "../data/key_words_codes.h"
 #include <stdlib.h>
-#include "variables.h"
-#include "../lib_src/my_lan_lib.h"
+#include "variables_x86.h"
+#include "../lib_src/my_lang_lib.h"
 
 #define CODE_GEN_ASSERT assert(node);                   \
                         assert(data);                   \
@@ -31,7 +31,7 @@ static int genInput(TreeNode *node, CodeGenData *data);
 static int genCall(TreeNode *node, CodeGenData *data);
 static int genRet(TreeNode *node, CodeGenData *data);
 
-static void callMainPrint(FILE *fn);
+static void createStart(FILE *fn);
 
 int genAsmCode(TreeStruct *tree, Vector *names_table, const char *filename) {
 
@@ -47,12 +47,12 @@ int genAsmCode(TreeStruct *tree, Vector *names_table, const char *filename) {
         return ERROR;
     }
 
-    Vector variables = {};
-    CodeGenData data = {.vars.variables = &variables, .vars.names_table = names_table};
+    struct Vector variables = {};
+    struct CodeGenData data = {NULL, data.vars.variables = &variables, data.vars.names_table = names_table};
     if (prepareData(&data, filename, names_table) != SUCCESS)
         return ERROR;
 
-    callMainPrint(data.fn);
+    createStart(data.fn);
 
     if (genFunction(tree->root, &data) != SUCCESS)
         return ERROR;
@@ -340,7 +340,7 @@ static int genExpression(TreeNode *node, CodeGenData *data) {
 
 }
 
-static void callMainPrint(FILE *fn) {
+static void createStart(FILE *fn) {
 
     assert(fn);
 

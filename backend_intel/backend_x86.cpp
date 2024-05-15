@@ -4,14 +4,14 @@
 #include "../graphviz/gen_graph_lang.h"
 #include "file_read_lang.h"
 #include "../lib_src/bin_tree.h"
-#include "gen_asm.h"
+#include "gen_asm_x86.h"
 #include "../frontend_src/lex_analysis.h"
 #include <string.h>
 #include <stdlib.h>
 
-#define DTOR_DATA namesBackendDtor(&names_table);  treeRootDtor(&tree);  vectorDtor(&names_table); free(output_file);
+#define DTOR_DATA namesBackendDtor(&names_table); treeRootDtor(&tree);  vectorDtor(&names_table); free(output_file);
 #define INPUT_FORMAT ".mo"
-#define OUTPUT_FORMAT ".ms"
+#define OUTPUT_FORMAT ".s"
 
 char *createOutputFile(const char *filename);
 void namesBackendDtor(Vector *names_table);

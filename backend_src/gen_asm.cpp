@@ -31,7 +31,7 @@ static int genInput(TreeNode *node, CodeGenData *data);
 static int genCall(TreeNode *node, CodeGenData *data);
 static int genRet(TreeNode *node, CodeGenData *data);
 
-static void callMainPrint(FILE *fn);
+static void callMain(FILE *fn);
 
 int genAsmCode(TreeStruct *tree, Vector *names_table, const char *filename) {
 
@@ -52,7 +52,8 @@ int genAsmCode(TreeStruct *tree, Vector *names_table, const char *filename) {
     if (prepareData(&data, filename, names_table) != SUCCESS)
         return ERROR;
 
-    callMainPrint(data.fn);
+    callMain
+(data.fn);
 
     if (genFunction(tree->root, &data) != SUCCESS)
         return ERROR;
@@ -340,7 +341,7 @@ static int genExpression(TreeNode *node, CodeGenData *data) {
 
 }
 
-static void callMainPrint(FILE *fn) {
+static void callMain(FILE *fn) {
 
     assert(fn);
 

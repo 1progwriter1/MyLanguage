@@ -2,7 +2,7 @@
 #define VARIABLES_PROCESSING
 
 #include "../../MyLibraries/headers/my_vector.h"
-#include "gen_asm.h"
+#include "gen_asm_x86.h"
 
 int prepareData(struct CodeGenData *data, const char *filename, Vector *names_table);
 

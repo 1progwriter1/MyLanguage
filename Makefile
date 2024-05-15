@@ -57,6 +57,8 @@ mid:
 
 intel: $(INTEL_SRC) $(GRAPH_SRC) $(LIB_OBJ)
 	$(COMP) $(CFLAGS) $(INTEL_SRC) $(GRAPH_SRC) $(LIB_OBJ) -o intel.out
+	rm -rf *.dSYM
+	mv intel.out my_g--
 
 run_square:
 	./front.out square.txt back.txt
@@ -80,3 +82,9 @@ clean_obj:
 
 clean_exe:
 	rm *.out
+
+%.o : %.s
+	nasm -f elf64 $< -o $@
+
+%.out : %.o
+	ld -s -o $@ $<
