@@ -3,22 +3,16 @@
 
 #include "../lib_src/bin_tree.h"
 
-enum VarPlace {
-    VarPlaceRAM,
-    VarPlaceREGS,
-};
 
 struct Address {
     size_t var_code;
-    VarPlace place;
     size_t var_index;
 };
 
 struct GenIndexes {
     size_t cur_if;
     size_t cur_while;
-    size_t cur_ram_ind;
-    size_t cur_reg_ind;
+    size_t cur_stack_ind;
     size_t cur_func_exe;
 };
 

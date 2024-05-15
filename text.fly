@@ -7,11 +7,5 @@ once upon the time () {
     a turn into 0;
     b turn into 10;
 
-    c turn into difference(a, b);
-
     end();
-}
-
-fairytale difference(a, b) {
-    end(a - b);
 }

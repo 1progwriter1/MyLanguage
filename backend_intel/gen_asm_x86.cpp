@@ -67,13 +67,12 @@ static int genFunction(TreeNode *node, CodeGenData *data) {
     CODE_GEN_ASSERT
 
     if (node->value.func_index == 0) {
-        fprintf(data->fn, ":main\n");
-        zeroRegs(data);
+        fprintf(data->fn, "main:\n");
     }
     else {
-        fprintf(data->fn, ":%s\n", getStrPtr(data->vars.names_table, node->value.func_index));
-        setSegment(data);
+        fprintf(data->fn, "%s:\n", getStrPtr(data->vars.names_table, node->value.func_index));
     }
+    setRbp(data);
 
     if (!isPunct(node->left, NEW_LINE)) {
         printf(RED "gen asm error: " END_OF_COLOR "function body expected\n");
@@ -166,7 +165,7 @@ static int genInput(TreeNode *node, CodeGenData *data) {
 
     fprintf(data->fn, "\t\tin\n");
 
-    if (writeVariable(data, node->right) != SUCCESS)
+    if (writeVariable(data, node->right, {}) != SUCCESS)
         return ERROR;
 
     return SUCCESS;
@@ -249,10 +248,14 @@ static int genAssign(TreeNode *node, CodeGenData *data) {
     if (!isType(node->left, VARIABLE) || !node->right)
         return ERROR;
 
+    if (!isType(node->right, NUMBER)) {
+        if (writeVariable(data, node->left, {.type = (ValueType) TypeNumber, .number = (long long) node->right->value.number}) != SUCCESS)
+            return ERROR;
+    }
     if (genExpression(node->right, data) != SUCCESS)
         return ERROR;
 
-    if (writeVariable(data, node->left) != SUCCESS)
+    if (writeVariable(data, node->left, {}) != SUCCESS)
         return ERROR;
 
     return SUCCESS;

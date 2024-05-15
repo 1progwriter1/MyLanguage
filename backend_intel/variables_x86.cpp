@@ -6,8 +6,9 @@
 #include "../lib_src/my_lang_lib.h"
 #include <stdlib.h>
 
-const char *REGS[] = {"rax", "rbx", "rcx", "rdx"};
-const size_t RAM_SIZE = 10000;
+const char *REGS_NAMES[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
+const Registers REGS[] = {RDI, RSI, RDX, RCX, R8, R9};
+const size_t VALUE_SIZE = sizeof(long long);
 
 int prepareData(CodeGenData *data, const char *filename, Vector *names_table) {
 
@@ -21,8 +22,7 @@ int prepareData(CodeGenData *data, const char *filename, Vector *names_table) {
     data->fn = fn;
     data->indexes.cur_if = 0;
     data->indexes.cur_while = 0;
-    data->indexes.cur_ram_ind = 0;
-    data->indexes.cur_reg_ind = 0;
+    data->indexes.cur_stack_ind = 0;
     data->indexes.cur_func_exe = 0;
 
     if (vectorCtor(data->vars.variables, 8, sizeof(Address)) != SUCCESS) {
@@ -42,8 +42,7 @@ void dtorData(CodeGenData *data) {
 
     data->indexes.cur_if = 0;
     data->indexes.cur_while = 0;
-    data->indexes.cur_ram_ind = 0;
-    data->indexes.cur_reg_ind = 0;
+    data->indexes.cur_stack_ind = 0;
     data->indexes.cur_func_exe = 0;
 
     vectorDtor(data->vars.variables);
@@ -56,7 +55,8 @@ int createSegment(CodeGenData *data, TreeNode *node) {
 
     if (!node)  return SUCCESS;
 
-    data->indexes.cur_ram_ind = 0;
+    data->indexes.cur_stack_ind = 0;
+    size_t arg_index = 0;
 
     Address *variable = (Address *) calloc (1, sizeof(Address));
     if (!variable)  return ERROR;
@@ -64,13 +64,19 @@ int createSegment(CodeGenData *data, TreeNode *node) {
     fprintf(data->fn, ";save arguments to memory\n");
     TreeNode *cur_arg = node;
     while (cur_arg) {
+        if (arg_index >= 6) {
+            printf("too many args");
+            break;
+        }
         if (!isType(node, VARIABLE)) {
             printf(RED "segment creation: " END_OF_COLOR "variable expected\n");
             free(variable);
             return ERROR;
         }
-        if (writeVariable(data, cur_arg) != SUCCESS)    return ERROR;
+
+        if (writeVariable(data, cur_arg, {.place = PlaceReg, .reg = REGS[arg_index]}) != SUCCESS)    return ERROR;
         cur_arg = cur_arg->right;
+        arg_index++;
     }
 
     free(variable);
@@ -82,7 +88,7 @@ int destroySegment(CodeGenData *data) {
 
     assert(data);
 
-    data->indexes.cur_ram_ind = 0;
+    data->indexes.cur_stack_ind = 0;
 
     Address *variable = (Address *) calloc (1, sizeof(Address));
     if (!variable) {
@@ -101,7 +107,7 @@ int destroySegment(CodeGenData *data) {
     return SUCCESS;
 }
 
-int writeVariable(CodeGenData *data, TreeNode *node) {
+int writeVariable(CodeGenData *data, TreeNode *node, ValueSrc src) {
 
     assert(data);
 
@@ -110,36 +116,37 @@ int writeVariable(CodeGenData *data, TreeNode *node) {
         return ERROR;
     }
 
+    size_t var_index = 0;
+    bool found = false;
     for (size_t i = 0; i < data->vars.variables->size; i++) {
         if (node->value.var_index == getVarIndex(data, i)) {
-            setRbx(data, getVarPlace(data, i));
-            fprintf(data->fn, "\t\tpop [rbx]\t\t;write value [%s]\n", getStrPtr(data->vars.names_table, node->value.var_index));
-            return SUCCESS;
+           var_index = i;
+           found  = true;
+           break;
         }
     }
+    if (!found) {
+        Address *new_var = (Address *) calloc (1, sizeof (Address));
+        if (!new_var)   return ERROR;
 
-    if (data->indexes.cur_ram_ind >= RAM_SIZE) {
-        printf(RED "error: " END_OF_COLOR "memory limit exceeded\n");
-        return ERROR;
+        new_var->var_code = node->value.var_index;
+        new_var->var_index = data->indexes.cur_stack_ind++;
+
+        if (pushBack(data->vars.variables, new_var) != SUCCESS) {
+            free(new_var);
+            printf(RED "write variable: " END_OF_COLOR "failed to create variable\n");
+            return ERROR;
+        }
+
+        var_index = new_var->var_index;
+        free(new_var);
     }
 
-    Address *new_var = (Address *) calloc (1, sizeof (Address));
-    if (!new_var)   return ERROR;
-
-    new_var->place = VarPlaceRAM;
-    new_var->var_code = node->value.var_index;
-    new_var->var_index = data->indexes.cur_ram_ind++;
-
-    if (pushBack(data->vars.variables, new_var) != SUCCESS) {
-        printf(RED "write variable: " END_OF_COLOR "failed to create variable\n");
-        return ERROR;
-    }
-
-    setRbx(data, data->indexes.cur_ram_ind - 1);
-    fprintf(data->fn, "\t\tpop [rbx]\t\t;fill variable [%s]\n", getStrPtr(data->vars.names_table, node->value.var_index));
-    incRdx(data);
-
-    free(new_var);
+    fprintf(data->fn, "\t\tmov [rbp - %lu], ", var_index * VALUE_SIZE);
+    if (src.type == TypeReg)          fprintf(data->fn, "%s", REGS_NAMES[src.reg]);
+    else if (src.type == TypeStack)   fprintf(data->fn, "[rbp - %lu]", src.index * VALUE_SIZE);
+    else                              fprintf(data->fn, "%lld", src.number);
+    fprintf(data->fn, "\t\t;write value [%s]\n", getStrPtr(data->vars.names_table, node->value.var_index));
 
     return SUCCESS;
 }
@@ -173,48 +180,12 @@ int getVariableValue(CodeGenData *data, size_t var_code) {
     return ERROR;
 }
 
-int saveArgs(CodeGenData *data, TreeNode *node) {
+void setRbp(CodeGenData *data) {
 
     assert(data);
 
-    if (!isType(node, VARIABLE))  return SUCCESS;
-
-    if (node->right) saveArgs(data, node->right);
-
-    getVariableValue(data, node->value.var_index);
-
-    return SUCCESS;
-}
-
-int restoreArgs(CodeGenData *data, TreeNode *node) {
-
-    assert(data);
-
-    TreeNode *cur = node;
-    while (isType(cur, VARIABLE)) {
-        writeVariable(data, cur);
-        cur = cur->right;
-    }
-
-    return SUCCESS;
-}
-
-void zeroRegs(CodeGenData *data) {
-
-    assert(data);
-
-    fprintf(data->fn, ";zero registers\n");
-    fprintf(data->fn, "\t\tpush 0\n\t\tpush 0\n");
-    fprintf(data->fn, "\t\tpop rcx\n\t\tpop rdx\n\n");
-
-}
-
-void setSegment(CodeGenData *data) {
-
-    assert(data);
-
-    fprintf(data->fn, ";set segment\n");
-    fprintf(data->fn, "\t\tpush rcx\n\t\tpush rdx\n\t\tadd\n\t\tpop rcx\n\t\tpush 0\n\t\tpop rdx\n\n");
+    fprintf(data->fn,   "\t\tpush rbp\n"
+                        "\t\tmov rbp, rsp\n");
 }
 
 void incRdx(CodeGenData *data) {
