@@ -7,31 +7,12 @@
 #include <stdlib.h>
 #include "variables_x86.h"
 #include "../lib_src/my_lang_lib.h"
-
-#define CODE_GEN_ASSERT assert(node);                   \
-                        assert(data);                   \
-                        assert(data->fn);
+#include <string.h>
 
 enum VarSearchStatus {
     kStatusFound,
     kStatusNotFound,
 };
-
-static int genFunction(TreeNode *node, CodeGenData *data);
-static int genNewLine(TreeNode *node, CodeGenData *data);
-static int genIf(TreeNode *node, CodeGenData *data);
-static int genWhile(TreeNode *node, CodeGenData *data);
-static int genAssign(TreeNode *node, CodeGenData *data);
-static int genOutput(TreeNode *node, CodeGenData *data);
-static int genExpression(TreeNode *node, CodeGenData *data);
-static int genLogicalJump(TreeNode *node, CodeGenData *data);
-static int genUnaryOp(TreeNode *node, CodeGenData *data);
-static int genBinaryOp(TreeNode *node, CodeGenData *data);
-static int genInput(TreeNode *node, CodeGenData *data);
-static int genCall(TreeNode *node, CodeGenData *data);
-static int genRet(TreeNode *node, CodeGenData *data);
-
-static void createStart(FILE *fn);
 
 int genAsmCode(TreeStruct *tree, Vector *names_table, const char *filename) {
 
@@ -47,8 +28,9 @@ int genAsmCode(TreeStruct *tree, Vector *names_table, const char *filename) {
         return ERROR;
     }
 
-    struct Vector variables = {};
-    struct CodeGenData data = {NULL, data.vars.variables = &variables, data.vars.names_table = names_table};
+    Vector variables = {};
+    Vector str_data = {};
+    CodeGenData data = {NULL, 0, data.vars.variables = &variables, data.vars.names_table = names_table, {}, data.str_data = &str_data};
     if (prepareData(&data, filename, names_table) != SUCCESS)
         return ERROR;
 
@@ -57,12 +39,14 @@ int genAsmCode(TreeStruct *tree, Vector *names_table, const char *filename) {
     if (genFunction(tree->root, &data) != SUCCESS)
         return ERROR;
 
+    createRoData(&data);
+
     dtorData(&data);
 
     return SUCCESS;
 }
 
-static int genFunction(TreeNode *node, CodeGenData *data) {
+int genFunction(TreeNode *node, CodeGenData *data) {
 
     CODE_GEN_ASSERT
 
@@ -93,7 +77,7 @@ static int genFunction(TreeNode *node, CodeGenData *data) {
     return SUCCESS;
 }
 
-static int genNewLine(TreeNode *node, CodeGenData *data) {
+int genNewLine(TreeNode *node, CodeGenData *data) {
 
     CODE_GEN_ASSERT
 
@@ -121,11 +105,9 @@ static int genNewLine(TreeNode *node, CodeGenData *data) {
             return ERROR;
     }
     else if (isType(node->left, FUNCTION)) {
-        saveRdxRcx(data);
         if (genCall(node->left->right, data) != SUCCESS)
             return ERROR;
-        fprintf(data->fn, "\t\tcall %s\n", getStrPtr(data->vars.names_table, node->left->value.func_index));
-        restoreRdxRcx(data);
+        fprintf(data->fn, "\t\tadd rsp, %lu\n", (data->vars.variables->size) * VALUE_SIZE);
     }
 
     else if (isUnOp(node->left, RET))
@@ -139,23 +121,30 @@ static int genNewLine(TreeNode *node, CodeGenData *data) {
     return SUCCESS;
 }
 
-static int genRet(TreeNode *node, CodeGenData *data) {
+int genRet(TreeNode *node, CodeGenData *data) {
 
     CODE_GEN_ASSERT
 
     if (node->right) {
-        if (genExpression(node->right, data) != SUCCESS)
+        ValueSrc src = {};
+        if (genExpression(node->right, data, &src) != SUCCESS)
             return ERROR;
-        fprintf(data->fn, "\t\tpop rax\n");
+
+        if (src.type != TypeReg || src.reg != RAX) {
+            fprintf(data->fn, "\t\tmov rax, ");
+            if (src.type == TypeNumber)     fprintf(data->fn, "%lld\t\t;pass the argument\n", src.number);
+            else if (src.type == TypeStack) fprintf(data->fn, "[rbx - %lu]\t\t;pass the argument\n", (src.index + 1) * VALUE_SIZE);
+            else                            fprintf(data->fn, "%s\t\t;pass the argument\n", REGS_NAMES[src.reg]);
+        }
     }
 
-    fprintf(data->fn,   "\t\tpop rbp\n"
+    fprintf(data->fn,   "\t\tleave\n"
                         "\t\tret\n\n");
 
     return SUCCESS;
 }
 
-static int genInput(TreeNode *node, CodeGenData *data) {
+int genInput(TreeNode *node, CodeGenData *data) {
 
     CODE_GEN_ASSERT
 
@@ -164,35 +153,40 @@ static int genInput(TreeNode *node, CodeGenData *data) {
         return ERROR;
     }
 
-    fprintf(data->fn, "\t\tin\n");
+    fprintf(data->fn, "\t\tcall my_scanf\t\t;read number to rax\n");
 
-    if (writeVariable(data, node->right, {}) != SUCCESS)
+    ValueSrc src = {.type = TypeReg, .reg = RAX};
+    if (writeVariable(data, node->right, src) != SUCCESS)
         return ERROR;
 
     return SUCCESS;
 }
 
-static int genCall(TreeNode *node, CodeGenData *data) {
+int genCall(TreeNode *node, CodeGenData *data) {
 
     CODE_GEN_ASSERT
 
-    if (!isType(node, VARIABLE))  return SUCCESS;
-
-    if (node->right) genCall(node->right, data);
-
-    getVariableValue(data, node->value.var_index);
+    TreeNode *cur = node;
+    size_t cur_arg = 0;
+    while (isType(cur, VARIABLE)) {
+        fprintf(data->fn, "\t\tmov %s, ", REGS_NAMES[ARGUMENTS_SRC[cur_arg++]]);
+        if (getVariableValue(data, cur->value.var_index) != SUCCESS)
+            return ERROR;
+        fprintf(data->fn, "\n");
+        cur = cur->right;
+    }
 
     return SUCCESS;
 }
 
-static int genIf(TreeNode *node, CodeGenData *data) {
+int genIf(TreeNode *node, CodeGenData *data) {
 
     CODE_GEN_ASSERT
 
     if (!node->left || !node->left->left || !node->left->right) return ERROR;
 
-    if (genExpression(node->left->right, data) != SUCCESS) return ERROR;
-    if (genExpression(node->left->left, data) != SUCCESS)  return ERROR;
+    if (genExpression(node->left->right, data, {}) != SUCCESS) return ERROR;
+    if (genExpression(node->left->left, data, {}) != SUCCESS)  return ERROR;
 
     size_t if_index = data->indexes.cur_if++;
 
@@ -213,7 +207,7 @@ static int genIf(TreeNode *node, CodeGenData *data) {
     return SUCCESS;
 }
 
-static int genWhile(TreeNode *node, CodeGenData *data) {
+int genWhile(TreeNode *node, CodeGenData *data) {
 
     CODE_GEN_ASSERT
 
@@ -224,8 +218,8 @@ static int genWhile(TreeNode *node, CodeGenData *data) {
     size_t while_index = data->indexes.cur_while++;
     fprintf(data->fn, ":while_%lu\n", while_index);
 
-    if (genExpression(node->left->right, data) != SUCCESS) return ERROR;
-    if (genExpression(node->left->left, data) != SUCCESS) return ERROR;
+    if (genExpression(node->left->right, data, {}) != SUCCESS) return ERROR;
+    if (genExpression(node->left->left, data, {}) != SUCCESS) return ERROR;
 
     if (genLogicalJump(node->left, data) != SUCCESS) return ERROR;
     fprintf(data->fn, "begin_while_%lu\n", while_index);
@@ -242,65 +236,34 @@ static int genWhile(TreeNode *node, CodeGenData *data) {
     return SUCCESS;
 }
 
-static int genAssign(TreeNode *node, CodeGenData *data) {
+int genAssign(TreeNode *node, CodeGenData *data) {
 
     CODE_GEN_ASSERT
 
     if (!isType(node->left, VARIABLE) || !node->right)
         return ERROR;
 
-    if (isType(node->right, NUMBER)) {
-        if (writeVariable(data, node->left, (ValueSrc) {.type = TypeNumber, .number = (long long) node->right->value.number}) != SUCCESS)
-            return ERROR;
-        return SUCCESS;
-    }
-    if (genExpression(node->right, data) != SUCCESS)
+    ValueSrc src = {};
+    if (genExpression(node->right, data, &src) != SUCCESS)
         return ERROR;
 
-    if (writeVariable(data, node->left, {}) != SUCCESS)
+    if (writeVariable(data, node->left, src) != SUCCESS)
         return ERROR;
 
     return SUCCESS;
 }
 
-static int genOutput(TreeNode *node, CodeGenData *data) {
-
-    CODE_GEN_ASSERT
-
-    if (!node->right) return ERROR;
-
-    Unary_Op operation = node->value.un_op;
-
-    if (operation == OUT_S) {
-
-        char *str = node->right->value.string;
-        while (*str != '\0') {
-            if (*str == '\\' && *(str + 1) == 'n') {
-                fprintf(data->fn, "\t\tpush %d\n\t\toutc\n", '\n');
-                str += 2;
-            }
-            else fprintf(data->fn, "\t\tpush %d\n\t\toutc\n", *str++);
-        }
-    }
-    else {
-        if (genExpression(node->right, data) != SUCCESS)
-            return ERROR;
-        fprintf(data->fn, "\t\tout\n");
-    }
-
-    return SUCCESS;
-}
-
-static int genExpression(TreeNode *node, CodeGenData *data) {
+int genExpression(TreeNode *node, CodeGenData *data, ValueSrc *src) {
 
     assert(data);
     assert(data->fn);
+    assert(src);
 
     if (!node)
         return SUCCESS;
 
     if (isType(node, UNARY_OP)) {
-        if (genExpression(node->right, data) != SUCCESS)
+        if (genExpression(node->right, data, {}) != SUCCESS)
             return ERROR;
 
         if (genUnaryOp(node, data) != SUCCESS)
@@ -308,34 +271,31 @@ static int genExpression(TreeNode *node, CodeGenData *data) {
 
         return SUCCESS;
     }
-    if (isType(node, BINARY_OP)) {
-
-        if (genExpression(node->left, data) != SUCCESS || genExpression(node->right, data) != SUCCESS)
-                return ERROR;
-
-        if (genBinaryOp(node, data) != SUCCESS)
-            return ERROR;
-
-        return SUCCESS;
-    }
-
-    if (isType(node, VARIABLE)) {
-        if (getVariableValue(data, node->value.var_index) != SUCCESS)
+    else if (isType(node, BINARY_OP)) {
+        if (genBinaryOp(node, data, src) != SUCCESS)
             return ERROR;
         return SUCCESS;
     }
-    if (isType(node, NUMBER)) {
-        fprintf(data->fn, "\t\tpush %lg\n", node->value.number);
+
+    else if (isType(node, VARIABLE)) {
+        size_t index = 0;
+        if (!findVariable(data, &index, node->value.var_index)) {
+            printf(RED "error: " END_OF_COLOR "variable was not defined\n");
+            return ERROR;
+        }
+        *src = {.type = TypeStack, index};
+        return SUCCESS;
+    }
+    else if (isType(node, NUMBER)) {
+        *src = {.type = TypeNumber, .number = (long long) node->value.number};
         return SUCCESS;
     }
 
-    if (isType(node, FUNCTION)) {
-        saveRdxRcx(data);
+    else if (isType(node, FUNCTION)) {
         if (genCall(node->right, data) != SUCCESS)
             return ERROR;
         fprintf(data->fn, "\t\tcall %s\n", getStrPtr(data->vars.names_table, node->value.func_index));
-        restoreRdxRcx(data);
-        fprintf(data->fn, "\t\tpush rax\n");
+        *src = {.type = TypeReg, .reg = RAX};
         return SUCCESS;
     }
 
@@ -345,11 +305,13 @@ static int genExpression(TreeNode *node, CodeGenData *data) {
 
 }
 
-static void createStart(FILE *fn) {
+void createStart(FILE *fn) {
 
     assert(fn);
 
     fprintf(fn, "section .text\n\n"
+                "extern my_printf\n"
+                "extern my_scanf\n\n"
                 "global _start\n\n"
                 "_start:\n"
                 "\t\tcall main\n"
@@ -358,7 +320,7 @@ static void createStart(FILE *fn) {
                 "\t\tsyscall\n\n");
 }
 
-static int genLogicalJump(TreeNode *node, CodeGenData *data) {
+int genLogicalJump(TreeNode *node, CodeGenData *data) {
 
     CODE_GEN_ASSERT
 
@@ -396,36 +358,7 @@ static int genLogicalJump(TreeNode *node, CodeGenData *data) {
     return SUCCESS;
 }
 
-static int genUnaryOp(TreeNode *node, CodeGenData *data) {
-
-    CODE_GEN_ASSERT
-
-    if (node->value.type != UNARY_OP) {
-        printf(RED "asm gen error: " END_OF_COLOR "unary operation expected\n");
-        return ERROR;
-    }
-
-    if (node->value.un_op == SIN)
-        fprintf(data->fn, "\t\tsin\n");
-
-    else if (node->value.un_op == COS)
-        fprintf(data->fn, "\t\tcos\n");
-
-    else if (node->value.un_op == LN)
-        fprintf(data->fn, "\t\tln\n");
-
-    else if (node->value.un_op == SQRT)
-        fprintf(data->fn, "\t\tsqrt\n");
-
-    else {
-        printf(RED "asm gen error: " END_OF_COLOR "invalid unary operation\n");
-        return ERROR;
-    }
-
-    return SUCCESS;
-}
-
-static int genBinaryOp(TreeNode *node, CodeGenData *data) {
+int genBinaryOp(TreeNode *node, CodeGenData *data, ValueSrc *src) {
 
     CODE_GEN_ASSERT
 
@@ -435,11 +368,12 @@ static int genBinaryOp(TreeNode *node, CodeGenData *data) {
     }
 
     if (node->value.bin_op == ADD)
-        fprintf(data->fn, "\t\tadd\n");
+        fprintf(data->fn, "\t\tadd ");
 
-    else if (node->value.bin_op == SUB)
-        fprintf(data->fn, "\t\tsub\n");
-
+    else if (node->value.bin_op == SUB) {
+        if (genSub(node, data, src) != SUCCESS)
+            return ERROR;
+    }
     else if (node->value.bin_op == MUL)
         fprintf(data->fn, "\t\tmul\n");
 
@@ -481,4 +415,32 @@ bool isKeyOp(TreeNode *node, Key_Op operation) {
 bool isType(TreeNode *node, ValueType type) {
 
     return node && node->value.type == type;
+}
+
+void createRoData(CodeGenData *data) {
+
+    assert(data);
+
+    fprintf(data->fn, "section .rodata\n");
+    for (size_t i = 0; i < data->str_data->size; i++) {
+        fprintf(data->fn, "STR%lu:\n\t\tdb ", i);
+        printStr(data, *((char **) getPtr(data->str_data, i)));
+        if (*((char **) getPtr(data->str_data, i))[0] == '%') free(*((char **) getPtr(data->str_data, i)));
+    }
+}
+
+void printStr(CodeGenData *data, char *str) {
+
+    assert(data);
+    assert(str);
+
+    fprintf(data->fn, "\"");
+    while (*str != '\0') {
+        if (*str == '\\' && *(str + 1) == 'n') {
+            fprintf(data->fn, "\", 0xA, \"");
+            str += 2;
+        }
+        else fprintf(data->fn, "%c", *str++);
+    }
+    fprintf(data->fn, "\", 0x0\n");
 }

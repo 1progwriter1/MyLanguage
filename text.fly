@@ -7,9 +7,16 @@ once upon the time () {
     a turn into 0;
     b turn into 10;
 
+    guess the riddle(a);
+    guess the riddle(b);
+
+    say the magic word("Here is the answer: ");
+    say the magic number(difference(a, b));
+    say the magic word("\n");
+
     end();
 }
 
 fairytale difference(a, b) {
-    end(a + 12 - 3 * b + 4 + 5);
+    end(b - a);
 }

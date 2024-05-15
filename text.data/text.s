@@ -1,5 +1,8 @@
 section .text
 
+extern my_printf
+extern my_scanf
+
 global _start
 
 _start:
@@ -11,41 +14,42 @@ _start:
 main:
 		push rbp
 		mov rbp, rsp
+		sub rsp, 16			;allocate memory
 		mov qword [rbp - 8], 0		;write value [a]
 		mov qword [rbp - 16], 10		;write value [b]
-		pop rbp
+		call my_scanf		;read number to rax
+		mov qword [rbp - 8], rax		;write value [a]
+		call my_scanf		;read number to rax
+		mov qword [rbp - 16], rax		;write value [b]
+		mov rdi, STR0		;print Here is the answer: 
+		call my_printf
+		mov rdi, qword [rbp - 8]
+		mov rsi, qword [rbp - 16]
+		call difference
+		mov rdi, STR1
+		mov rsi, rax
+		call my_printf		;print number
+		mov rdi, STR2		;print \n
+		call my_printf
+		leave
 		ret
 
 difference:
 		push rbp
 		mov rbp, rsp
+		sub rsp, 16			;allocate memory
 ;save arguments to memory
 		mov qword [rbp - 8], rdi		;write value [a]
 		mov qword [rbp - 16], rsi		;write value [b]
-;set variable index [0]
-		push 0
-		push rcx
-		add
-		pop rbx
-
-		push [rbx]		;get value [a]
-		push 12
-		add
-		push 3
-;set variable index [1]
-		push 1
-		push rcx
-		add
-		pop rbx
-
-		push [rbx]		;get value [b]
-		mul
-		sub
-		push 4
-		add
-		push 5
-		add
-		pop rax
-		pop rbp
+		mov rax, [rbp - 16]
+		sub rax, [rbp - 8]
+		leave
 		ret
 
+section .rodata
+STR0:
+		db "Here is the answer: ", 0x0
+STR1:
+		db "%d", 0x0
+STR2:
+		db "", 0xA, "", 0x0

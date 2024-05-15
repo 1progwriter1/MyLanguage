@@ -85,4 +85,4 @@ clean_exe:
 	nasm -f elf64 $< -o $@
 
 %.out : %.o
-	ld -s -o $@ $<
+	ld -s -o $@ backend_intel/my_printf.o backend_intel/my_scanf.o $<

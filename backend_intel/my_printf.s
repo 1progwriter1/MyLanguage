@@ -198,7 +198,7 @@ global my_printf
                  jmp .L1
 
 .error:
-                mov [buffer], 21                ;buffer <- !
+                mov byte [buffer], 21                ;buffer <- !
                 mov rdx, 1                      ;length = 1
                 jmp .print_buffer
 
@@ -384,9 +384,9 @@ global my_printf
          dq      PrintArgument.binary            ;%b
          dq      PrintArgument.character         ;%c
          dq      PrintArgument.decimal           ;%d
-         dq      Print.error
+         dq      PrintArgument.error
          dq      PrintArgument.octal             ;%o
-         dq      Print.error
+         dq      PrintArgument.error
          dq      PrintArgument.string            ;%s
-         dq      Print.error
+         dq      PrintArgument.error
          dq      PrintArgument.hexadecimal       ;%x

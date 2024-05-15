@@ -6,9 +6,8 @@
 #include "../lib_src/my_lang_lib.h"
 #include <stdlib.h>
 
-const char *REGS_NAMES[] = {"rax", "rbx", "rcx", "rdx", "rsi", "rdi", "rbp", "rsp", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15"};
 const Registers ARGUMENTS_SRC[] = {RDI, RSI, RDX, RCX, R8, R9};
-const size_t VALUE_SIZE = sizeof(long long);
+const char *REGS_NAMES[] = {"rax", "rbx", "rcx", "rdx", "rsi", "rdi", "rbp", "rsp", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15"};
 
 int prepareData(CodeGenData *data, const char *filename, Vector *names_table) {
 
@@ -25,9 +24,17 @@ int prepareData(CodeGenData *data, const char *filename, Vector *names_table) {
     data->indexes.cur_stack_ind = 0;
     data->indexes.cur_func_exe = 0;
 
+    setRegisters(data);
+
     if (vectorCtor(data->vars.variables, 8, sizeof(Address)) != SUCCESS) {
         closeFile(fn);
         vectorDtor(names_table);
+        return ERROR;
+    }
+    if (vectorCtor(data->str_data, 8, sizeof(char **)) != SUCCESS) {
+        closeFile(fn);
+        vectorDtor(names_table);
+        vectorDtor(data->vars.variables);
         return ERROR;
     }
 
@@ -46,7 +53,7 @@ void dtorData(CodeGenData *data) {
     data->indexes.cur_func_exe = 0;
 
     vectorDtor(data->vars.variables);
-
+    vectorDtor(data->str_data);
 }
 
 int createSegment(CodeGenData *data, TreeNode *node) {
@@ -89,6 +96,10 @@ int destroySegment(CodeGenData *data) {
     assert(data);
 
     data->indexes.cur_stack_ind = 0;
+    long int tmp = ftell(data->fn);
+    fseek(data->fn, data->offset, SEEK_SET);
+    fprintf(data->fn, "%lu", data->vars.variables->size * VALUE_SIZE);
+    fseek(data->fn, tmp, SEEK_SET);
 
     Address *variable = (Address *) calloc (1, sizeof(Address));
     if (!variable) {
@@ -171,8 +182,7 @@ int getVariableValue(CodeGenData *data, size_t var_code) {
 
     for (size_t i = 0; i < data->vars.variables->size; i++) {
         if (var_code == getVarIndex(data, i)) {
-            setRbx(data, getVarPlace(data, i));
-            fprintf(data->fn, "\t\tpush [rbx]\t\t;get value [%s]\n", getStrPtr(data->vars.names_table, var_code));
+            fprintf(data->fn, "qword [rbp - %lu]", (getVarPlace(data, i) + 1) * VALUE_SIZE);
             return SUCCESS;
         }
     }
@@ -185,7 +195,10 @@ void setRbp(CodeGenData *data) {
     assert(data);
 
     fprintf(data->fn,   "\t\tpush rbp\n"
-                        "\t\tmov rbp, rsp\n");
+                        "\t\tmov rbp, rsp\n"
+                        "\t\tsub rsp, ");
+    data->offset = ftell(data->fn);
+    fprintf(data->fn, "\t\t\t\t\t;allocate memory\n");
 }
 
 void incRdx(CodeGenData *data) {
@@ -216,4 +229,63 @@ void restoreRdxRcx(CodeGenData *data) {
     assert(data);
 
     fprintf(data->fn, "\t\tpop rdx\n\t\tpop rcx\n");
+}
+
+void setRegisters(CodeGenData *data) {
+
+    assert(data);
+
+    for (size_t i = 0; i < NUMBER_OF_USED; i++)
+        data->vars.used_regs[i] = {(Registers) i, false};
+}
+
+bool findVariable(CodeGenData *data, size_t *index, size_t code) {
+
+    assert(data);
+    assert(index);
+
+    for (size_t i = 0; i < data->vars.variables->size; i++) {
+        if (code == getVarIndex(data, i)) {
+            *index = getVarPlace(data, i);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+int findFreeRegister(CodeGenData *data) {
+
+    assert(data);
+
+    for (size_t i = 0; i < data->vars.variables->size; i++) {
+        if (data->vars.used_regs[i].is_used)
+            continue;
+        return (int) i;
+    }
+
+    return -1;
+}
+
+void printPlace(CodeGenData *data, ValueSrc src) {
+
+    assert(data);
+
+    switch (src.type) {
+        case (TypeNumber): {
+            fprintf(data->fn, "%lld", src.number);
+            break;
+        }
+        case (TypeReg): {
+            fprintf(data->fn, "%s", REGS_NAMES[src.reg]);
+            break;
+        }
+        case (TypeStack): {
+            fprintf(data->fn, "[rbp - %lu]", (src.index + 1) * VALUE_SIZE);
+            break;
+        }
+        default:
+            break;
+    }
+
 }
