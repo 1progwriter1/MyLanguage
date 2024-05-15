@@ -9,3 +9,7 @@ once upon the time () {
 
     end();
 }
+
+fairytale difference(a, b) {
+    end(a + 12 - 3 * b + 4 + 5);
+}

@@ -1,27 +1,27 @@
 #include <stdio.h>
-#include "../headers/calculate.h"
+#include "calculate.h"
 #include "../../MyLibraries/headers/systemdata.h"
-#include "../bin_tree/bin_tree.h"
+#include "../lib_src/bin_tree.h"
 #include <assert.h>
 #include <math.h>
 #include "../../MyLibraries/headers/func.h"
-#include "../headers/diff_dsl.h"
+#include "diff_dsl.h"
 
 enum NumOfAgrs {
     kOneArgsNum = 1,
     kTwoArgsNum = 2
 };
 
-int CalculateTree(TreeStruct *tree, double *answer) {
+int calculateTree(TreeStruct *tree, double *answer) {
 
     assert(tree);
     assert(answer);
 
-    if (TreeVerify(tree) != SUCCESS)
+    if (treeVerify(tree) != SUCCESS)
         return ERROR;
 
     bool error = 0;
-    *answer = CalculateNode(tree->root, &error);
+    *answer = calculateNode(tree->root, &error);
 
     if (error) {
         printf(RED "Error when calculating the tree" END_OF_COLOR "\n");
@@ -31,7 +31,7 @@ int CalculateTree(TreeStruct *tree, double *answer) {
     return SUCCESS;
 }
 
-double CalculateNode(TreeNode *node, bool *error) {
+double calculateNode(TreeNode *node, bool *error) {
 
     assert(node);
     assert(error);
@@ -49,7 +49,7 @@ double CalculateNode(TreeNode *node, bool *error) {
         return node->value.number;
     }
 
-    if (OperationVerify(node) != SUCCESS) {
+    if (operationVerify(node) != SUCCESS) {
         *error = true;
     }
 
@@ -61,7 +61,7 @@ double CalculateNode(TreeNode *node, bool *error) {
     int op_code = IsValType(node, UNARY_OP) ? (int) node->value.un_op : (int) node->value.bin_op;
 
     switch (op_code) {
-        #include "../headers/operations.h"
+        #include "operations.h"
         default: {
             printf(RED "Incorrect operation" END_OF_COLOR "\n");
             *error = true;
@@ -74,7 +74,7 @@ double CalculateNode(TreeNode *node, bool *error) {
     return SUCCESS;
 }
 
-int OperationVerify(const TreeNode *node) {
+int operationVerify(const TreeNode *node) {
 
     assert(node);
 
@@ -126,41 +126,41 @@ int OperationVerify(const TreeNode *node) {
     return SUCCESS;
 }
 
-int TreeCopy(TreeStruct *tree_src, TreeStruct *tree_dst) {
+int treeCopy(TreeStruct *tree_src, TreeStruct *tree_dst) {
 
     assert(tree_src);
     assert(tree_dst);
 
-    if (TreeRootCtor(tree_dst) != SUCCESS)
+    if (treeRootCtor(tree_dst) != SUCCESS)
         return ERROR;
 
-    NodeDtor(tree_dst, tree_dst->root);
-    tree_dst->root = NodeCopy(tree_dst, tree_src->root);
+    nodeDtor(tree_dst, tree_dst->root);
+    tree_dst->root = nodeCopy(tree_dst, tree_src->root);
     if (!tree_dst->root)
         return ERROR;
 
     return SUCCESS;
 }
 
-TreeNode* NodeCopy(TreeStruct *tree, TreeNode *src) {
+TreeNode* nodeCopy(TreeStruct *tree, TreeNode *src) {
 
     assert(tree);
     assert(src);
 
-    TreeNode *ptr = TreeNodeNew(tree, src->value,  NULL, NULL);
+    TreeNode *ptr = treeNodeNew(tree, src->value,  NULL, NULL);
     if (!ptr)
         return NULL;
 
     if (src->left) {
-        ptr->left = NodeCopy(tree, src->left);
+        ptr->left = nodeCopy(tree, src->left);
         if (!ptr->left)
             return NULL;
     }
 
     if (src->right) {
-        ptr->right = NodeCopy(tree, src->right);
+        ptr->right = nodeCopy(tree, src->right);
         if (!ptr->right) {
-            NodeDtor(tree, ptr->left);
+            nodeDtor(tree, ptr->left);
             return NULL;
         }
     }

@@ -2,7 +2,7 @@
 #define DIFFERENTIATOR_DSL
 
 
-#define CALC(node) CalculateNode(node, error)
+#define CALC(node) calculateNode(node, error)
 
 #define PUNCT(sym)   (Token) {PUNCT_SYM, {.sym_code = sym}}
 
@@ -24,9 +24,9 @@
 
 #define NEW_S(val, left, right) treeNodeNewSafe(tree, val ,left, right)
 
-#define D(node) TakeNodeDerivative(tree, node, var_index)
+#define D(node) takeNodeDerivative(tree, node, var_index)
 
-#define C(node)  NodeCopy(tree, node)
+#define C(node)  nodeCopy(tree, node)
 
 #define L     node->left
 

@@ -1,112 +1,27 @@
+section .text
+
+global _start
+
+_start:
 		call main
-		push 10
-		outc
-		hlt
-:main
-;zero registers
-		push 0
-		push 0
-		pop rcx
-		pop rdx
+		mov rax, 0x3C		;exit
+		xor rdi, rdi
+		syscall
 
-		push 0
-;set variable index [0]
-		push 0
-		push rcx
-		add
-		pop rbx
-
-		pop [rbx]		;fill variable [a]
-;inc rdx
-		push 1
-		push rdx
-		add
-		pop rdx
-
-		push 10
-;set variable index [1]
-		push 1
-		push rcx
-		add
-		pop rbx
-
-		pop [rbx]		;fill variable [b]
-;inc rdx
-		push 1
-		push rdx
-		add
-		pop rdx
-
-		push rcx
-		push rdx
-;set variable index [1]
-		push 1
-		push rcx
-		add
-		pop rbx
-
-		push [rbx]		;get value [b]
-;set variable index [0]
-		push 0
-		push rcx
-		add
-		pop rbx
-
-		push [rbx]		;get value [a]
-		call difference
-		pop rdx
-		pop rcx
-		push rax
-;set variable index [2]
-		push 2
-		push rcx
-		add
-		pop rbx
-
-		pop [rbx]		;fill variable [c]
-;inc rdx
-		push 1
-		push rdx
-		add
-		pop rdx
-
+main:
+		push rbp
+		mov rbp, rsp
+		mov qword [rbp - 8], 0		;write value [a]
+		mov qword [rbp - 16], 10		;write value [b]
+		pop rbp
 		ret
-:difference
-;set segment
-		push rcx
-		push rdx
-		add
-		pop rcx
-		push 0
-		pop rdx
 
+difference:
+		push rbp
+		mov rbp, rsp
 ;save arguments to memory
-;set variable index [0]
-		push 0
-		push rcx
-		add
-		pop rbx
-
-		pop [rbx]		;fill variable [a]
-;inc rdx
-		push 1
-		push rdx
-		add
-		pop rdx
-
-;set variable index [1]
-		push 1
-		push rcx
-		add
-		pop rbx
-
-		pop [rbx]		;fill variable [b]
-;inc rdx
-		push 1
-		push rdx
-		add
-		pop rdx
-
+		mov qword [rbp - 8], rdi		;write value [a]
+		mov qword [rbp - 16], rsi		;write value [b]
 ;set variable index [0]
 		push 0
 		push rcx
@@ -114,6 +29,9 @@
 		pop rbx
 
 		push [rbx]		;get value [a]
+		push 12
+		add
+		push 3
 ;set variable index [1]
 		push 1
 		push rcx
@@ -121,6 +39,13 @@
 		pop rbx
 
 		push [rbx]		;get value [b]
+		mul
 		sub
+		push 4
+		add
+		push 5
+		add
 		pop rax
+		pop rbp
 		ret
+

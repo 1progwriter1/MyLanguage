@@ -4,21 +4,21 @@
 #include "../../MyLibraries/headers/my_vector.h"
 #include "gen_asm_x86.h"
 
-enum ValueType {
+enum ValueSrcType {
     TypeNumber = 0,
     TypeStack  = 1,
     TypeReg    = 2,
 };
 
 enum Registers {
-    RAX,    RBX,    RCX,    RDX,
-    RSI,    RDI,    RBP,    RSP,
-    R8,     R9,     R10,    R11,
-    R12,    R13,    R14,    R15
+    RAX = 0,    RAB = 1,    RCX = 2,    RDX = 3,
+    RSI = 4,    RDI = 5,    RBP = 6,    RSP = 7,
+    R8  = 8,    R9  = 9,    R10 = 10,   R11 = 11,
+    R12 = 12,   R13 = 13,   R14 = 14,   R15 = 15,
 };
 
 struct ValueSrc {
-    ValueType type;
+    ValueSrcType type;
     union {
         size_t index;
         Registers reg;

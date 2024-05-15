@@ -111,7 +111,7 @@ else
     execute_command "make '$DATA_DIR/$filename.out'"
 
     # Перемещаем файл .out в папку MyLanguage
-    execute_command "mv '$DATA_DIR/$filename.out' '../'"
+    execute_command "mv '$DATA_DIR/$filename.out' '../MyLanguage'"
 fi
 
 echo "Процесс завершен"

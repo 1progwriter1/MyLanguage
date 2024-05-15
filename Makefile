@@ -47,10 +47,8 @@ back: $(BACK_SRC) $(GRAPH_SRC) $(LIB_OBJ)
 	rm -rf *.dSYM
 	mv back.out my_g--
 
-mid:
-	$(COMP) $(CFLAGS) -c $(MID_SRC) $(GRAPH_SRC) middle_end.cpp
-	$(COMP) $(CFLAGS) $(MID_OBJ) $(LIB_OBJ) $(GRAPH_OBJ) object_files/file_read_lang.o object_files/prog_output.o middle_end.o -o mid.out
-	mv $(MID_OBJ) $(GRAPH_OBJ) middle_end.o $(OBJ_DIR)/
+mid: $(MID_SRC) $(GRAPH_SRC) $(LIB_OBJ)
+	$(COMP) $(CFLAGS) $(MID_SRC) $(GRAPH_SRC) $(LIB_OBJ) -o mid.out
 	rm -rf *.dSYM
 	mv mid.out my_g--
 

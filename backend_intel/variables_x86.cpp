@@ -6,8 +6,8 @@
 #include "../lib_src/my_lang_lib.h"
 #include <stdlib.h>
 
-const char *REGS_NAMES[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
-const Registers REGS[] = {RDI, RSI, RDX, RCX, R8, R9};
+const char *REGS_NAMES[] = {"rax", "rbx", "rcx", "rdx", "rsi", "rdi", "rbp", "rsp", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15"};
+const Registers ARGUMENTS_SRC[] = {RDI, RSI, RDX, RCX, R8, R9};
 const size_t VALUE_SIZE = sizeof(long long);
 
 int prepareData(CodeGenData *data, const char *filename, Vector *names_table) {
@@ -74,7 +74,7 @@ int createSegment(CodeGenData *data, TreeNode *node) {
             return ERROR;
         }
 
-        if (writeVariable(data, cur_arg, {.place = PlaceReg, .reg = REGS[arg_index]}) != SUCCESS)    return ERROR;
+        if (writeVariable(data, cur_arg, {.type = TypeReg, .reg = ARGUMENTS_SRC[arg_index]}) != SUCCESS)    return ERROR;
         cur_arg = cur_arg->right;
         arg_index++;
     }
@@ -142,9 +142,9 @@ int writeVariable(CodeGenData *data, TreeNode *node, ValueSrc src) {
         free(new_var);
     }
 
-    fprintf(data->fn, "\t\tmov [rbp - %lu], ", var_index * VALUE_SIZE);
+    fprintf(data->fn, "\t\tmov qword [rbp - %lu], ", (var_index + 1) * VALUE_SIZE);
     if (src.type == TypeReg)          fprintf(data->fn, "%s", REGS_NAMES[src.reg]);
-    else if (src.type == TypeStack)   fprintf(data->fn, "[rbp - %lu]", src.index * VALUE_SIZE);
+    else if (src.type == TypeStack)   fprintf(data->fn, "qword [rbp - %lu]", (src.index + 1) * VALUE_SIZE);
     else                              fprintf(data->fn, "%lld", src.number);
     fprintf(data->fn, "\t\t;write value [%s]\n", getStrPtr(data->vars.names_table, node->value.var_index));
 

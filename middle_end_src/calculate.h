@@ -3,14 +3,14 @@
 
 #include "../lib_src/bin_tree.h"
 
-int CalculateTree(struct TreeStruct *tree, double *answer);
+int calculateTree(struct TreeStruct *tree, double *answer);
 
-int TreeCopy(TreeStruct *tree_src, TreeStruct *tree_dst);
+int treeCopy(TreeStruct *tree_src, TreeStruct *tree_dst);
 
-TreeNode *NodeCopy(TreeStruct *tree, TreeNode *src);
+TreeNode *nodeCopy(TreeStruct *tree, TreeNode *src);
 
-double CalculateNode(TreeNode *node, bool *error);
+double calculateNode(TreeNode *node, bool *error);
 
-int OperationVerify(const TreeNode *node);
+int operationVerify(const TreeNode *node);
 
 #endif

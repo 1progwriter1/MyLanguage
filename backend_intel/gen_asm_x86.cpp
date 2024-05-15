@@ -100,27 +100,27 @@ static int genNewLine(TreeNode *node, CodeGenData *data) {
     if (!node->left)
         return SUCCESS;
 
-    if (isKeyOp(node->left, IF))
+    if (isKeyOp(node->left, IF)) {
         if (genIf(node->left, data) != SUCCESS)
             return ERROR;
-
-    if (isKeyOp(node->left, WHILE))
+    }
+    else if (isKeyOp(node->left, WHILE)) {
         if (genWhile(node->left, data) != SUCCESS)
             return ERROR;
-
-    if (isBinOp(node->left, ASSIGN))
+    }
+    else if (isBinOp(node->left, ASSIGN)) {
         if (genAssign(node->left, data) != SUCCESS)
             return ERROR;
-
-    if (isUnOp(node->left, OUT) || isUnOp(node->left, OUT_S))
+    }
+    else if (isUnOp(node->left, OUT) || isUnOp(node->left, OUT_S)) {
         if (genOutput(node->left, data) != SUCCESS)
             return ERROR;
-
-    if (isUnOp(node->left, IN))
+    }
+    else if (isUnOp(node->left, IN)) {
         if (genInput(node->left, data) != SUCCESS)
             return ERROR;
-
-    if (isType(node->left, FUNCTION)) {
+    }
+    else if (isType(node->left, FUNCTION)) {
         saveRdxRcx(data);
         if (genCall(node->left->right, data) != SUCCESS)
             return ERROR;
@@ -128,7 +128,7 @@ static int genNewLine(TreeNode *node, CodeGenData *data) {
         restoreRdxRcx(data);
     }
 
-    if (isUnOp(node->left, RET))
+    else if (isUnOp(node->left, RET))
         if (genRet(node->left, data) != SUCCESS)
             return ERROR;
 
@@ -149,7 +149,8 @@ static int genRet(TreeNode *node, CodeGenData *data) {
         fprintf(data->fn, "\t\tpop rax\n");
     }
 
-    fprintf(data->fn, "\t\tret\n");
+    fprintf(data->fn,   "\t\tpop rbp\n"
+                        "\t\tret\n\n");
 
     return SUCCESS;
 }
@@ -248,9 +249,10 @@ static int genAssign(TreeNode *node, CodeGenData *data) {
     if (!isType(node->left, VARIABLE) || !node->right)
         return ERROR;
 
-    if (!isType(node->right, NUMBER)) {
-        if (writeVariable(data, node->left, {.type = (ValueType) TypeNumber, .number = (long long) node->right->value.number}) != SUCCESS)
+    if (isType(node->right, NUMBER)) {
+        if (writeVariable(data, node->left, (ValueSrc) {.type = TypeNumber, .number = (long long) node->right->value.number}) != SUCCESS)
             return ERROR;
+        return SUCCESS;
     }
     if (genExpression(node->right, data) != SUCCESS)
         return ERROR;
@@ -347,9 +349,13 @@ static void createStart(FILE *fn) {
 
     assert(fn);
 
-    fprintf(fn, "\t\tcall main\n");
-    fprintf(fn, "\t\tpush %d\n\t\toutc\n", '\n');
-    fprintf(fn, "\t\thlt\n");
+    fprintf(fn, "section .text\n\n"
+                "global _start\n\n"
+                "_start:\n"
+                "\t\tcall main\n"
+                "\t\tmov rax, 0x3C\t\t;exit\n"
+                "\t\txor rdi, rdi\n"
+                "\t\tsyscall\n\n");
 }
 
 static int genLogicalJump(TreeNode *node, CodeGenData *data) {
