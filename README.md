@@ -1,5 +1,4 @@
-# MyLanguage
+# Компилятор для FAIRYTALE LANGUAGE
 
-Fairytale language
+## Синтаксис языка
 
-My fairytale language. You can use it to tell your own story.

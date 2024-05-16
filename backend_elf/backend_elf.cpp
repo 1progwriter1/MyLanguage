@@ -1,17 +1,16 @@
 #include <stdio.h>
-#include <assert.h>
 #include "../../MyLibraries/headers/systemdata.h"
 #include "../graphviz/gen_graph_lang.h"
-#include "../lib_src/file_read_lang.h"
+#include <assert.h>
 #include "../lib_src/bin_tree.h"
-#include "gen_asm.h"
-#include "../frontend_src/lex_analysis.h"
-#include <string.h>
 #include <stdlib.h>
+#include "../lib_src/file_read_lang.h"
+#include <string.h>
+#include "gen_elf.h"
 
 #define DTOR_DATA namesBackendDtor(&names_table); treeRootDtor(&tree);  vectorDtor(&names_table); free(output_file);
 #define INPUT_FORMAT ".mo"
-#define OUTPUT_FORMAT ".ms"
+#define OUTPUT_FORMAT ".out"
 
 char *createOutputFile(const char *filename);
 void namesBackendDtor(Vector *names_table);
@@ -50,7 +49,7 @@ int main(const int argc, const char *argv[]) {
         return ERROR;
     }
 
-    if (genAsmCode(&tree, &names_table, output_file) != SUCCESS) {
+    if (genElf(&tree, &names_table, output_file) != SUCCESS) {
         printf(RED "error: " END_OF_COLOR "asm code gen failed\n");
         DTOR_DATA
         return ERROR;

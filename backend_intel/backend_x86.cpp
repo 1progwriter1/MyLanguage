@@ -2,7 +2,7 @@
 #include <assert.h>
 #include "../../MyLibraries/headers/systemdata.h"
 #include "../graphviz/gen_graph_lang.h"
-#include "file_read_lang.h"
+#include "../lib_src/file_read_lang.h"
 #include "../lib_src/bin_tree.h"
 #include "gen_asm_x86.h"
 #include "../frontend_src/lex_analysis.h"

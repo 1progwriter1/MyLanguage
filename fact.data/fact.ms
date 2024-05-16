@@ -194,28 +194,6 @@
 		add
 		pop rdx
 
-;set variable index [0]
-		push 0
-		push rcx
-		add
-		pop rbx
-
-		push [rbx]		;get value [n]
-		push 30
-		sub
-;set variable index [2]
-		push 2
-		push rcx
-		add
-		pop rbx
-
-		pop [rbx]		;fill variable [tmp]
-;inc rdx
-		push 1
-		push rdx
-		add
-		pop rdx
-
 ;set variable index [1]
 		push 1
 		push rcx
