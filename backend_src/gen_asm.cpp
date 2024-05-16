@@ -321,7 +321,7 @@ static int genExpression(TreeNode *node, CodeGenData *data) {
         return SUCCESS;
     }
     if (isType(node, NUMBER)) {
-        fprintf(data->fn, "\t\tpush %lg\n", node->value.number);
+        fprintf(data->fn, "\t\tpush %.Lf\n", (long double) node->value.number);
         return SUCCESS;
     }
 

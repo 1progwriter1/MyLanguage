@@ -226,12 +226,16 @@ int genWhile(TreeNode *node, CodeGenData *data) {
         return ERROR;
     }
     size_t while_index = data->indexes.cur_while++;
-    fprintf(data->fn, ":while_%lu\n", while_index);
+    fprintf(data->fn, ".while_%lu:\n", while_index);
 
     ValueSrc left = {};
     ValueSrc right = {};
     if (genExpression(node->left->right, data, &left) != SUCCESS) return ERROR;
     if (genExpression(node->left->left, data, &right) != SUCCESS) return ERROR;
+
+    if (left.type == TypeStack && right.type == TypeStack)
+        if (moveToRegister(data, &left) != SUCCESS)
+            return ERROR;
 
     fprintf(data->fn, "\t\tcmp ");
     printPlace(data, right);

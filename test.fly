@@ -2,11 +2,11 @@ fairytale Fact(n);
 
 once upon the time () {
 
-    n turn into 10;
+    n turn into 50;
     count turn into 1000;
     cur turn into 0;
     fell into a dead sleep until (cur weaker count) {
-        tmp = Fact(n);
+        tmp turn into Fact(n);
         cur turn into cur + 1;
     }
 
