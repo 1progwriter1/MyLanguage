@@ -16,7 +16,7 @@ main:
 		mov rbp, rsp
 		sub rsp, 32			;allocate memory
 		mov qword [rbp - 8], 10		;write value [n]
-		mov qword [rbp - 16], 1000000		;write value [count]
+		mov qword [rbp - 16], 10000000		;write value [count]
 		mov qword [rbp - 24], 0		;write value [cur]
 		mov qword [rbp - 32], 0		;write value [tmp]
 .while_0:

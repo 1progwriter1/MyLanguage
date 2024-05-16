@@ -23,7 +23,7 @@
 		add
 		pop rdx
 
-		push 1000000
+		push 10000000
 ;set variable index [1]
 		push 1
 		push rcx
