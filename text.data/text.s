@@ -34,22 +34,3 @@ main:
 		leave
 		ret
 
-test:
-		push rbp
-		mov rbp, rsp
-		sub rsp, 16			;allocate memory
-;save arguments to memory
-		mov qword [rbp - 8], rdi		;write value [a]
-		mov qword [rbp - 16], rsi		;write value [b]
-		mov rax, [rbp - 8]
-		imul rax, [rbp - 16]
-		leave
-		ret
-
-section .rodata
-STR0:
-		db "Here is the answer: ", 0x0
-STR1:
-		db "%d", 0x0
-STR2:
-		db "", 0xA, "", 0x0

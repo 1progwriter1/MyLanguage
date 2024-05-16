@@ -8,7 +8,7 @@
 const size_t VALUE_SIZE = sizeof(long long);
 extern const char *REGS_NAMES[];
 
-const size_t NUMBER_OF_USED = 13;
+const size_t NUMBER_OF_USED = 12;
 
 enum Registers {
     RAX = 0,    RBX = 1,    RCX = 2,    RDX = 3,
@@ -39,15 +39,15 @@ struct GenIndexes {
 struct Variables {
     Vector *variables;
     Vector *names_table;
-    UsedRegisters used_regs[NUMBER_OF_USED];
+    Vector *str_data;
 };
 
 struct CodeGenData {
     FILE *fn;
     long int offset;
-    Variables vars;
-    Vector *str_data;
     GenIndexes indexes;
+    UsedRegisters used_regs[NUMBER_OF_USED];
+    Variables vars;
 };
 
 enum ValueSrcType {

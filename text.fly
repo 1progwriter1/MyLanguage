@@ -18,5 +18,5 @@ once upon the time () {
 }
 
 fairytale test(a, b) {
-    end(a * b);
+    end((a / b);
 }

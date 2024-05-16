@@ -30,7 +30,7 @@ int genAsmCode(TreeStruct *tree, Vector *names_table, const char *filename) {
 
     Vector variables = {};
     Vector str_data = {};
-    CodeGenData data = {NULL, 0, data.vars.variables = &variables, data.vars.names_table = names_table, {}, data.str_data = &str_data};
+    CodeGenData data = {NULL, 0, {}, {}, data.vars.variables = &variables, data.vars.names_table = names_table, data.vars.str_data = &str_data};
     if (prepareData(&data, filename, names_table) != SUCCESS)
         return ERROR;
 
@@ -107,7 +107,6 @@ int genNewLine(TreeNode *node, CodeGenData *data) {
     else if (isType(node->left, FUNCTION)) {
         if (genCall(node->left->right, data) != SUCCESS)
             return ERROR;
-        fprintf(data->fn, "\t\tadd rsp, %lu\n", (data->vars.variables->size) * VALUE_SIZE);
     }
 
     else if (isUnOp(node->left, RET))
@@ -372,10 +371,10 @@ int genBinaryOp(TreeNode *node, CodeGenData *data, ValueSrc *src) {
         if (genMul(node, data, src) != SUCCESS)
             return ERROR;
     }
-
-    else if (node->value.bin_op == DIV)
-        fprintf(data->fn, "\t\tdiv\n");
-
+    else if (node->value.bin_op == DIV) {
+        if (genDiv(node, data, src) != SUCCESS)
+            return ERROR;
+    }
     else if (node->value.bin_op == POW)
         fprintf(data->fn, "\t\tpow\n");
 
@@ -418,10 +417,10 @@ void createRoData(CodeGenData *data) {
     assert(data);
 
     fprintf(data->fn, "section .rodata\n");
-    for (size_t i = 0; i < data->str_data->size; i++) {
+    for (size_t i = 0; i < data->vars.str_data->size; i++) {
         fprintf(data->fn, "STR%lu:\n\t\tdb ", i);
-        printStr(data, *((char **) getPtr(data->str_data, i)));
-        if (*((char **) getPtr(data->str_data, i))[0] == '%') free(*((char **) getPtr(data->str_data, i)));
+        printStr(data, *((char **) getPtr(data->vars.str_data, i)));
+        if (*((char **) getPtr(data->vars.str_data, i))[0] == '%') free(*((char **) getPtr(data->vars.str_data, i)));
     }
 }
 

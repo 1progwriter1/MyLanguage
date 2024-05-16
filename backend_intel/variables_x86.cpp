@@ -31,7 +31,8 @@ int prepareData(CodeGenData *data, const char *filename, Vector *names_table) {
         vectorDtor(names_table);
         return ERROR;
     }
-    if (vectorCtor(data->str_data, 8, sizeof(char **)) != SUCCESS) {
+
+    if (vectorCtor(data->vars.str_data, 8, sizeof(char **)) != SUCCESS) {
         closeFile(fn);
         vectorDtor(names_table);
         vectorDtor(data->vars.variables);
@@ -53,7 +54,7 @@ void dtorData(CodeGenData *data) {
     data->indexes.cur_func_exe = 0;
 
     vectorDtor(data->vars.variables);
-    vectorDtor(data->str_data);
+    vectorDtor(data->vars.str_data);
 }
 
 int createSegment(CodeGenData *data, TreeNode *node) {
@@ -70,15 +71,10 @@ int createSegment(CodeGenData *data, TreeNode *node) {
 
     fprintf(data->fn, ";save arguments to memory\n");
     TreeNode *cur_arg = node;
-    while (cur_arg) {
+    while (isType(cur_arg, VARIABLE)) {
         if (arg_index >= 6) {
             printf("too many args");
             break;
-        }
-        if (!isType(node, VARIABLE)) {
-            printf(RED "segment creation: " END_OF_COLOR "variable expected\n");
-            free(variable);
-            return ERROR;
         }
 
         if (writeVariable(data, cur_arg, {.type = TypeReg, .reg = ARGUMENTS_SRC[arg_index]}) != SUCCESS)    return ERROR;
@@ -154,9 +150,7 @@ int writeVariable(CodeGenData *data, TreeNode *node, ValueSrc src) {
     }
 
     fprintf(data->fn, "\t\tmov qword [rbp - %lu], ", (var_index + 1) * VALUE_SIZE);
-    if (src.type == TypeReg)          fprintf(data->fn, "%s", REGS_NAMES[src.reg]);
-    else if (src.type == TypeStack)   fprintf(data->fn, "qword [rbp - %lu]", (src.index + 1) * VALUE_SIZE);
-    else                              fprintf(data->fn, "%lld", src.number);
+    printPlace(data, src);
     fprintf(data->fn, "\t\t;write value [%s]\n", getStrPtr(data->vars.names_table, node->value.var_index));
 
     return SUCCESS;
@@ -235,8 +229,12 @@ void setRegisters(CodeGenData *data) {
 
     assert(data);
 
-    for (size_t i = 0; i < NUMBER_OF_USED; i++)
-        data->vars.used_regs[i] = {(Registers) i, false};
+    size_t cur = 0;
+    for (size_t i = 0; i < 16; i++) {
+        if ((Registers) i == RAX || (Registers) i == RDX || (Registers) i == RSP || (Registers) i == RBP)
+            continue;
+        data->used_regs[cur++] = {(Registers) i, false};
+    }
 }
 
 bool findVariable(CodeGenData *data, size_t *index, size_t code) {
@@ -259,7 +257,7 @@ int findFreeRegister(CodeGenData *data) {
     assert(data);
 
     for (size_t i = 0; i < data->vars.variables->size; i++) {
-        if (data->vars.used_regs[i].is_used)
+        if (data->used_regs[i].is_used)
             continue;
         return (int) i;
     }
