@@ -57,3 +57,14 @@
 
 ## Компилятор
 
+Для языка был написан компилятор `g--` с возможностью компиляции для [виртуального процессора](!https://github.com/1progwriter1/Calculator_CPU) и для intel_x86_64.
+
+### Сбора компилятора
+
+**Клонируйте репозиторий и переходите в папку с ним
+
+```
+    git clone https://github.com/1progwriter1/MyLanguage.git && cd MyLanguage
+```
+
+
