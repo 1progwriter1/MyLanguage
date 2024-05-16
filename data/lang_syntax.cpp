@@ -22,7 +22,7 @@ const char *KEY_WORDS[] = {
     "did not turn into",                    // "!="
     "turn into",                            // =
     "stone",                                // if
-    "fell into a dead sleep while",         // while
+    "fell into a dead sleep until",         // while
     "fairytale",                            // function
     "once upon the time",                   // main
     "go left",                              //

@@ -1,0 +1,26 @@
+fairytale Fact(n);
+
+once upon the time () {
+
+    n turn into 10;
+    count turn into 1000;
+    cur turn into 0;
+    fell into a dead sleep until (cur weaker count) {
+        tmp = Fact(n);
+        cur turn into cur + 1;
+    }
+
+    end();
+}
+
+fairytale Fact(n) {
+
+    stone (n not stronger 1)
+    go right {
+        end(1);
+    }
+
+    tmp turn into n - 1;
+
+    end(Fact(tmp) * n);
+}

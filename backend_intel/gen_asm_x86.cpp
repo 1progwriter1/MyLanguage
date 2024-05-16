@@ -107,6 +107,7 @@ int genNewLine(TreeNode *node, CodeGenData *data) {
     else if (isType(node->left, FUNCTION)) {
         if (genCall(node->left->right, data) != SUCCESS)
             return ERROR;
+        fprintf(data->fn, "\t\tcall %s\n", getStrPtr(data->vars.names_table, node->left->value.func_index));
     }
 
     else if (isUnOp(node->left, RET))
@@ -227,20 +228,27 @@ int genWhile(TreeNode *node, CodeGenData *data) {
     size_t while_index = data->indexes.cur_while++;
     fprintf(data->fn, ":while_%lu\n", while_index);
 
-    if (genExpression(node->left->right, data, {}) != SUCCESS) return ERROR;
-    if (genExpression(node->left->left, data, {}) != SUCCESS) return ERROR;
+    ValueSrc left = {};
+    ValueSrc right = {};
+    if (genExpression(node->left->right, data, &left) != SUCCESS) return ERROR;
+    if (genExpression(node->left->left, data, &right) != SUCCESS) return ERROR;
 
+    fprintf(data->fn, "\t\tcmp ");
+    printPlace(data, right);
+    fprintf(data->fn, ", ");
+    printPlace(data, left);
+    fprintf(data->fn, "\n");
     if (genLogicalJump(node->left, data) != SUCCESS) return ERROR;
-    fprintf(data->fn, "begin_while_%lu\n", while_index);
+    fprintf(data->fn, ".begin_while_%lu\n", while_index);
 
-    fprintf(data->fn, "\t\tjmp end_while_%lu\n", while_index);
+    fprintf(data->fn, "\t\tjmp .end_while_%lu\n", while_index);
 
-    fprintf(data->fn, ":begin_while_%lu\n", while_index);
+    fprintf(data->fn, ".begin_while_%lu:\n", while_index);
     if (genNewLine(node->right->left, data) != SUCCESS) return ERROR;
 
-    fprintf(data->fn, "\t\tjmp while_%lu\n", while_index);
+    fprintf(data->fn, "\t\tjmp .while_%lu\n", while_index);
 
-    fprintf(data->fn, ":end_while_%lu\n", while_index);
+    fprintf(data->fn, ".end_while_%lu:\n", while_index);
 
     return SUCCESS;
 }
@@ -298,6 +306,11 @@ int genExpression(TreeNode *node, CodeGenData *data, ValueSrc *src) {
         *src = {.type = TypeReg, .reg = RAX};
         return SUCCESS;
     }
+    else if (isType(node, UNARY_OP)) {
+        if (genUnaryOp(node, data, src) != SUCCESS)
+            return ERROR;
+        return SUCCESS;
+    }
 
     printf(RED "asm gen error: " END_OF_COLOR "invalid value type for expression\n");
 
@@ -339,16 +352,16 @@ int genLogicalJump(TreeNode *node, CodeGenData *data) {
         fprintf(data->fn, "\t\tjne ");
 
     else if (node->value.bin_op == ABOVE)
-        fprintf(data->fn, "\t\tja ");
+        fprintf(data->fn, "\t\tjg ");
 
     else if (node->value.bin_op == BELOW)
-        fprintf(data->fn, "\t\tjb ");
+        fprintf(data->fn, "\t\tjl ");
 
     else if (node->value.bin_op == AB_EQ)
-        fprintf(data->fn, "\t\tjae ");
+        fprintf(data->fn, "\t\tjge ");
 
     else if (node->value.bin_op == BEl_EQ)
-        fprintf(data->fn, "\t\tjbe ");
+        fprintf(data->fn, "\t\tjle ");
 
     else {
         printf(RED "asm gen error: " END_OF_COLOR "invalid logical operation\n");
@@ -443,4 +456,26 @@ void printStr(CodeGenData *data, char *str) {
         else fprintf(data->fn, "%c", *str++);
     }
     fprintf(data->fn, "\", 0x0\n");
+}
+
+int genUnaryOp(TreeNode *node, CodeGenData *data, ValueSrc *src) {
+
+    CODE_GEN_ASSERT
+
+    if (node->value.type != UNARY_OP) {
+        printf(RED "asm gen error: " END_OF_COLOR "unary operation expected\n");
+        return ERROR;
+    }
+
+    if (node->value.un_op == SQRT) {
+        if (genSqrt(node, data, src) != SUCCESS)
+            return ERROR;
+    }
+
+    else {
+        printf(RED "asm gen error: " END_OF_COLOR "invalid unary operation\n");
+        return ERROR;
+    }
+
+    return SUCCESS;
 }

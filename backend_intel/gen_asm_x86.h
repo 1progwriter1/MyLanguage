@@ -25,7 +25,7 @@ int genWhile(TreeNode *node, CodeGenData *data);
 int genAssign(TreeNode *node, CodeGenData *data);
 int genExpression(TreeNode *node, CodeGenData *data, ValueSrc *src);
 int genLogicalJump(TreeNode *node, CodeGenData *data);
-int genUnaryOp(TreeNode *node, CodeGenData *data);
+int genUnaryOp(TreeNode *node, CodeGenData *data, ValueSrc *src);
 int genBinaryOp(TreeNode *node, CodeGenData *data, ValueSrc *src);
 int genInput(TreeNode *node, CodeGenData *data);
 int genCall(TreeNode *node, CodeGenData *data);

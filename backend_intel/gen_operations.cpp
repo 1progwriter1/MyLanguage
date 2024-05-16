@@ -4,6 +4,33 @@
 #include "../../MyLibraries/headers/systemdata.h"
 #include <stdlib.h>
 
+int genSqrt(TreeNode *node, CodeGenData *data, ValueSrc *src) {
+
+    CODE_GEN_ASSERT
+
+    ValueSrc right = {};
+    if (genExpression(node->right, data, &right) != SUCCESS)
+        return ERROR;
+
+    if (right.type != TypeStack) {
+        fprintf(data->fn, "\t\tmov [rbp - %lu], ", (data->indexes.cur_stack_ind + 1) * VALUE_SIZE);
+        printPlace(data, right);
+        fprintf(data->fn, "\n");
+        right.type = TypeStack;
+        right.index = data->indexes.cur_stack_ind;
+    }
+
+    fprintf(data->fn, "\t\tfild qword [rbp - %lu]\n", (right.index + 1) *  VALUE_SIZE);
+    fprintf(data->fn, "\t\tfsqrt\t\t;sqrt\n");
+    fprintf(data->fn, "\t\tfisttp qword [rbp - %lu]\n", (right.index + 1) *  VALUE_SIZE);
+    if (moveToRegister(data, &right) != SUCCESS)
+        return ERROR;
+
+    *src = right;
+
+    return SUCCESS;
+}
+
 int genDiv(TreeNode *node, CodeGenData *data, ValueSrc *src) {
 
     CODE_GEN_ASSERT
@@ -28,7 +55,7 @@ int genDiv(TreeNode *node, CodeGenData *data, ValueSrc *src) {
 
     fprintf(data->fn, "\t\tidiv qword ");
     printPlace(data, right);
-    fprintf(data->fn, "\n");
+    fprintf(data->fn, "\t\t;div\n");
 
     src->type = TypeReg;
     src->reg = RAX;
@@ -57,7 +84,7 @@ int genMul(TreeNode *node, CodeGenData *data, ValueSrc *src) {
     printPlace(data, left);
     fprintf(data->fn, ", ");
     printPlace(data, right);
-    fprintf(data->fn, "\n");
+    fprintf(data->fn, "\t\t;mul\n");
 
     *src = left;
 
@@ -92,7 +119,7 @@ int genAdd(TreeNode *node, CodeGenData *data, ValueSrc *src) {
     printPlace(data, left);
     fprintf(data->fn, ", ");
     printPlace(data, right);
-    fprintf(data->fn, "\n");
+    fprintf(data->fn, "\t\t;add\n");
 
     *src = left;
 
@@ -120,7 +147,7 @@ int genSub(TreeNode *node, CodeGenData *data, ValueSrc *src) {
     printPlace(data, left);
     fprintf(data->fn, ", ");
     printPlace(data, right);
-    fprintf(data->fn, "\n");
+    fprintf(data->fn, "\t\t;sub\n");
 
     *src = left;
 

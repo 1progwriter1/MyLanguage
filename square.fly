@@ -63,14 +63,14 @@ fairytale Square(a, b, c, d) {
         say the magic number (x);
         end();
     }
+    tmp turn into sqrt(d);
+    x1 turn into (-1 * b + tmp) / (2 * a);
+    x2 turn into (-1 * b - tmp) / ( 2 * a);
 
-   x1 turn into (-1 * b + sqrt(d)) / (2 * a);
-   x2 turn into (-1 * b - sqrt(d)) / ( 2 * a);
+    say the magic word ("x1 = ");
+    say the magic number (x1);
+    say the magic word ("\nx2 = ");
+    say the magic number (x2);
 
-   say the magic word ("x1 = ");
-   say the magic number (x1);
-   say the magic word ("\nx2 = ");
-   say the magic number (x2);
-
-   end();
+    end();
 }

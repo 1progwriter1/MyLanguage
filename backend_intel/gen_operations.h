@@ -17,4 +17,6 @@ int genMul(TreeNode *node, CodeGenData *data, ValueSrc *src);
 
 int genDiv(TreeNode *node, CodeGenData *data, ValueSrc *src);
 
+int genSqrt(TreeNode *node, CodeGenData *data, ValueSrc *src);
+
 #endif
