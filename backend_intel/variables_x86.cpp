@@ -256,7 +256,7 @@ int findFreeRegister(CodeGenData *data) {
 
     assert(data);
 
-    for (size_t i = 0; i < data->vars.variables->size; i++) {
+    for (size_t i = 0; i < NUMBER_OF_USED; i++) {
         if (data->used_regs[i].is_used)
             continue;
         return (int) i;

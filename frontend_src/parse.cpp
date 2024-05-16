@@ -267,7 +267,7 @@ TreeNode *getCall(StringParseData *data, TreeStruct *tree) {
     PUNCT_ASSERT(OP_PARENTHESIS, OP_PARENTHESIS_MISSED, ptr, NULL)
     data->position++;
 
-    TreeNode *args = getArgs(data, tree);
+    TreeNode *args = getArgsExpression(data, tree);
     RETURN_ON_ERROR(args, ptr);
 
     ptr->right = args;
@@ -567,7 +567,7 @@ TreeNode *getNumber(StringParseData *data, TreeStruct *tree) {
         PUNCT_ASSERT(OP_PARENTHESIS, OP_PARENTHESIS_MISSED, ptr, NULL)
         data->position++;
 
-        ptr->right = getArgs(data, tree);
+        ptr->right = getArgsExpression(data, tree);
         RETURN_ON_ERROR(ptr, NULL);
 
         PUNCT_ASSERT(CL_PARENTHESIS, CL_PARENTHESIS_MISSED, ptr, NULL)
@@ -579,6 +579,27 @@ TreeNode *getNumber(StringParseData *data, TreeStruct *tree) {
         data->error = NUMBER_ERROR;
         return NULL;
     }
+}
+
+TreeNode *getArgsExpression(StringParseData *data, TreeStruct *tree) {
+
+    PARSE_ASSERT
+
+    TreeNode *arg = getExpression(data, tree);
+    if (!arg) return NULL;
+
+    TreeNode *ptr = NEW(PUNCT(NEW_LINE), arg, NULL);
+
+    if (!isPunct(data, COMMA))
+        return ptr;
+    data->position++;
+
+    TreeNode *arg_next = getArgsExpression(data, tree);
+    if (!arg_next)  return ptr;
+
+    ptr->right = arg_next;
+
+    return ptr;
 }
 
 static char *copyStr(char *src) {

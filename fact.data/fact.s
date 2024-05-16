@@ -40,7 +40,7 @@ Fact:
 ;save arguments to memory
 		mov qword [rbp - 8], rdi		;write value [n]
 		cmp qword [rbp - 8], 1
-		jbe .if_0
+		jle .if_0
 		jmp .end_if_0
 .if_0:
 		mov rax, 1		;pass the argument
@@ -49,11 +49,17 @@ Fact:
 
 .end_if_0:
 		mov rax, qword [rbp - 8]
-		sub rax, 1
-		mov qword [rbp - 16], rax		;write value [tmp]
-		mov rdi, qword [rbp - 16]
+		add rax, 1		;add
+		mov qword [rbp - 8], rax		;write value [n]
+		mov rax, qword [rbp - 8]
+		sub rax, 2		;sub
+		mov rdi, rax
 		call Fact
-		imul rax, qword [rbp - 8]
+		mov rbx, qword [rbp - 8]
+		sub rbx, 1		;sub
+		imul rax, rbx		;mul
+		mov qword [rbp - 16], rax		;write value [tmp_fact]
+		mov rax, [rbp - 16]		;pass the argument
 		leave
 		ret
 

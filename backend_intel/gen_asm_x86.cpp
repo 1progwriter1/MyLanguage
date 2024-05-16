@@ -71,6 +71,8 @@ int genFunction(TreeNode *node, CodeGenData *data) {
 
     if (destroySegment(data) != SUCCESS) return ERROR;
 
+    setRegisters(data);
+
     if (isType(node->right, FUNCTION))
         if (genFunction(node->right, data) != SUCCESS) return ERROR;
 
@@ -135,13 +137,15 @@ int genRet(TreeNode *node, CodeGenData *data) {
         if (src.type != TypeReg || src.reg != RAX) {
             fprintf(data->fn, "\t\tmov rax, ");
             if (src.type == TypeNumber)     fprintf(data->fn, "%lld\t\t;pass the argument\n", src.number);
-            else if (src.type == TypeStack) fprintf(data->fn, "[rbx - %lu]\t\t;pass the argument\n", (src.index + 1) * VALUE_SIZE);
+            else if (src.type == TypeStack) fprintf(data->fn, "[rbp - %lu]\t\t;pass the argument\n", (src.index + 1) * VALUE_SIZE);
             else                            fprintf(data->fn, "%s\t\t;pass the argument\n", REGS_NAMES[src.reg]);
         }
     }
 
     fprintf(data->fn,   "\t\tleave\n"
                         "\t\tret\n\n");
+
+    setRegisters(data);
 
     return SUCCESS;
 }
@@ -161,6 +165,8 @@ int genInput(TreeNode *node, CodeGenData *data) {
     if (writeVariable(data, node->right, src) != SUCCESS)
         return ERROR;
 
+    setRegisters(data);
+
     return SUCCESS;
 }
 
@@ -170,13 +176,19 @@ int genCall(TreeNode *node, CodeGenData *data) {
 
     TreeNode *cur = node;
     size_t cur_arg = 0;
-    while (isType(cur, VARIABLE)) {
-        fprintf(data->fn, "\t\tmov %s, ", REGS_NAMES[ARGUMENTS_SRC[cur_arg++]]);
-        if (getVariableValue(data, cur->value.var_index) != SUCCESS)
+
+    while (isPunct(cur, NEW_LINE)) {
+        ValueSrc src = {};
+        if (genExpression(cur->left, data, &src) != SUCCESS)
             return ERROR;
+
+        fprintf(data->fn, "\t\tmov %s, ", REGS_NAMES[ARGUMENTS_SRC[cur_arg++]]);
+        printPlace(data, src);
         fprintf(data->fn, "\n");
         cur = cur->right;
     }
+
+    setRegisters(data);
 
     return SUCCESS;
 }
@@ -200,6 +212,8 @@ int genIf(TreeNode *node, CodeGenData *data) {
     printPlace(data, left);
     fprintf(data->fn, "\n");
 
+    setRegisters(data);
+
     if (genLogicalJump(node->left, data) != SUCCESS) return ERROR;
     fprintf(data->fn, ".if_%lu\n", if_index);
 
@@ -213,6 +227,8 @@ int genIf(TreeNode *node, CodeGenData *data) {
         if (genNewLine(node->right->left, data) != SUCCESS) return ERROR;
 
     fprintf(data->fn, ".end_if_%lu:\n", if_index);
+
+    setRegisters(data);
 
     return SUCCESS;
 }
@@ -247,12 +263,16 @@ int genWhile(TreeNode *node, CodeGenData *data) {
 
     fprintf(data->fn, "\t\tjmp .end_while_%lu\n", while_index);
 
+    setRegisters(data);
+
     fprintf(data->fn, ".begin_while_%lu:\n", while_index);
     if (genNewLine(node->right->left, data) != SUCCESS) return ERROR;
 
     fprintf(data->fn, "\t\tjmp .while_%lu\n", while_index);
 
     fprintf(data->fn, ".end_while_%lu:\n", while_index);
+
+    setRegisters(data);
 
     return SUCCESS;
 }
@@ -271,6 +291,8 @@ int genAssign(TreeNode *node, CodeGenData *data) {
     if (writeVariable(data, node->left, src) != SUCCESS)
         return ERROR;
 
+    setRegisters(data);
+
     return SUCCESS;
 }
 
@@ -286,7 +308,6 @@ int genExpression(TreeNode *node, CodeGenData *data, ValueSrc *src) {
     if (isType(node, BINARY_OP)) {
         if (genBinaryOp(node, data, src) != SUCCESS)
             return ERROR;
-        return SUCCESS;
     }
 
     else if (isType(node, VARIABLE)) {
@@ -296,11 +317,9 @@ int genExpression(TreeNode *node, CodeGenData *data, ValueSrc *src) {
             return ERROR;
         }
         *src = {.type = TypeStack, index};
-        return SUCCESS;
     }
     else if (isType(node, NUMBER)) {
         *src = {.type = TypeNumber, .number = (long long) node->value.number};
-        return SUCCESS;
     }
 
     else if (isType(node, FUNCTION)) {
@@ -308,17 +327,18 @@ int genExpression(TreeNode *node, CodeGenData *data, ValueSrc *src) {
             return ERROR;
         fprintf(data->fn, "\t\tcall %s\n", getStrPtr(data->vars.names_table, node->value.func_index));
         *src = {.type = TypeReg, .reg = RAX};
-        return SUCCESS;
+        data->used_regs[RAX].is_used = true;
     }
     else if (isType(node, UNARY_OP)) {
         if (genUnaryOp(node, data, src) != SUCCESS)
             return ERROR;
-        return SUCCESS;
+    }
+    else {
+        printf(RED "asm gen error: " END_OF_COLOR "invalid value type for expression\n");
+        return ERROR;
     }
 
-    printf(RED "asm gen error: " END_OF_COLOR "invalid value type for expression\n");
-
-    return ERROR;
+    return SUCCESS;
 
 }
 

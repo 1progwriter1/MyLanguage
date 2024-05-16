@@ -26,7 +26,10 @@ fairytale Fact(n) {
         end(1);
     }
 
-    tmp turn into n - 1;
+    n turn into n + 1;
 
-    end(Fact(tmp) * n);
+    tmp_fact turn into Fact(n - 2) * (n - 1);
+    // tmp turn into n - 30;
+
+    end(tmp_fact);
 }

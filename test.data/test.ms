@@ -9,7 +9,7 @@
 		pop rcx
 		pop rdx
 
-		push 50
+		push 10
 ;set variable index [0]
 		push 0
 		push rcx
@@ -23,7 +23,7 @@
 		add
 		pop rdx
 
-		push 1000
+		push 1000000
 ;set variable index [1]
 		push 1
 		push rcx
@@ -45,6 +45,20 @@
 		pop rbx
 
 		pop [rbx]		;fill variable [cur]
+;inc rdx
+		push 1
+		push rdx
+		add
+		pop rdx
+
+		push 0
+;set variable index [3]
+		push 3
+		push rcx
+		add
+		pop rbx
+
+		pop [rbx]		;fill variable [tmp]
 ;inc rdx
 		push 1
 		push rdx
@@ -88,13 +102,7 @@
 		add
 		pop rbx
 
-		pop [rbx]		;fill variable [tmp]
-;inc rdx
-		push 1
-		push rdx
-		add
-		pop rdx
-
+		pop [rbx]		;write value [tmp]
 ;set variable index [2]
 		push 2
 		push rcx
@@ -113,6 +121,14 @@
 		pop [rbx]		;write value [cur]
 		jmp while_0
 :end_while_0
+;set variable index [3]
+		push 3
+		push rcx
+		add
+		pop rbx
+
+		push [rbx]		;get value [tmp]
+		out
 		ret
 :Fact
 ;set segment
@@ -152,6 +168,8 @@
 		pop rax
 		ret
 :end_if_0
+		push rcx
+		push rdx
 ;set variable index [0]
 		push 0
 		push rcx
@@ -161,28 +179,6 @@
 		push [rbx]		;get value [n]
 		push 1
 		sub
-;set variable index [1]
-		push 1
-		push rcx
-		add
-		pop rbx
-
-		pop [rbx]		;fill variable [tmp]
-;inc rdx
-		push 1
-		push rdx
-		add
-		pop rdx
-
-		push rcx
-		push rdx
-;set variable index [1]
-		push 1
-		push rcx
-		add
-		pop rbx
-
-		push [rbx]		;get value [tmp]
 		call Fact
 		pop rdx
 		pop rcx

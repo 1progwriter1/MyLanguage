@@ -15,9 +15,10 @@ main:
 		push rbp
 		mov rbp, rsp
 		sub rsp, 32			;allocate memory
-		mov qword [rbp - 8], 50		;write value [n]
-		mov qword [rbp - 16], 1000		;write value [count]
+		mov qword [rbp - 8], 10		;write value [n]
+		mov qword [rbp - 16], 1000000		;write value [count]
 		mov qword [rbp - 24], 0		;write value [cur]
+		mov qword [rbp - 32], 0		;write value [tmp]
 .while_0:
 		mov rax, qword [rbp - 16]
 		cmp qword [rbp - 24], rax
@@ -32,13 +33,16 @@ main:
 		mov qword [rbp - 24], rax		;write value [cur]
 		jmp .while_0
 .end_while_0:
+		mov rdi, STR0
+		mov rsi, qword [rbp - 32]
+		call my_printf		;print number
 		leave
 		ret
 
 Fact:
 		push rbp
 		mov rbp, rsp
-		sub rsp, 16			;allocate memory
+		sub rsp, 8				;allocate memory
 ;save arguments to memory
 		mov qword [rbp - 8], rdi		;write value [n]
 		cmp qword [rbp - 8], 1
@@ -52,11 +56,12 @@ Fact:
 .end_if_0:
 		mov rax, qword [rbp - 8]
 		sub rax, 1		;sub
-		mov qword [rbp - 16], rax		;write value [tmp]
-		mov rdi, qword [rbp - 16]
+		mov rdi, rax
 		call Fact
 		imul rax, qword [rbp - 8]		;mul
 		leave
 		ret
 
 section .rodata
+STR0:
+		db "%d", 0x0

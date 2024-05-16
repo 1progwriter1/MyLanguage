@@ -67,4 +67,6 @@ TreeNode *getArgs             (StringParseData *data, TreeStruct *tree);
 
 Token *getTokenPtr(StringParseData *data, size_t index);
 
+TreeNode *getArgsExpression(StringParseData *data, TreeStruct *tree);
+
 #endif

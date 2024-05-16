@@ -1,22 +1,80 @@
-// fact
+// factorial
 
-fairytale test(a, b);
+fairytale Fact(n, deep);
+fairytale indent(new_line, n);
 
 once upon the time () {
 
-    a turn into 0;
-    b turn into 10;
+    n turn into 0;
 
-    guess the riddle(a);
-    guess the riddle(b);
+    say the magic word ("Enter n: ");
+    guess the riddle (n);
 
-    say the magic word("Here is the answer: ");
-    say the magic number(test(a, b));
-    say the magic word("\n");
+    ans turn into Fact(n, 0);
+
+    say the magic word ("Answer: ");
+    say the magic number (ans);
+    say the magic word ("\n");
 
     end();
 }
 
-fairytale test(a, b) {
-    end((a / b);
+
+fairytale Fact(n, deep) {
+
+    indent(1, deep);
+    say the magic word ("Factorial (");
+    say the magic number (n);
+    say the magic word ("):\n");
+
+    stone (n not stronger 1)
+    go right {
+        indent(0, deep);
+        say the magic word ("Factorial from 1\n\n");
+        end(1);
+    }
+
+    indent(0, deep);
+    say the magic word ("n before: ");
+    say the magic number (n);
+    say the magic word ("\n");
+
+    n turn into n + 1;
+
+    indent(0, deep);
+    say the magic word ("n after n + 1: ");
+    say the magic number (n);
+    say the magic word ("\n");
+
+    tmp_fact turn into Fact(n - 2, deep + 1) * (n - 1);
+
+    indent(0, deep);
+    say the magic word ("n after call from n - 2: ");
+    say the magic number (n);
+    say the magic word ("\n");
+
+    indent(0, deep);
+    say the magic word ("tmp_fact: ");
+    say the magic number (tmp_fact);
+    say the magic word ("\n\n");
+
+    //tmp turn into n - 30;
+
+    end(tmp_fact);
+}
+
+fairytale indent(new_line, n) {
+
+    n turn into 4 * n;
+
+    stone (new_line turned into 1) {
+        say the magic word ("\n");
+    }
+
+    fell into a dead sleep until (n stronger 0) {
+        say the magic word (" ");
+        n turn into n - 1;
+    }
+
+    end();
 }

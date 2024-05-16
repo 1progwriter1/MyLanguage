@@ -86,3 +86,4 @@ clean_exe:
 
 %.out : %.o
 	ld -s -o $@ backend_intel/my_printf.o backend_intel/my_scanf.o $<
+

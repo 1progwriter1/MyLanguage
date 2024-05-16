@@ -177,11 +177,13 @@ static int genCall(TreeNode *node, CodeGenData *data) {
 
     CODE_GEN_ASSERT
 
-    if (!isType(node, VARIABLE))  return SUCCESS;
+    if (!isPunct(node, NEW_LINE))  return SUCCESS;
 
-    if (node->right) genCall(node->right, data);
+    if (node->right)
+        if (genCall(node->right, data) != SUCCESS)
+            return ERROR;
 
-    getVariableValue(data, node->value.var_index);
+    if (node->left) genExpression(node->left, data);
 
     return SUCCESS;
 }

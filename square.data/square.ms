@@ -534,6 +534,27 @@
 		out
 		ret
 :end_if_4
+;set variable index [3]
+		push 3
+		push rcx
+		add
+		pop rbx
+
+		push [rbx]		;get value [d]
+		sqrt
+;set variable index [5]
+		push 5
+		push rcx
+		add
+		pop rbx
+
+		pop [rbx]		;fill variable [tmp]
+;inc rdx
+		push 1
+		push rdx
+		add
+		pop rdx
+
 		push -1
 ;set variable index [1]
 		push 1
@@ -543,14 +564,13 @@
 
 		push [rbx]		;get value [b]
 		mul
-;set variable index [3]
-		push 3
+;set variable index [5]
+		push 5
 		push rcx
 		add
 		pop rbx
 
-		push [rbx]		;get value [d]
-		sqrt
+		push [rbx]		;get value [tmp]
 		add
 		push 2
 ;set variable index [0]
@@ -562,8 +582,8 @@
 		push [rbx]		;get value [a]
 		mul
 		div
-;set variable index [5]
-		push 5
+;set variable index [6]
+		push 6
 		push rcx
 		add
 		pop rbx
@@ -584,14 +604,13 @@
 
 		push [rbx]		;get value [b]
 		mul
-;set variable index [3]
-		push 3
+;set variable index [5]
+		push 5
 		push rcx
 		add
 		pop rbx
 
-		push [rbx]		;get value [d]
-		sqrt
+		push [rbx]		;get value [tmp]
 		sub
 		push 2
 ;set variable index [0]
@@ -603,8 +622,8 @@
 		push [rbx]		;get value [a]
 		mul
 		div
-;set variable index [6]
-		push 6
+;set variable index [7]
+		push 7
 		push rcx
 		add
 		pop rbx
@@ -626,8 +645,8 @@
 		outc
 		push 32
 		outc
-;set variable index [5]
-		push 5
+;set variable index [6]
+		push 6
 		push rcx
 		add
 		pop rbx
@@ -646,8 +665,8 @@
 		outc
 		push 32
 		outc
-;set variable index [6]
-		push 6
+;set variable index [7]
+		push 7
 		push rcx
 		add
 		pop rbx
