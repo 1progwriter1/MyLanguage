@@ -279,7 +279,7 @@ void printPlace(CodeGenData *data, ValueSrc src) {
             break;
         }
         case (TypeStack): {
-            fprintf(data->fn, "[rbp - %lu]", (src.index + 1) * VALUE_SIZE);
+            fprintf(data->fn, "qword [rbp - %lu]", (src.index + 1) * VALUE_SIZE);
             break;
         }
         default:

@@ -13,6 +13,7 @@ once upon the time () {
 
     say the magic word ("Answer: ");
     say the magic number (ans);
+    say the magic word ("\n");
 
     end();
 }

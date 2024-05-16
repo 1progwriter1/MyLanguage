@@ -186,24 +186,32 @@ int genIf(TreeNode *node, CodeGenData *data) {
 
     if (!node->left || !node->left->left || !node->left->right) return ERROR;
 
-    if (genExpression(node->left->right, data, {}) != SUCCESS) return ERROR;
-    if (genExpression(node->left->left, data, {}) != SUCCESS)  return ERROR;
+    ValueSrc left = {};
+    ValueSrc right = {};
+    if (genExpression(node->left->right, data, &left) != SUCCESS) return ERROR;
+    if (genExpression(node->left->left, data, &right) != SUCCESS)  return ERROR;
 
     size_t if_index = data->indexes.cur_if++;
 
+    fprintf(data->fn, "\t\tcmp ");
+    printPlace(data, right);
+    fprintf(data->fn, ", ");
+    printPlace(data, left);
+    fprintf(data->fn, "\n");
+
     if (genLogicalJump(node->left, data) != SUCCESS) return ERROR;
-    fprintf(data->fn, "if_%lu\n", if_index);
+    fprintf(data->fn, ".if_%lu\n", if_index);
 
     if (node->right->right && isPunct(node->right->right, NEW_LINE))
         if (genNewLine(node->right->right, data) != SUCCESS) return ERROR;
 
-    fprintf(data->fn, "\t\tjmp end_if_%lu\n", if_index);
-    fprintf(data->fn, ":if_%lu\n", if_index);
+    fprintf(data->fn, "\t\tjmp .end_if_%lu\n", if_index);
+    fprintf(data->fn, ".if_%lu:\n", if_index);
 
     if (node->right->left && isPunct(node->right->left, NEW_LINE))
         if (genNewLine(node->right->left, data) != SUCCESS) return ERROR;
 
-    fprintf(data->fn, ":end_if_%lu\n", if_index);
+    fprintf(data->fn, ".end_if_%lu:\n", if_index);
 
     return SUCCESS;
 }
@@ -375,9 +383,6 @@ int genBinaryOp(TreeNode *node, CodeGenData *data, ValueSrc *src) {
         if (genDiv(node, data, src) != SUCCESS)
             return ERROR;
     }
-    else if (node->value.bin_op == POW)
-        fprintf(data->fn, "\t\tpow\n");
-
     else {
         printf(RED "asm gen error: " END_OF_COLOR "invalid binary operation\n");
         return ERROR;
