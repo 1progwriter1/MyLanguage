@@ -49,8 +49,8 @@ int main(const int argc, const char *argv[]) {
         return ERROR;
     }
 
-    if (genElf(&tree, &names_table, output_file) != SUCCESS) {
-        printf(RED "error: " END_OF_COLOR "asm code gen failed\n");
+    if (genElf(&tree, output_file) != SUCCESS) {
+        printf(RED "error: " END_OF_COLOR "elf gen failed\n");
         DTOR_DATA
         return ERROR;
     }

@@ -9,6 +9,7 @@ GRAPH_DIR=graphviz
 BACK_DIR=backend_src
 MID_DIR=middle_end_src
 INTEL_DIR=backend_intel
+ELF_DIR=backend_elf
 
 SOURCES=$(wildcard src/*.cpp)
 OBJECTS=$(wildcard *.o)
@@ -30,6 +31,9 @@ MID_OBJ=$(patsubst $(MID_DIR)/%.cpp, %.o, $(MID_SRC))
 
 INTEL_SRC=$(wildcard $(INTEL_DIR)/*.cpp)
 INTEL_OBJ=$(patsubst $(INTEL_DIR)/%.cpp, %.o, $(INTEL_SRC))
+
+ELF_SRC=$(wildcard $(ELF_DIR)/*.cpp)
+ELF_OBJ=$(patsubst $(ELF_DIR)/%.cpp, %.o, $(ELF_SRC))
 
 
 all: $(SOURCES)
@@ -57,6 +61,10 @@ intel: $(INTEL_SRC) $(GRAPH_SRC) $(LIB_OBJ)
 	$(COMP) $(CFLAGS) $(INTEL_SRC) $(GRAPH_SRC) $(LIB_OBJ) -o intel.out
 	rm -rf *.dSYM
 	mv intel.out my_g--
+
+elf: $(ELF_SRC) $(GRAPH_SRC) $(LIB_OBJ)
+	$(COMP) $(CFLAGS) $(ELF_SRC) $(GRAPH_SRC) $(LIB_OBJ) -o elf.out
+	rm -rf *.dSYM
 
 run_square:
 	./front.out square.txt back.txt
