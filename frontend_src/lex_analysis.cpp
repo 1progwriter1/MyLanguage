@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <assert.h>
 #include "lex_analysis.h"
-#include "../../MyLibraries/headers/systemdata.h"
-#include "../../MyLibraries/headers/file_func.h"
+#include "systemdata.h"
+#include "file_func.h"
 #include <string.h>
 #include <stdlib.h>
 

@@ -1,7 +1,7 @@
 #ifndef DIFFERENTIATOR
 #define DIFFERENTIATOR
 
-#include "../lib_src/bin_tree.h"
+#include "bin_tree.h"
 
 int calculateTree(struct TreeStruct *tree, double *answer);
 

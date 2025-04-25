@@ -1,9 +1,9 @@
 #include "variables_x86.h"
 #include "gen_asm_x86.h"
 #include <assert.h>
-#include "../../MyLibraries/headers/systemdata.h"
-#include "../../MyLibraries/headers/file_func.h"
-#include "../lib_src/my_lang_lib.h"
+#include "systemdata.h"
+#include "file_func.h"
+#include "my_lang_lib.h"
 #include <stdlib.h>
 
 const Registers ARGUMENTS_SRC[] = {RDI, RSI, RDX, RCX, R8, R9};

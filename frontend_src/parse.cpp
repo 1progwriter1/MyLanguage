@@ -1,14 +1,14 @@
 #include <assert.h>
 #include <math.h>
-#include "../../MyLibraries/headers/systemdata.h"
+#include "systemdata.h"
 #include <string.h>
-#include "../../MyLibraries/headers/file_func.h"
+#include "file_func.h"
 #include "parse.h"
 #include "../middle_end_src/diff_dsl.h"
 #include "lex_analysis.h"
 #include "dump.h"
 #include <stdlib.h>
-#include "../lib_src/my_lang_lib.h"
+#include "my_lang_lib.h"
 
 /*
     G  ::= B '\0'

@@ -2,10 +2,10 @@
 #include "derivative.h"
 #include "calculate.h"
 #include <assert.h>
-#include "../../MyLibraries/headers/systemdata.h"
-#include "../../MyLibraries/headers/func.h"
+#include "systemdata.h"
+#include "func.h"
 #include <stdbool.h>
-#include "../lib_src/bin_tree.h"
+#include "bin_tree.h"
 #include "diff_dsl.h"
 #include <math.h>
 

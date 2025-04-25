@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "gen_operations.h"
 #include <assert.h>
-#include "../../MyLibraries/headers/systemdata.h"
+#include "systemdata.h"
 #include <stdlib.h>
 
 int genSqrt(TreeNode *node, CodeGenData *data, ValueSrc *src) {

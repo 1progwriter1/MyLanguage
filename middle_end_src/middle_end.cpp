@@ -1,10 +1,10 @@
 #include <stdio.h>
-#include "../../MyLibraries/headers/systemdata.h"
+#include "systemdata.h"
 #include "file_read_lang.h"
 #include <assert.h>
 #include "derivative.h"
 #include "../graphviz/gen_graph_lang.h"
-#include "../lib_src/prog_output.h"
+#include "prog_output.h"
 
 int main(const int argc, const char *argv[]) {
 

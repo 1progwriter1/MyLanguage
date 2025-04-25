@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include "file_read_lang.h"
-#include "../../MyLibraries/headers/file_func.h"
+#include "file_func.h"
 #include <assert.h>
-#include "../../MyLibraries/headers/systemdata.h"
+#include "systemdata.h"
 #include <string.h>
-#include "../lib_src/bin_tree.h"
+#include "bin_tree.h"
 #include "../data/key_words_codes.h"
 #include "../frontend_src/lex_analysis.h"
 #include <stdlib.h>

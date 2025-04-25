@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include "gen_asm.h"
 #include <assert.h>
-#include "../../MyLibraries/headers/systemdata.h"
-#include "../../MyLibraries/headers/file_func.h"
+#include "systemdata.h"
+#include "file_func.h"
 #include "../data/key_words_codes.h"
 #include <stdlib.h>
 #include "variables.h"
-#include "../lib_src/my_lang_lib.h"
+#include "my_lang_lib.h"
 
 #define CODE_GEN_ASSERT assert(node);                   \
                         assert(data);                   \

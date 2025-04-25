@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include "gen_asm_x86.h"
 #include <assert.h>
-#include "../../MyLibraries/headers/systemdata.h"
-#include "../../MyLibraries/headers/file_func.h"
+#include "systemdata.h"
+#include "file_func.h"
 #include "../data/key_words_codes.h"
 #include <stdlib.h>
 #include "variables_x86.h"
-#include "../lib_src/my_lang_lib.h"
+#include "my_lang_lib.h"
 #include <string.h>
 
 enum VarSearchStatus {

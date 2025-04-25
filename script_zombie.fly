@@ -1,0 +1,31 @@
+fairytale putZombie(a, b);
+
+once upon the time () {
+
+    a turn into 0;
+    n_steps turn into 0;
+    fell into a dead sleep until (a turned into a) {
+        stone (n_steps turned into 2000000000) {
+            putZombie(0, a + 3);
+            n_steps turn into 0;
+        }
+        n_steps turn into n_steps + 1;
+    }
+
+    end();
+}
+
+fairytale putZombie(a, b) {
+    say the magic number (1);
+    say the magic word(" ");
+    say the magic number (0);
+    say the magic word(" ");
+    say the magic number (a);
+    say the magic word(" ");
+    say the magic number (b);
+    say the magic word(" ");
+    say the magic number (-1);
+    say the magic word(" ");
+
+    end();
+}

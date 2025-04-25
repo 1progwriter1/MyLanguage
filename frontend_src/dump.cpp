@@ -1,10 +1,10 @@
-#include "../../MyLibraries/headers/my_vector.h"
+#include "my_vector.h"
 #include "lex_analysis.h"
 #include "parse.h"
 #include "dump.h"
 #include <assert.h>
-#include "../../MyLibraries/headers/systemdata.h"
-#include "../../MyLibraries/headers/file_func.h"
+#include "systemdata.h"
+#include "file_func.h"
 
 void dumpErrors(StringParseData *data, Vector *tokens, Vector *names_table) {
 

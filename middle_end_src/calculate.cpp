@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include "calculate.h"
-#include "../../MyLibraries/headers/systemdata.h"
-#include "../lib_src/bin_tree.h"
+#include "systemdata.h"
+#include "bin_tree.h"
 #include <assert.h>
 #include <math.h>
-#include "../../MyLibraries/headers/func.h"
+#include "func.h"
 #include "diff_dsl.h"
 
 enum NumOfAgrs {

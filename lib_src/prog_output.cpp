@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include "prog_output.h"
 #include <assert.h>
-#include "../../MyLibraries/headers/systemdata.h"
-#include "../../MyLibraries/headers/file_func.h"
+#include "systemdata.h"
+#include "file_func.h"
 #include <stdlib.h>
 
 static int printNode(TreeNode *node, Vector *names_table, FILE *fn);

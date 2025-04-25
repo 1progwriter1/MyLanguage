@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <assert.h>
-#include "../../MyLibraries/headers/systemdata.h"
+#include "systemdata.h"
 #include "../graphviz/gen_graph_lang.h"
-#include "../lib_src/file_read_lang.h"
-#include "../lib_src/bin_tree.h"
+#include "file_read_lang.h"
+#include "bin_tree.h"
 #include "gen_asm.h"
 #include "../frontend_src/lex_analysis.h"
 #include <string.h>

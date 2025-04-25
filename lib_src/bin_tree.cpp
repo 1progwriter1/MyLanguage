@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include "bin_tree.h"
 #include <assert.h>
-#include "../../MyLibraries/headers/systemdata.h"
-#include "../../MyLibraries/headers/func.h"
+#include "systemdata.h"
+#include "func.h"
 #include <string.h>
-#include "../../MyLibraries/headers/file_func.h"
+#include "file_func.h"
 #include "../middle_end_src/calculate.h"
 #include <stdlib.h>
 

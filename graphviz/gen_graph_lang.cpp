@@ -1,9 +1,9 @@
 #include <stdio.h>
-#include "../../MyLibraries/headers/file_func.h"
+#include "file_func.h"
 #include "gen_graph_lang.h"
 #include <assert.h>
 #include "../data/key_words_codes.h"
-#include "../../MyLibraries/headers/systemdata.h"
+#include "systemdata.h"
 #include <stdlib.h>
 
 const size_t MAX_CMD_LEN = 60;

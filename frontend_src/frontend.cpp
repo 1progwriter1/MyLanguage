@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <assert.h>
-#include "../../MyLibraries/headers/systemdata.h"
+#include "systemdata.h"
 #include "lex_analysis.h"
 #include "parse.h"
 #include "../graphviz/gen_graph_lang.h"
-#include "../lib_src/my_lang_lib.h"
-#include "../lib_src/prog_output.h"
+#include "my_lang_lib.h"
+#include "prog_output.h"
 #include "dump.h"
 #include <string.h>
 #include <stdlib.h>

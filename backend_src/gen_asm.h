@@ -1,7 +1,7 @@
 #ifndef ASM_CODE_GEN
 #define ASM_CODE_GEN
 
-#include "../lib_src/bin_tree.h"
+#include "bin_tree.h"
 
 enum VarPlace {
     VarPlaceRAM,

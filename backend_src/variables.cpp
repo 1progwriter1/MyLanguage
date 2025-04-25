@@ -1,9 +1,9 @@
 #include "variables.h"
 #include "gen_asm.h"
 #include <assert.h>
-#include "../../MyLibraries/headers/systemdata.h"
-#include "../../MyLibraries/headers/file_func.h"
-#include "../lib_src/my_lang_lib.h"
+#include "systemdata.h"
+#include "file_func.h"
+#include "my_lang_lib.h"
 #include <stdlib.h>
 
 const char *REGS[] = {"rax", "rbx", "rcx", "rdx"};
